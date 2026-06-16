@@ -1,0 +1,213 @@
+"use client";
+
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import type { Dictionary } from "@/i18n";
+
+type T = Dictionary["admin"]["units"];
+
+type Initial = {
+  id: number;
+  identifier: string;
+  floor?: number;
+  total_m2?: number;
+  covered_m2?: number;
+  uncovered_m2?: number;
+  rooms?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  orientation?: string;
+  price_usd: number;
+  status: string;
+  description?: string;
+};
+
+type Props = {
+  t: T;
+  lang: string;
+  developmentId: string;
+  developmentName: string;
+  initial?: Initial;
+};
+
+export default function UnitForm({ t, lang, developmentId, developmentName, initial }: Props) {
+  const router = useRouter();
+  const isEdit = !!initial;
+
+  const [identifier, setIdentifier] = useState(initial?.identifier ?? "");
+  const [floor, setFloor] = useState(initial?.floor?.toString() ?? "");
+  const [totalM2, setTotalM2] = useState(initial?.total_m2?.toString() ?? "");
+  const [coveredM2, setCoveredM2] = useState(initial?.covered_m2?.toString() ?? "");
+  const [uncoveredM2, setUncoveredM2] = useState(initial?.uncovered_m2?.toString() ?? "");
+  const [rooms, setRooms] = useState(initial?.rooms?.toString() ?? "");
+  const [bedrooms, setBedrooms] = useState(initial?.bedrooms?.toString() ?? "");
+  const [bathrooms, setBathrooms] = useState(initial?.bathrooms?.toString() ?? "");
+  const [orientation, setOrientation] = useState(initial?.orientation ?? "");
+  const [priceUsd, setPriceUsd] = useState(initial?.price_usd?.toString() ?? "");
+  const [status, setStatus] = useState(initial?.status ?? "available");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError("");
+
+    if (!identifier.trim() || !priceUsd) {
+      setError(t.form.errorRequired);
+      return;
+    }
+
+    setLoading(true);
+
+    const body = {
+      identifier: identifier.trim(),
+      floor: floor ? parseInt(floor) : null,
+      total_m2: totalM2 ? parseFloat(totalM2) : null,
+      covered_m2: coveredM2 ? parseFloat(coveredM2) : null,
+      uncovered_m2: uncoveredM2 ? parseFloat(uncoveredM2) : null,
+      rooms: rooms ? parseInt(rooms) : null,
+      bedrooms: bedrooms ? parseInt(bedrooms) : null,
+      bathrooms: bathrooms ? parseInt(bathrooms) : null,
+      orientation: orientation || null,
+      price_usd: parseFloat(priceUsd),
+      status,
+      description: description.trim() || null,
+    };
+
+    const url = isEdit
+      ? `/api/admin/units/${initial!.id}`
+      : `/api/admin/developments/${developmentId}/units`;
+    const method = isEdit ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    setLoading(false);
+
+    if (!res.ok) {
+      setError(data.error ?? "Error");
+      return;
+    }
+
+    router.push(`/${lang}/admin/developments/${developmentId}`);
+    router.refresh();
+  }
+
+  const orientationKeys = Object.keys(t.form.orientations) as Array<keyof typeof t.form.orientations>;
+
+  return (
+    <div style={wrap}>
+      <p style={{ fontSize: "0.8rem", color: "#9ca3af", marginBottom: "0.25rem" }}>{developmentName}</p>
+      <h1 style={title}>{isEdit ? t.form.titleEdit : t.form.titleNew}</h1>
+
+      <form onSubmit={handleSubmit} style={form}>
+        <Row>
+          <Field label={t.form.identifier}>
+            <input style={input} value={identifier} onChange={(e) => setIdentifier(e.target.value)} required placeholder="2A" />
+          </Field>
+          <Field label={t.form.floor}>
+            <input style={input} type="number" value={floor} onChange={(e) => setFloor(e.target.value)} />
+          </Field>
+          <Field label={t.form.status}>
+            <select style={input} value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="available">{t.status.available}</option>
+              <option value="partial">{t.status.partial}</option>
+              <option value="sold">{t.status.sold}</option>
+            </select>
+          </Field>
+        </Row>
+
+        <Row>
+          <Field label={t.form.totalM2}>
+            <input style={input} type="number" step="0.01" value={totalM2} onChange={(e) => setTotalM2(e.target.value)} />
+          </Field>
+          <Field label={t.form.coveredM2}>
+            <input style={input} type="number" step="0.01" value={coveredM2} onChange={(e) => setCoveredM2(e.target.value)} />
+          </Field>
+          <Field label={t.form.uncoveredM2}>
+            <input style={input} type="number" step="0.01" value={uncoveredM2} onChange={(e) => setUncoveredM2(e.target.value)} />
+          </Field>
+        </Row>
+
+        <Row>
+          <Field label={t.form.rooms}>
+            <input style={input} type="number" min="1" value={rooms} onChange={(e) => setRooms(e.target.value)} />
+          </Field>
+          <Field label={t.form.bedrooms}>
+            <input style={input} type="number" min="0" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} />
+          </Field>
+          <Field label={t.form.bathrooms}>
+            <input style={input} type="number" min="1" value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} />
+          </Field>
+        </Row>
+
+        <Row>
+          <Field label={t.form.orientation}>
+            <select style={input} value={orientation} onChange={(e) => setOrientation(e.target.value)}>
+              <option value="">—</option>
+              {orientationKeys.map((k) => (
+                <option key={k} value={k}>{t.form.orientations[k]}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label={t.form.priceUsd}>
+            <input style={input} type="number" step="0.01" min="0" value={priceUsd}
+              onChange={(e) => setPriceUsd(e.target.value)} required />
+          </Field>
+        </Row>
+
+        <Field label={t.form.description}>
+          <textarea style={{ ...input, minHeight: 64, resize: "vertical" }}
+            value={description} onChange={(e) => setDescription(e.target.value)} />
+        </Field>
+
+        {error && <p style={errorStyle}>{error}</p>}
+
+        <div style={actions}>
+          <button type="button" onClick={() => router.back()} style={btnSecondary}>
+            {t.form.cancel}
+          </button>
+          <button type="submit" style={btnPrimary} disabled={loading}>
+            {loading ? t.form.submitting : t.form.submit}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", flex: 1, minWidth: 140 }}>
+      <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "#374151" }}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function Row({ children }: { children: React.ReactNode }) {
+  return <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>{children}</div>;
+}
+
+const wrap: React.CSSProperties = { maxWidth: 740, background: "#fff", borderRadius: 12, padding: "2rem", border: "1px solid #e5e7eb" };
+const title: React.CSSProperties = { fontSize: "1.25rem", fontWeight: 700, marginBottom: "1.5rem" };
+const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1rem" };
+const input: React.CSSProperties = {
+  padding: "0.55rem 0.75rem", border: "1px solid #d1d5db",
+  borderRadius: 8, fontSize: "0.9rem", width: "100%", outline: "none",
+};
+const errorStyle: React.CSSProperties = { color: "#dc2626", fontSize: "0.875rem" };
+const actions: React.CSSProperties = { display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "0.5rem" };
+const btnPrimary: React.CSSProperties = {
+  padding: "0.6rem 1.25rem", background: "#111", color: "#fff",
+  border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: "0.9rem",
+};
+const btnSecondary: React.CSSProperties = {
+  padding: "0.6rem 1.25rem", background: "#fff", color: "#111",
+  border: "1px solid #d1d5db", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: "0.9rem",
+};
