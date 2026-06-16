@@ -1,23 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken, COOKIE_NAME } from "@/lib/auth";
+import { LOCALES, DEFAULT_LOCALE } from "@/i18n";
 
-// Only these paths require an authenticated session.
-const PROTECTED_PATHS = ["/dashboard", "/admin", "/account"];
+const PROTECTED_SEGMENTS = ["/dashboard", "/admin", "/account"];
+
+function getLocaleFromPath(pathname: string) {
+  const segment = pathname.split("/")[1];
+  return LOCALES.includes(segment as (typeof LOCALES)[number]) ? segment : null;
+}
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
-  if (!isProtected) return NextResponse.next();
+  // Skip Next.js internals and API routes
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
 
-  const token = req.cookies.get(COOKIE_NAME)?.value;
-  const session = token ? await verifyToken(token) : null;
+  // If path has no valid locale prefix, redirect to the default locale
+  const locale = getLocaleFromPath(pathname);
+  if (!locale) {
+    const url = req.nextUrl.clone();
+    url.pathname = `/${DEFAULT_LOCALE}${pathname}`;
+    return NextResponse.redirect(url);
+  }
 
-  if (!session) {
-    const loginUrl = req.nextUrl.clone();
-    loginUrl.pathname = "/login";
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
+  // Strip the locale to get the plain path (e.g. /es/dashboard → /dashboard)
+  const plainPath = pathname.slice(locale.length + 1) || "/";
+  const isProtected = PROTECTED_SEGMENTS.some((p) => plainPath.startsWith(p));
+
+  if (isProtected) {
+    const token = req.cookies.get(COOKIE_NAME)?.value;
+    const session = token ? await verifyToken(token) : null;
+
+    if (!session) {
+      const url = req.nextUrl.clone();
+      url.pathname = `/${locale}/login`;
+      url.searchParams.set("next", pathname);
+      return NextResponse.redirect(url);
+    }
   }
 
   return NextResponse.next();
