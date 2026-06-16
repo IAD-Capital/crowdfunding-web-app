@@ -1,7 +1,6 @@
 import { getSession } from "@/lib/session";
 import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
-import LogoutButton from "@/components/LogoutButton";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import PublicShell from "@/components/PublicShell";
 import Link from "next/link";
 
 export default async function Home({ params }: { params: { lang: string } }) {
@@ -9,33 +8,24 @@ export default async function Home({ params }: { params: { lang: string } }) {
   const [session, t] = await Promise.all([getSession(), getDictionary(lang)]);
 
   return (
-    <main style={{ padding: "2rem" }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem" }}>
-        <LanguageSwitcher currentLang={lang} />
-      </div>
+    <PublicShell lang={lang}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "4rem 1.5rem" }}>
+        <h1 style={{ fontSize: "2.5rem", fontWeight: 800, letterSpacing: "-0.03em" }}>
+          {t.home.welcome}{session ? `, ${session.fullName}` : ""}
+        </h1>
 
-      <h1>{t.home.welcome}{session ? `, ${session.fullName}` : ""}</h1>
-
-      {session ? (
-        <>
-          <p style={{ color: "#6b7280", marginTop: "0.25rem" }}>
-            {session.email} &mdash; <strong>{session.role}</strong>
+        {!session && (
+          <p style={{ marginTop: "1rem", color: "#6b7280", fontSize: "1.1rem" }}>
+            <Link href={`/${lang}/login`} style={{ color: "#111", fontWeight: 600 }}>
+              {t.home.signIn}
+            </Link>
+            {" "}{t.home.or}{" "}
+            <Link href={`/${lang}/signup`} style={{ color: "#111", fontWeight: 600 }}>
+              {t.home.createAccount}
+            </Link>.
           </p>
-          <div style={{ marginTop: "1.5rem" }}>
-            <LogoutButton label={t.auth.logout} />
-          </div>
-        </>
-      ) : (
-        <p style={{ marginTop: "1rem", color: "#6b7280" }}>
-          <Link href={`/${lang}/login`} style={{ color: "#111", fontWeight: 600 }}>
-            {t.home.signIn}
-          </Link>
-          {" "}{t.home.or}{" "}
-          <Link href={`/${lang}/signup`} style={{ color: "#111", fontWeight: 600 }}>
-            {t.home.createAccount}
-          </Link>.
-        </p>
-      )}
-    </main>
+        )}
+      </div>
+    </PublicShell>
   );
 }

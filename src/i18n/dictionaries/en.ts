@@ -2,6 +2,15 @@ import type { Dictionary } from "./es";
 
 const en: Dictionary = {
   lang: "en",
+  header: {
+    signIn: "Sign in",
+    signUp: "Sign up",
+    admin: "Admin panel",
+  },
+  footer: {
+    tagline: "Smart real estate investing.",
+    rights: "All rights reserved.",
+  },
   home: {
     welcome: "Welcome",
     signIn: "Sign in",

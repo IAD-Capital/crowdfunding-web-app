@@ -1,5 +1,14 @@
 const es = {
   lang: "es",
+  header: {
+    signIn: "Iniciar sesión",
+    signUp: "Registrarse",
+    admin: "Panel admin",
+  },
+  footer: {
+    tagline: "Inversión inteligente en bienes raíces.",
+    rights: "Todos los derechos reservados.",
+  },
   home: {
     welcome: "Bienvenido",
     signIn: "Iniciar sesión",

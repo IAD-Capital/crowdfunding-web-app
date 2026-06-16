@@ -8,6 +8,9 @@ export default function LangLayout({
   params: { lang: string };
 }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
-
-  return <html lang={lang}><body>{children}</body></html>;
+  return (
+    <html lang={lang}>
+      <body>{children}</body>
+    </html>
+  );
 }
