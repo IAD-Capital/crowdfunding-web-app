@@ -60,6 +60,8 @@ const en: Dictionary = {
   admin: {
     nav: {
       developments: "Developments",
+      units: "Apartments",
+      users: "Users",
       back: "Back",
     },
     developments: {

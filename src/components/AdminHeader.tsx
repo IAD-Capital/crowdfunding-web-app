@@ -8,7 +8,6 @@ type Props = { lang: Locale };
 
 export default async function AdminHeader({ lang }: Props) {
   const [session, t] = await Promise.all([getSession(), getDictionary(lang)]);
-
   return (
     <header style={header}>
       <div style={inner}>
@@ -22,6 +21,12 @@ export default async function AdminHeader({ lang }: Props) {
         <nav style={nav}>
           <Link href={`/${lang}/admin/developments`} style={navLink}>
             {t.admin.nav.developments}
+          </Link>
+          <Link href={`/${lang}/admin/units`} style={navLink}>
+            {t.admin.nav.units}
+          </Link>
+          <Link href={`/${lang}/admin/users`} style={navLink}>
+            {t.admin.nav.users}
           </Link>
         </nav>
 

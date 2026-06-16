@@ -1,5 +1,6 @@
 import { isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import AdminHeader from "@/components/AdminHeader";
+import AdminFooter from "@/components/AdminFooter";
 
 export default function AdminLayout({
   children,
@@ -16,6 +17,7 @@ export default function AdminLayout({
       <main style={{ flex: 1, maxWidth: 1400, width: "100%", margin: "0 auto", padding: "2rem 1.5rem" }}>
         {children}
       </main>
+      <AdminFooter lang={lang} />
     </div>
   );
 }

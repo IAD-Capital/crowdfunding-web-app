@@ -58,6 +58,8 @@ const es = {
   admin: {
     nav: {
       developments: "Emprendimientos",
+      units: "Departamentos",
+      users: "Usuarios",
       back: "Volver",
     },
     developments: {
