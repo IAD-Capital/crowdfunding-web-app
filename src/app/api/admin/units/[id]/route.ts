@@ -11,7 +11,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   const body = await req.json();
   const {
     identifier, floor, total_m2, covered_m2, uncovered_m2,
-    rooms, bedrooms, bathrooms, orientation, price_usd, status, description,
+    rooms, bedrooms, bathrooms, orientation, price_usd, status, description, images,
   } = body;
 
   const [row] = await db`
@@ -28,6 +28,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
       price_usd    = ${price_usd},
       status       = ${status ?? "available"},
       description  = ${description ?? null},
+      images       = ${images ?? []},
       updated_at   = NOW()
     WHERE id = ${params.id}
     RETURNING *

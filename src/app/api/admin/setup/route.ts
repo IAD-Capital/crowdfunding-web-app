@@ -32,10 +32,12 @@ export async function GET() {
         projected_value_usd  NUMERIC(14,2),
         projected_gain_pct   NUMERIC(6,2),
         amenities            TEXT[]         NOT NULL DEFAULT '{}',
+        images               TEXT[]         NOT NULL DEFAULT '{}',
         created_at           TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
         updated_at           TIMESTAMPTZ    NOT NULL DEFAULT NOW()
       )
     `;
+    await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS images TEXT[] NOT NULL DEFAULT '{}'`;
 
     // Units (UF - Unidades Funcionales)
     await db`
@@ -54,10 +56,12 @@ export async function GET() {
         price_usd        NUMERIC(14,2)  NOT NULL,
         status           TEXT           NOT NULL DEFAULT 'available',
         description      TEXT,
+        images           TEXT[]         NOT NULL DEFAULT '{}',
         created_at       TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
         updated_at       TIMESTAMPTZ    NOT NULL DEFAULT NOW()
       )
     `;
+    await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS images TEXT[] NOT NULL DEFAULT '{}'`;
 
     const hash = await hashPassword("Test123@");
     await db`

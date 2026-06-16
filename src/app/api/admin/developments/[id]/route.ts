@@ -20,22 +20,18 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   if (error) return error;
 
   const body = await req.json();
-  const {
-    name, address, description, completion_date,
-    status, projected_value_usd, projected_gain_pct, amenities,
-  } = body;
+  const { name, address, description, completion_date, status, amenities, images } = body;
 
   const [row] = await db`
     UPDATE developments SET
-      name                = ${name},
-      address             = ${address},
-      description         = ${description ?? null},
-      completion_date     = ${completion_date ?? null},
-      status              = ${status ?? "active"},
-      projected_value_usd = ${projected_value_usd ?? null},
-      projected_gain_pct  = ${projected_gain_pct ?? null},
-      amenities           = ${amenities ?? []},
-      updated_at          = NOW()
+      name            = ${name},
+      address         = ${address},
+      description     = ${description ?? null},
+      completion_date = ${completion_date ?? null},
+      status          = ${status ?? "active"},
+      amenities       = ${amenities ?? []},
+      images          = ${images ?? []},
+      updated_at      = NOW()
     WHERE id = ${params.id}
     RETURNING *
   `;

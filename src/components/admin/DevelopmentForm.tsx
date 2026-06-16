@@ -3,6 +3,7 @@
 import { useState, FormEvent, KeyboardEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Dictionary } from "@/i18n";
+import ImageUploader from "./ImageUploader";
 
 type T = Dictionary["admin"]["developments"];
 
@@ -14,6 +15,7 @@ type Initial = {
   completion_date?: string;
   status: string;
   amenities?: string[];
+  images?: string[];
 };
 
 type Props = { t: T; lang: string; initial?: Initial };
@@ -31,6 +33,7 @@ export default function DevelopmentForm({ t, lang, initial }: Props) {
   const [status, setStatus] = useState(initial?.status ?? "active");
   const [amenities, setAmenities] = useState<string[]>(initial?.amenities ?? []);
   const [amenityInput, setAmenityInput] = useState("");
+  const [images, setImages] = useState<string[]>(initial?.images ?? []);
   const amenityRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -79,6 +82,7 @@ export default function DevelopmentForm({ t, lang, initial }: Props) {
       projected_value_usd: null,
       projected_gain_pct: null,
       amenities,
+      images,
     };
 
     const url = isEdit ? `/api/admin/developments/${initial!.id}` : "/api/admin/developments";
@@ -170,6 +174,10 @@ export default function DevelopmentForm({ t, lang, initial }: Props) {
           <p style={hint}>Presioná Enter o coma para agregar</p>
         </Field>
 
+        <Field label="Fotos">
+          <ImageUploader images={images} onChange={setImages} />
+        </Field>
+
         {error && <p style={errorStyle}>{error}</p>}
 
         <div style={actions}>
@@ -198,7 +206,7 @@ function Row({ children }: { children: React.ReactNode }) {
   return <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>{children}</div>;
 }
 
-const wrap: React.CSSProperties = { maxWidth: 740, background: "#fff", borderRadius: 12, padding: "2rem", border: "1px solid #e5e7eb" };
+const wrap: React.CSSProperties = { background: "#fff", borderRadius: 12, padding: "2rem", border: "1px solid #e5e7eb" };
 const title: React.CSSProperties = { fontSize: "1.25rem", fontWeight: 700, marginBottom: "1.5rem" };
 const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1rem" };
 const input: React.CSSProperties = {

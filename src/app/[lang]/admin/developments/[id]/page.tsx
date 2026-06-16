@@ -2,6 +2,7 @@ import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18
 import db from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ImageGallery from "@/components/admin/ImageGallery";
 
 export default async function DevelopmentDetailPage({
   params,
@@ -63,6 +64,16 @@ export default async function DevelopmentDetailPage({
         </div>
       )}
 
+      {/* Photo gallery */}
+      {dev.images?.length > 0 && (
+        <div style={{ marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#6b7280", marginBottom: "0.5rem" }}>
+            Fotos ({dev.images.length})
+          </p>
+          <ImageGallery images={dev.images} />
+        </div>
+      )}
+
       {/* Units section */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "2rem 0 1rem" }}>
         <h2 style={{ fontSize: "1.1rem", fontWeight: 700 }}>{tu.title}</h2>
@@ -78,7 +89,7 @@ export default async function DevelopmentDetailPage({
           <table style={table}>
             <thead>
               <tr>
-                {["ID", tu.form.floor, "m² tot", "m² cub", tu.form.rooms, tu.form.priceUsd, tu.form.status].map((h) => (
+                {["ID", tu.form.floor, "m² tot", "m² cub", tu.form.rooms, tu.form.priceUsd, tu.form.status, "Fotos"].map((h) => (
                   <th key={h} style={th}>{h}</th>
                 ))}
                 <th style={th}></th>
@@ -98,10 +109,16 @@ export default async function DevelopmentDetailPage({
                       {tu.status[u.status as keyof typeof tu.status] ?? u.status}
                     </span>
                   </td>
+                  <td style={td_}>{u.images?.length ?? 0}</td>
                   <td style={td_}>
-                    <Link href={`/${lang}/admin/developments/${dev.id}/units/${u.id}/edit`} style={{ color: "#6b7280", fontSize: "0.8rem" }}>
-                      Editar
-                    </Link>
+                    <div style={{ display: "flex", gap: "0.75rem" }}>
+                      <Link href={`/${lang}/admin/developments/${dev.id}/units/${u.id}`} style={{ color: "#111", fontSize: "0.8rem", fontWeight: 600 }}>
+                        Ver
+                      </Link>
+                      <Link href={`/${lang}/admin/developments/${dev.id}/units/${u.id}/edit`} style={{ color: "#6b7280", fontSize: "0.8rem" }}>
+                        Editar
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

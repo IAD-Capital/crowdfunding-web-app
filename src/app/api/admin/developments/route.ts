@@ -7,8 +7,7 @@ export async function GET() {
   if (error) return error;
 
   const rows = await db`
-    SELECT d.*,
-           COUNT(u.id)::int AS unit_count
+    SELECT d.*, COUNT(u.id)::int AS unit_count
     FROM developments d
     LEFT JOIN units u ON u.development_id = d.id
     GROUP BY d.id
@@ -22,27 +21,18 @@ export async function POST(req: NextRequest) {
   if (error) return error;
 
   const body = await req.json();
-  const {
-    name, address, description, completion_date,
-    status, projected_value_usd, projected_gain_pct, amenities,
-  } = body;
+  const { name, address, description, completion_date, status, amenities, images } = body;
 
   if (!name?.trim() || !address?.trim()) {
     return NextResponse.json({ error: "Name and address are required." }, { status: 400 });
   }
 
   const [row] = await db`
-    INSERT INTO developments
-      (name, address, description, completion_date, status, projected_value_usd, projected_gain_pct, amenities)
+    INSERT INTO developments (name, address, description, completion_date, status, amenities, images)
     VALUES (
-      ${name.trim()},
-      ${address.trim()},
-      ${description ?? null},
-      ${completion_date ?? null},
-      ${status ?? "active"},
-      ${projected_value_usd ?? null},
-      ${projected_gain_pct ?? null},
-      ${amenities ?? []}
+      ${name.trim()}, ${address.trim()}, ${description ?? null},
+      ${completion_date ?? null}, ${status ?? "active"},
+      ${amenities ?? []}, ${images ?? []}
     )
     RETURNING *
   `;

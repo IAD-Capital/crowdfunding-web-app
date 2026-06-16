@@ -34,6 +34,7 @@ export default async function UnitsPage({ params }: { params: { lang: string } }
                   tu.form.rooms,
                   tu.form.priceUsd,
                   tu.form.status,
+                  "Fotos",
                   "",
                 ].map((h) => (
                   <th key={h} style={th}>{h}</th>
@@ -61,13 +62,16 @@ export default async function UnitsPage({ params }: { params: { lang: string } }
                       {tu.status[u.status as keyof typeof tu.status] ?? u.status}
                     </span>
                   </td>
+                  <td style={td}>{u.images?.length ?? 0}</td>
                   <td style={td}>
-                    <Link
-                      href={`/${lang}/admin/developments/${u.development_id}/units/${u.id}/edit`}
-                      style={{ color: "#6b7280", fontSize: "0.8rem" }}
-                    >
-                      Editar
-                    </Link>
+                    <div style={{ display: "flex", gap: "0.75rem" }}>
+                      <Link href={`/${lang}/admin/developments/${u.development_id}/units/${u.id}`} style={{ color: "#111", fontSize: "0.8rem", fontWeight: 600 }}>
+                        Ver
+                      </Link>
+                      <Link href={`/${lang}/admin/developments/${u.development_id}/units/${u.id}/edit`} style={{ color: "#6b7280", fontSize: "0.8rem" }}>
+                        Editar
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

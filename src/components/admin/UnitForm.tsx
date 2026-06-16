@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { Dictionary } from "@/i18n";
+import ImageUploader from "./ImageUploader";
 
 type T = Dictionary["admin"]["units"];
 
@@ -20,6 +21,7 @@ type Initial = {
   price_usd: number;
   status: string;
   description?: string;
+  images?: string[];
 };
 
 type Props = {
@@ -46,6 +48,7 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
   const [priceUsd, setPriceUsd] = useState(initial?.price_usd?.toString() ?? "");
   const [status, setStatus] = useState(initial?.status ?? "available");
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [images, setImages] = useState<string[]>(initial?.images ?? []);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -73,6 +76,7 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
       price_usd: parseFloat(priceUsd),
       status,
       description: description.trim() || null,
+      images,
     };
 
     const url = isEdit
@@ -166,6 +170,10 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
             value={description} onChange={(e) => setDescription(e.target.value)} />
         </Field>
 
+        <Field label="Fotos">
+          <ImageUploader images={images} onChange={setImages} />
+        </Field>
+
         {error && <p style={errorStyle}>{error}</p>}
 
         <div style={actions}>
@@ -194,7 +202,7 @@ function Row({ children }: { children: React.ReactNode }) {
   return <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>{children}</div>;
 }
 
-const wrap: React.CSSProperties = { maxWidth: 740, background: "#fff", borderRadius: 12, padding: "2rem", border: "1px solid #e5e7eb" };
+const wrap: React.CSSProperties = { background: "#fff", borderRadius: 12, padding: "2rem", border: "1px solid #e5e7eb" };
 const title: React.CSSProperties = { fontSize: "1.25rem", fontWeight: 700, marginBottom: "1.5rem" };
 const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1rem" };
 const input: React.CSSProperties = {
