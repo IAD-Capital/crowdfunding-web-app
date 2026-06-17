@@ -84,7 +84,7 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
     const res = await fetch(`/api/admin/investments/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "cancelled", clear_removal_request: true }),
+      body: JSON.stringify({ status: "cancelled" }),
     });
     if (!res.ok) { const d = await res.json(); setError(d.error ?? "Error"); return; }
     startTransition(() => router.refresh());
