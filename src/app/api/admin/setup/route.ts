@@ -15,10 +15,14 @@ export async function GET() {
         full_name     TEXT        NOT NULL,
         email         TEXT        NOT NULL UNIQUE,
         password_hash TEXT        NOT NULL,
-        role          TEXT        NOT NULL DEFAULT 'admin',
+        role          TEXT        NOT NULL DEFAULT 'superadmin',
+        avatar        TEXT,
         created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `;
+    await db`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT`;
+    // Migrate legacy 'admin' role to 'superadmin'
+    await db`UPDATE users SET role = 'superadmin' WHERE role = 'admin'`;
 
     // Developments (Emprendimientos)
     await db`
@@ -66,7 +70,7 @@ export async function GET() {
     const hash = await hashPassword("Test123@");
     await db`
       INSERT INTO users (full_name, email, password_hash, role)
-      VALUES ('IAD Admin', 'admin@iadcapital.app', ${hash}, 'admin')
+      VALUES ('IAD Admin', 'admin@iadcapital.app', ${hash}, 'superadmin')
       ON CONFLICT (email) DO NOTHING
     `;
 

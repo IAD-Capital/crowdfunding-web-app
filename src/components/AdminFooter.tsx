@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { getDictionary, type Locale } from "@/i18n";
+import { getSession } from "@/lib/session";
 
 type Props = { lang: Locale };
 
 export default async function AdminFooter({ lang }: Props) {
-  const t = await getDictionary(lang);
+  const [session, t] = await Promise.all([getSession(), getDictionary(lang)]);
   const year = new Date().getFullYear();
+  const isSuperAdmin = session?.role === "superadmin";
 
   const sections = [
     {
@@ -16,10 +18,10 @@ export default async function AdminFooter({ lang }: Props) {
       label: t.admin.nav.units,
       href: `/${lang}/admin/units`,
     },
-    {
+    ...(isSuperAdmin ? [{
       label: t.admin.nav.users,
       href: `/${lang}/admin/users`,
-    },
+    }] : []),
   ];
 
   return (

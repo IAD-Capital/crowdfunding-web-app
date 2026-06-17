@@ -10,8 +10,9 @@ const EXPIRY = "7d";
 export type SessionPayload = {
   sub: string;
   email: string;
-  role: "admin";
+  role: "superadmin" | "investor";
   fullName: string;
+  avatar?: string | null;
 };
 
 export async function signToken(payload: SessionPayload) {

@@ -25,14 +25,14 @@ export async function POST(req: NextRequest) {
   const hash = await hashPassword(password);
   const [user] = await db`
     INSERT INTO users (full_name, email, password_hash, role)
-    VALUES (${fullName.trim()}, ${email.toLowerCase()}, ${hash}, 'admin')
+    VALUES (${fullName.trim()}, ${email.toLowerCase()}, ${hash}, 'investor')
     RETURNING id, email, full_name, role
   `;
 
   const token = await signToken({
     sub: String(user.id),
     email: user.email,
-    role: "admin",
+    role: "investor",
     fullName: user.full_name,
   });
 

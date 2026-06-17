@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   }
 
   const [user] = await db`
-    SELECT id, email, full_name, password_hash, role
+    SELECT id, email, full_name, password_hash, role, avatar
     FROM users
     WHERE email = ${email.toLowerCase()}
   `;
@@ -20,11 +20,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
+  if (user.role !== "superadmin" && user.role !== "investor") {
+    return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+  }
+
   const token = await signToken({
     sub: String(user.id),
     email: user.email,
-    role: "admin",
+    role: user.role as "superadmin" | "investor",
     fullName: user.full_name,
+    avatar: user.avatar ?? null,
   });
 
   const res = NextResponse.json({ ok: true });

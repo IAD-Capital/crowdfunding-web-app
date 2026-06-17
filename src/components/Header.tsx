@@ -21,7 +21,7 @@ export default async function Header({ lang }: Props) {
 
           {session ? (
             <>
-              {session.role === "admin" && (
+              {session.role === "superadmin" && (
                 <Link href={`/${lang}/admin`} style={navLink}>
                   {t.header.admin}
                 </Link>

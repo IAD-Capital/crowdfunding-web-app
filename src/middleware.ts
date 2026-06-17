@@ -37,7 +37,8 @@ export async function middleware(req: NextRequest) {
     const token = req.cookies.get(COOKIE_NAME)?.value;
     const session = token ? await verifyToken(token) : null;
 
-    if (!session) {
+    const isAdmin = plainPath.startsWith("/admin");
+    if (!session || (isAdmin && session.role !== "superadmin")) {
       const url = req.nextUrl.clone();
       url.pathname = `/${locale}/login`;
       url.searchParams.set("next", pathname);
