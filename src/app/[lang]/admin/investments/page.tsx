@@ -15,7 +15,8 @@ export default async function AdminInvestmentsPage({ params }: { params: { lang:
       u.id AS unit_id, u.identifier, u.price_usd AS unit_price_usd,
       u.group_expires_at,
       d.id AS development_id, d.name AS development_name,
-      usr.id AS user_id, usr.full_name, usr.email, usr.avatar
+      usr.id AS user_id, usr.full_name, usr.email, usr.avatar,
+      i.removal_requested_at
     FROM investments i
     JOIN units u ON u.id = i.unit_id
     JOIN developments d ON d.id = u.development_id
@@ -40,6 +41,7 @@ export default async function AdminInvestmentsPage({ params }: { params: { lang:
     full_name: String(r.full_name),
     email: String(r.email),
     avatar: r.avatar ? String(r.avatar) : null,
+    removal_requested_at: r.removal_requested_at ? new Date(r.removal_requested_at as string).toISOString() : null,
   }));
 
   return (

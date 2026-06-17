@@ -20,6 +20,7 @@ type Investment = {
   full_name: string;
   email: string;
   avatar: string | null;
+  removal_requested_at: string | null;
 };
 
 const STATUS_OPTS = ["active", "pending", "cancelled"] as const;
@@ -77,6 +78,29 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
     startTransition(() => router.refresh());
   }
 
+  async function approveRemoval(id: number) {
+    if (!confirm("¿Aprobar la remoción? La inversión pasará a estado cancelada.")) return;
+    setError(null);
+    const res = await fetch(`/api/admin/investments/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "cancelled", clear_removal_request: true }),
+    });
+    if (!res.ok) { const d = await res.json(); setError(d.error ?? "Error"); return; }
+    startTransition(() => router.refresh());
+  }
+
+  async function rejectRemoval(id: number) {
+    setError(null);
+    const res = await fetch(`/api/admin/investments/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clear_removal_request: true }),
+    });
+    if (!res.ok) { const d = await res.json(); setError(d.error ?? "Error"); return; }
+    startTransition(() => router.refresh());
+  }
+
   if (investments.length === 0) {
     return (
       <div style={empty}>
@@ -104,9 +128,10 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
               const isEditing = editingId === inv.id;
               const groupExpires = inv.group_expires_at ? new Date(inv.group_expires_at) : null;
               const groupExpired = groupExpires ? groupExpires < new Date() : false;
+              const hasPendingRemoval = !!inv.removal_requested_at;
 
               return (
-                <tr key={inv.id} style={isEditing ? trEditing : tr}>
+                <tr key={inv.id} style={isEditing ? trEditing : hasPendingRemoval ? trPendingRemoval : tr}>
                   {/* Investor */}
                   <td style={td}>
                     <div style={userCell}>
@@ -180,21 +205,25 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
                   <td style={{ ...td, textAlign: "right" }}>
                     {isEditing ? (
                       <div style={actionRow}>
-                        <button style={btnSave} onClick={() => saveEdit(inv.id)} disabled={isPending}>
-                          Guardar
-                        </button>
-                        <button style={btnCancel} onClick={() => setEditingId(null)}>
-                          Cancelar
-                        </button>
+                        <button style={btnSave} onClick={() => saveEdit(inv.id)} disabled={isPending}>Guardar</button>
+                        <button style={btnCancel} onClick={() => setEditingId(null)}>Cancelar</button>
+                      </div>
+                    ) : hasPendingRemoval ? (
+                      <div style={{ ...actionRow, flexDirection: "column", alignItems: "flex-end", gap: "0.3rem" }}>
+                        <span style={removalLabel}>⚠️ Remoción solicitada</span>
+                        <div style={actionRow}>
+                          <button style={btnApprove} onClick={() => approveRemoval(inv.id)} disabled={isPending}>
+                            Aprobar
+                          </button>
+                          <button style={btnReject} onClick={() => rejectRemoval(inv.id)} disabled={isPending}>
+                            Rechazar
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div style={actionRow}>
-                        <button style={btnEdit} onClick={() => startEdit(inv)}>
-                          Editar
-                        </button>
-                        <button style={btnDelete} onClick={() => deleteInv(inv.id)}>
-                          Eliminar
-                        </button>
+                        <button style={btnEdit} onClick={() => startEdit(inv)}>Editar</button>
+                        <button style={btnDelete} onClick={() => deleteInv(inv.id)}>Eliminar</button>
                       </div>
                     )}
                   </td>
@@ -237,5 +266,9 @@ const btnSave: React.CSSProperties = { padding: "0.3rem 0.75rem", border: "none"
 const btnCancel: React.CSSProperties = { padding: "0.3rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 6, background: "#fff", cursor: "pointer", fontSize: "0.78rem" };
 const btnDelete: React.CSSProperties = { padding: "0.3rem 0.75rem", border: "none", borderRadius: 6, background: "#fee2e2", color: "#991b1b", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 };
 
+const trPendingRemoval: React.CSSProperties = { ...tr, background: "#fffbeb" };
+const removalLabel: React.CSSProperties = { fontSize: "0.72rem", fontWeight: 700, color: "#92400e" };
+const btnApprove: React.CSSProperties = { padding: "0.3rem 0.65rem", border: "none", borderRadius: 6, background: "#dc2626", color: "#fff", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700 };
+const btnReject: React.CSSProperties = { padding: "0.3rem 0.65rem", border: "1px solid #d1d5db", borderRadius: 6, background: "#fff", color: "#374151", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 };
 const empty: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", padding: "4rem 2rem", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12 };
 const errorBanner: React.CSSProperties = { background: "#fee2e2", color: "#991b1b", padding: "0.6rem 1rem", borderRadius: 8, fontSize: "0.85rem", marginBottom: "1rem" };

@@ -5,6 +5,7 @@ import db from "@/lib/db";
 import PublicShell from "@/components/PublicShell";
 import Image from "next/image";
 import Link from "next/link";
+import RemovalRequestButton from "@/components/RemovalRequestButton";
 
 export default async function WalletPage({ params }: { params: { lang: string } }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
@@ -17,7 +18,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
   // Always show the current user's own investments
   const investments = await db`
     SELECT
-      i.id, i.percentage, i.amount_usd, i.status, i.created_at,
+      i.id, i.percentage, i.amount_usd, i.status, i.created_at, i.removal_requested_at,
       u.id AS unit_id, u.identifier, u.floor, u.total_m2,
       u.price_usd AS unit_price_usd, u.status AS unit_status, u.images AS unit_images,
       d.id AS development_id, d.name AS development_name, d.address AS development_address,
@@ -135,6 +136,13 @@ export default async function WalletPage({ params }: { params: { lang: string } 
                         Ver emprendimiento →
                       </Link>
                     </div>
+
+                    {inv.status === "active" && session.role === "investor" && (
+                      <RemovalRequestButton
+                        investmentId={inv.id}
+                        hasPendingRequest={!!inv.removal_requested_at}
+                      />
+                    )}
                   </div>
                 </div>
               );

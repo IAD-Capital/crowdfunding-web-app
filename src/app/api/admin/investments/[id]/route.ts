@@ -8,13 +8,14 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   const { error } = await requireSuperAdmin();
   if (error) return error;
 
-  const { status, percentage, amount_usd } = await req.json();
+  const { status, percentage, amount_usd, clear_removal_request } = await req.json();
 
   const [row] = await db`
     UPDATE investments SET
-      status     = COALESCE(${status ?? null}, status),
-      percentage = COALESCE(${percentage ?? null}, percentage),
-      amount_usd = COALESCE(${amount_usd ?? null}, amount_usd)
+      status                = COALESCE(${status ?? null}, status),
+      percentage            = COALESCE(${percentage ?? null}, percentage),
+      amount_usd            = COALESCE(${amount_usd ?? null}, amount_usd),
+      removal_requested_at  = CASE WHEN ${!!clear_removal_request} THEN NULL ELSE removal_requested_at END
     WHERE id = ${params.id}
     RETURNING *
   `;

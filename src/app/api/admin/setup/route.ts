@@ -69,6 +69,8 @@ export async function GET() {
     await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS images TEXT[] NOT NULL DEFAULT '{}'`;
     await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS group_expires_at TIMESTAMPTZ`;
 
+    await db`ALTER TABLE investments ADD COLUMN IF NOT EXISTS removal_requested_at TIMESTAMPTZ`;
+
     // Investments
     await db`
       CREATE TABLE IF NOT EXISTS investments (
