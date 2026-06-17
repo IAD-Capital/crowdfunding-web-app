@@ -3,6 +3,7 @@ import db from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ImageGallery from "@/components/admin/ImageGallery";
+import UnitsView from "@/components/admin/UnitsView";
 
 export default async function DevelopmentDetailPage({
   params,
@@ -26,11 +27,12 @@ export default async function DevelopmentDetailPage({
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1.5rem" }}>
+      {/* Back */}
+      <div style={{ marginBottom: "1.5rem" }}>
         <Link href={`/${lang}/admin/developments`} style={backLink}>← {t.admin.nav.back}</Link>
       </div>
 
+      {/* Title row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
         <div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{dev.name}</h1>
@@ -41,7 +43,7 @@ export default async function DevelopmentDetailPage({
         </Link>
       </div>
 
-      {/* Dev info cards */}
+      {/* Info cards */}
       <div style={infoGrid}>
         <InfoCard label={td.form.completionDate} value={fmtDate(dev.completion_date)} />
         <InfoCard label={td.form.status} value={td.status[dev.status as keyof typeof td.status] ?? dev.status} />
@@ -51,11 +53,10 @@ export default async function DevelopmentDetailPage({
         <p style={{ margin: "1rem 0", color: "#374151", fontSize: "0.9rem" }}>{dev.description}</p>
       )}
 
+      {/* Amenities */}
       {dev.amenities?.length > 0 && (
         <div style={{ marginBottom: "1.5rem" }}>
-          <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#6b7280", marginBottom: "0.5rem" }}>
-            {td.form.amenities.split(" ")[0]}
-          </p>
+          <p style={sectionLabel}>{td.form.amenities.split(" ")[0]}</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
             {dev.amenities.map((a: string) => (
               <span key={a} style={tag}>{a.trim()}</span>
@@ -67,9 +68,7 @@ export default async function DevelopmentDetailPage({
       {/* Photo gallery */}
       {dev.images?.length > 0 && (
         <div style={{ marginBottom: "1.5rem" }}>
-          <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#6b7280", marginBottom: "0.5rem" }}>
-            Fotos ({dev.images.length})
-          </p>
+          <p style={sectionLabel}>Fotos ({dev.images.length})</p>
           <ImageGallery images={dev.images} />
         </div>
       )}
@@ -85,46 +84,14 @@ export default async function DevelopmentDetailPage({
       {units.length === 0 ? (
         <p style={{ color: "#6b7280" }}>{tu.empty}</p>
       ) : (
-        <div style={tableWrap}>
-          <table style={table}>
-            <thead>
-              <tr>
-                {["ID", tu.form.floor, "m² tot", "m² cub", tu.form.rooms, tu.form.priceUsd, tu.form.status, "Fotos"].map((h) => (
-                  <th key={h} style={th}>{h}</th>
-                ))}
-                <th style={th}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {units.map((u) => (
-                <tr key={u.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                  <td style={td_}><strong>{u.identifier}</strong> {u.floor != null ? `P${u.floor}` : ""}</td>
-                  <td style={td_}>{u.floor ?? "—"}</td>
-                  <td style={td_}>{u.total_m2 ?? "—"}</td>
-                  <td style={td_}>{u.covered_m2 ?? "—"}</td>
-                  <td style={td_}>{u.rooms ?? "—"}</td>
-                  <td style={td_}>{u.price_usd != null ? `USD ${Number(u.price_usd).toLocaleString()}` : "—"}</td>
-                  <td style={td_}>
-                    <span style={statusBadge(u.status)}>
-                      {tu.status[u.status as keyof typeof tu.status] ?? u.status}
-                    </span>
-                  </td>
-                  <td style={td_}>{u.images?.length ?? 0}</td>
-                  <td style={td_}>
-                    <div style={{ display: "flex", gap: "0.75rem" }}>
-                      <Link href={`/${lang}/admin/developments/${dev.id}/units/${u.id}`} style={{ color: "#111", fontSize: "0.8rem", fontWeight: 600 }}>
-                        Ver
-                      </Link>
-                      <Link href={`/${lang}/admin/developments/${dev.id}/units/${u.id}/edit`} style={{ color: "#6b7280", fontSize: "0.8rem" }}>
-                        Editar
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <UnitsView
+          units={units}
+          lang={lang}
+          statusT={tu.status as { available: string; partial: string; sold: string }}
+          priceLabel={tu.form.priceUsd}
+          floorLabel={tu.form.floor}
+          roomsLabel={tu.form.rooms}
+        />
       )}
     </div>
   );
@@ -155,21 +122,10 @@ const infoGrid: React.CSSProperties = {
 const infoCard: React.CSSProperties = {
   background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, padding: "0.75rem 1rem",
 };
+const sectionLabel: React.CSSProperties = {
+  fontSize: "0.8rem", fontWeight: 600, color: "#6b7280", marginBottom: "0.5rem",
+};
 const tag: React.CSSProperties = {
   padding: "0.2rem 0.6rem", background: "#f3f4f6", borderRadius: 999,
   fontSize: "0.78rem", color: "#374151",
 };
-const tableWrap: React.CSSProperties = { background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" };
-const table: React.CSSProperties = { width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" };
-const th: React.CSSProperties = { padding: "0.65rem 1rem", textAlign: "left", background: "#f9fafb", fontWeight: 600, fontSize: "0.8rem", color: "#6b7280" };
-const td_: React.CSSProperties = { padding: "0.65rem 1rem", color: "#111" };
-
-function statusBadge(status: string): React.CSSProperties {
-  const bg: Record<string, string> = { available: "#dcfce7", partial: "#fef9c3", sold: "#fee2e2" };
-  const fg: Record<string, string> = { available: "#166534", partial: "#854d0e", sold: "#991b1b" };
-  return {
-    display: "inline-block", padding: "0.15rem 0.5rem", borderRadius: 999,
-    fontSize: "0.75rem", fontWeight: 600,
-    background: bg[status] ?? "#f3f4f6", color: fg[status] ?? "#374151",
-  };
-}
