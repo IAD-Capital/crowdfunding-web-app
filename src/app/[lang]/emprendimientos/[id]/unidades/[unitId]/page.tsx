@@ -68,7 +68,7 @@ export default async function PublicUnitPage({
 
   const fmtDate = (d: Date) =>
     d.toLocaleDateString(lang === "es" ? "es-AR" : "en-US", {
-      day: "2-digit", month: "long", year: "numeric",
+      day: "2-digit", month: "long", year: "numeric", timeZone: "UTC",
     });
 
   return (

@@ -68,7 +68,7 @@ export default function NotificationBell({ notifications: initial, dark = false 
 
   const fmtDate = (s: string) =>
     new Date(s).toLocaleDateString("es-AR", {
-      day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+      day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC",
     });
 
   const VS: Record<Notification["variant"], { icon: string; bg: string; fg: string }> = {

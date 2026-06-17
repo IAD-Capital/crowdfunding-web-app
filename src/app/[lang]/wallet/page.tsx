@@ -41,7 +41,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
 
   const fmtDate = (d: unknown) =>
     new Date(d as string).toLocaleDateString(lang === "es" ? "es-AR" : "en-US", {
-      day: "2-digit", month: "short", year: "numeric",
+      day: "2-digit", month: "short", year: "numeric", timeZone: "UTC",
     });
 
   return (

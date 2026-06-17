@@ -42,7 +42,7 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
     `USD ${n.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
   const fmtDate = (s: string) =>
-    new Date(s).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
+    new Date(s).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
 
   function startEdit(inv: Investment) {
     setEditingId(inv.id);

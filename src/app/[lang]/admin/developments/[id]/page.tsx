@@ -23,7 +23,7 @@ export default async function DevelopmentDetailPage({
   `;
 
   const fmtDate = (d: string | null) =>
-    d ? new Date(d).toLocaleDateString(lang === "es" ? "es-AR" : "en-US") : "—";
+    d ? new Date(d).toLocaleDateString(lang === "es" ? "es-AR" : "en-US", { timeZone: "UTC" }) : "—";
 
   return (
     <div>

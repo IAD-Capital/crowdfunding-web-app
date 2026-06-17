@@ -21,7 +21,7 @@ export default async function PublicDevelopmentPage({
   const units = await db`SELECT * FROM units WHERE development_id = ${params.id} ORDER BY floor, identifier`;
 
   const fmtDate = (d: unknown) =>
-    d ? new Date(d as string).toLocaleDateString(lang === "es" ? "es-AR" : "en-US", { month: "long", year: "numeric", day: "numeric" }) : null;
+    d ? new Date(d as string).toLocaleDateString(lang === "es" ? "es-AR" : "en-US", { month: "long", year: "numeric", day: "numeric", timeZone: "UTC" }) : null;
 
   const availableUnits = units.filter((u) => u.status !== "sold");
 

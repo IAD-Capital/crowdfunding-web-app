@@ -94,7 +94,7 @@ function GridView({ developments, t, lang }: Props) {
               <span style={stat}>🏠 {d.unit_count} {t.units}</span>
               {d.completion_date && (
                 <span style={stat}>
-                  📅 {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric" })}
+                  📅 {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric", timeZone: "UTC" })}
                 </span>
               )}
             </div>
@@ -147,7 +147,7 @@ function ListView({ developments, t, lang }: Props) {
               <span style={stat}>🏠 {d.unit_count} {t.units}</span>
               {d.completion_date && (
                 <span style={stat}>
-                  📅 {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric" })}
+                  📅 {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric", timeZone: "UTC" })}
                 </span>
               )}
               {d.images?.length > 0 && <span style={stat}>📷 {d.images.length}</span>}

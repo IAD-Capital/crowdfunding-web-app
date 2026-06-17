@@ -146,7 +146,7 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
 /* ─── Dev card ─────────────────────────────────── */
 function DevCard({ d, lang }: { d: Development; lang: string }) {
   const fmtDate = d.completion_date
-    ? new Date(d.completion_date).toLocaleDateString("es-AR", { month: "long", year: "numeric" })
+    ? new Date(d.completion_date).toLocaleDateString("es-AR", { month: "long", year: "numeric", timeZone: "UTC" })
     : null;
 
   return (

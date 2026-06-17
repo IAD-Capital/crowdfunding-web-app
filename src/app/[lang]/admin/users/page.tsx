@@ -61,7 +61,7 @@ export default async function UsersPage({ params }: { params: { lang: string } }
                 <td style={{ ...td, color: "#9ca3af", fontSize: "0.8rem" }}>
                   {new Date(u.created_at).toLocaleDateString(
                     lang === "es" ? "es-AR" : "en-US",
-                    { day: "2-digit", month: "short", year: "numeric" }
+                    { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }
                   )}
                 </td>
                 {isSuperAdmin && (
