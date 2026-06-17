@@ -50,7 +50,15 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
             Adquiriste el {effectivePct}% de {identifier} por USD {amount.toLocaleString("es-AR", { maximumFractionDigits: 0 })}
           </p>
         </div>
-        <a href={`/${lang}/wallet`} style={walletLink}>Ver mi cartera →</a>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "center" }}>
+          <button
+            style={reinvestBtn}
+            onClick={() => { setDone(false); setFull(false); setPct(Math.min(5, maxSlider)); setError(null); }}
+          >
+            Invertir de nuevo
+          </button>
+          <a href={`/${lang}/wallet`} style={walletLink}>Ver mi cartera →</a>
+        </div>
       </div>
     );
   }
@@ -181,4 +189,9 @@ const panelSuccess: React.CSSProperties = {
 const walletLink: React.CSSProperties = {
   padding: "0.5rem 1.25rem", background: "#111", color: "#fff",
   borderRadius: 8, textDecoration: "none", fontWeight: 700, fontSize: "0.85rem",
+};
+const reinvestBtn: React.CSSProperties = {
+  padding: "0.5rem 1.25rem", background: "#fff", color: "#166534",
+  border: "1.5px solid #86efac", borderRadius: 8, fontWeight: 700, fontSize: "0.85rem",
+  cursor: "pointer",
 };

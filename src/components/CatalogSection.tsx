@@ -31,12 +31,14 @@ type Unit = {
   status: string;
   images: string[];
   description?: string;
+  available_pct?: number;
 };
 
 type Props = {
   developments: Development[];
   units: Unit[];
   isInvestor: boolean;
+  myInvestedUnitIds?: number[];
   lang: string;
 };
 
@@ -48,7 +50,7 @@ const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
   sold:      { bg: "#fee2e2", fg: "#991b1b", label: "Vendida" },
 };
 
-export default function CatalogSection({ developments, units, isInvestor, lang }: Props) {
+export default function CatalogSection({ developments, units, isInvestor, myInvestedUnitIds = [], lang }: Props) {
   const [tab, setTab] = useState<Tab>("developments");
   const [devFilter, setDevFilter] = useState<number | "all">("all");
   const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
@@ -116,12 +118,20 @@ export default function CatalogSection({ developments, units, isInvestor, lang }
                     lang={lang}
                   />
                   {isInvestor && selectedUnit === u.id && u.status !== "sold" && (
-                    <BuyPanel
-                      unitId={u.id}
-                      priceUsd={u.price_usd}
-                      identifier={u.identifier}
-                      lang={lang}
-                    />
+                    myInvestedUnitIds.includes(u.id) ? (
+                      <div style={alreadyNote}>
+                        Ya tenés una participación activa en esta unidad.{" "}
+                        <a href={`/${lang}/wallet`} style={{ color: "#166534", fontWeight: 700 }}>Ver cartera →</a>
+                      </div>
+                    ) : (
+                      <BuyPanel
+                        unitId={u.id}
+                        priceUsd={u.price_usd}
+                        identifier={u.identifier}
+                        lang={lang}
+                        availablePct={u.available_pct ?? 100}
+                      />
+                    )
                   )}
                 </div>
               ))}
@@ -289,4 +299,8 @@ const btnInvest: React.CSSProperties = {
   marginTop: "0.5rem", padding: "0.45rem 0", background: "#fff",
   border: "1.5px solid #111", borderRadius: 8, fontWeight: 700,
   fontSize: "0.85rem", cursor: "pointer", color: "#111", transition: "all 0.15s",
+};
+const alreadyNote: React.CSSProperties = {
+  background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 10,
+  padding: "0.75rem 1rem", fontSize: "0.82rem", color: "#166534", marginTop: "0.5rem",
 };

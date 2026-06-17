@@ -33,6 +33,14 @@ export default async function PublicUnitPage({
   const [dev] = await db`SELECT id, name, address, images FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
 
+  // Check if this investor already holds a position in this unit
+  const [myInvestment] = canInvest
+    ? await db`
+        SELECT id, percentage, amount_usd FROM investments
+        WHERE unit_id = ${unit.id} AND user_id = ${Number(session!.sub)} AND status = 'active'
+      `
+    : [null];
+
   // Co-investors: visible to investors only (other active investors in this unit)
   const coInvestors = canInvest
     ? await db`
@@ -191,7 +199,18 @@ export default async function PublicUnitPage({
 
               <div style={sideDivider} />
 
-              {canInvest && unit.status !== "sold" && unit.price_usd != null && !groupExpired ? (
+              {canInvest && myInvestment ? (
+                <div style={alreadyInvested}>
+                  <p style={{ fontWeight: 700, margin: 0, fontSize: "0.88rem" }}>Tu participación</p>
+                  <p style={{ margin: "0.25rem 0 0", fontSize: "1.5rem", fontWeight: 900, letterSpacing: "-0.04em" }}>
+                    {Number(myInvestment.percentage)}%
+                  </p>
+                  <p style={{ margin: "0.15rem 0 0", fontSize: "0.82rem", color: "#166534" }}>
+                    USD {Number(myInvestment.amount_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })}
+                  </p>
+                  <a href={`/${lang}/wallet`} style={walletBtn}>Ver mi cartera →</a>
+                </div>
+              ) : canInvest && unit.status !== "sold" && unit.price_usd != null && !groupExpired ? (
                 <BuyPanel
                   unitId={unit.id}
                   priceUsd={Number(unit.price_usd)}
@@ -289,3 +308,5 @@ const sideBtnOutline: React.CSSProperties = { display: "block", textAlign: "cent
 const sideFact: React.CSSProperties = { background: "#f9fafb", borderRadius: 10, padding: "0.85rem 1rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.15rem" };
 const sideFactNum: React.CSSProperties = { fontSize: "1.5rem", fontWeight: 900, color: "#111" };
 const sideFactLabel: React.CSSProperties = { fontSize: "0.72rem", color: "#9ca3af", textAlign: "center" };
+const alreadyInvested: React.CSSProperties = { background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: 12, padding: "1rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.15rem", textAlign: "center" };
+const walletBtn: React.CSSProperties = { marginTop: "0.5rem", padding: "0.45rem 1rem", background: "#111", color: "#fff", borderRadius: 8, textDecoration: "none", fontWeight: 700, fontSize: "0.82rem" };

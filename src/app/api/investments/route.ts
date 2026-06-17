@@ -17,6 +17,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Porcentaje inválido. Debe ser entre 5% y 50% (múltiplos de 5) o el 100%." }, { status: 400 });
   }
 
+  // One investment per user per unit
+  const [existing] = await db`
+    SELECT id FROM investments
+    WHERE unit_id = ${unit_id} AND user_id = ${session!.sub} AND status = 'active'
+  `;
+  if (existing) {
+    return NextResponse.json({ error: "Ya tenés una inversión activa en esta unidad." }, { status: 409 });
+  }
+
   const [unit] = await db`SELECT price_usd, status FROM units WHERE id = ${unit_id}`;
   if (!unit) return NextResponse.json({ error: "Unidad no encontrada." }, { status: 404 });
   if (unit.status === "sold") return NextResponse.json({ error: "Unidad ya vendida." }, { status: 409 });

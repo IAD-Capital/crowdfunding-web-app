@@ -10,7 +10,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const [session] = await Promise.all([getSession(), getDictionary(lang)]);
 
-  const isInvestor = session?.role === "investor" || session?.role === "superadmin";
+  const isInvestor = session?.role === "investor";
 
   const developments = await db`
     SELECT d.id, d.name, d.address, d.description, d.status,
@@ -26,7 +26,11 @@ export default async function Home({ params }: { params: { lang: string } }) {
   const units = await db`
     SELECT u.id, u.development_id, u.identifier, u.floor,
            u.total_m2, u.covered_m2, u.rooms, u.bedrooms,
-           u.orientation, u.price_usd, u.status, u.images, u.description
+           u.orientation, u.price_usd, u.status, u.images, u.description,
+           100 - COALESCE((
+             SELECT SUM(percentage) FROM investments
+             WHERE unit_id = u.id AND status = 'active'
+           ), 0) AS available_pct
     FROM units u
     JOIN developments d ON d.id = u.development_id
     WHERE d.status = 'active'
@@ -53,8 +57,17 @@ export default async function Home({ params }: { params: { lang: string } }) {
     units: units.map((u) => ({
       ...u,
       price_usd: u.price_usd != null ? Number(u.price_usd) : null,
+      available_pct: Number(u.available_pct),
     })),
   };
+
+  // Unit IDs the current investor already invested in (to block re-investment)
+  const myInvestedUnitIds: number[] = isInvestor
+    ? (await db`
+        SELECT DISTINCT unit_id FROM investments
+        WHERE user_id = ${Number(session!.sub)} AND status = 'active'
+      `).map((r) => Number(r.unit_id))
+    : [];
 
   return (
     <PublicShell lang={lang}>
@@ -169,6 +182,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
           developments={serialized.developments as Parameters<typeof CatalogSection>[0]["developments"]}
           units={serialized.units as Parameters<typeof CatalogSection>[0]["units"]}
           isInvestor={isInvestor}
+          myInvestedUnitIds={myInvestedUnitIds}
           lang={lang}
         />
       </div>
