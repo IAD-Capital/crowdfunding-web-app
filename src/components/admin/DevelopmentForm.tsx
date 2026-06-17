@@ -16,6 +16,7 @@ type Initial = {
   status: string;
   amenities?: string[];
   images?: string[];
+  featured?: boolean;
 };
 
 type Props = { t: T; lang: string; initial?: Initial };
@@ -34,6 +35,7 @@ export default function DevelopmentForm({ t, lang, initial }: Props) {
   const [amenities, setAmenities] = useState<string[]>(initial?.amenities ?? []);
   const [amenityInput, setAmenityInput] = useState("");
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
+  const [featured, setFeatured] = useState(initial?.featured ?? false);
   const amenityRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -83,6 +85,7 @@ export default function DevelopmentForm({ t, lang, initial }: Props) {
       projected_gain_pct: null,
       amenities,
       images,
+      featured,
     };
 
     const url = isEdit ? `/api/admin/developments/${initial!.id}` : "/api/admin/developments";
@@ -141,6 +144,19 @@ export default function DevelopmentForm({ t, lang, initial }: Props) {
             </select>
           </Field>
         </Row>
+
+        {/* Featured toggle */}
+        <label style={featuredLabel}>
+          <div style={toggle(featured)} onClick={() => setFeatured(!featured)}>
+            <div style={toggleThumb(featured)} />
+          </div>
+          <span>
+            <strong>Destacado en la home</strong>
+            <span style={{ color: "#9ca3af", marginLeft: "0.5rem", fontSize: "0.82rem" }}>
+              Aparece en la sección "Emprendimientos destacados"
+            </span>
+          </span>
+        </label>
 
         {/* Amenities chip input */}
         <Field label={t.form.amenities}>
@@ -206,6 +222,16 @@ function Row({ children }: { children: React.ReactNode }) {
   return <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>{children}</div>;
 }
 
+const featuredLabel: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", userSelect: "none" };
+const toggle = (on: boolean): React.CSSProperties => ({
+  width: 44, height: 24, borderRadius: 999, background: on ? "#111" : "#d1d5db",
+  position: "relative", cursor: "pointer", flexShrink: 0, transition: "background 0.2s",
+});
+const toggleThumb = (on: boolean): React.CSSProperties => ({
+  position: "absolute", top: 3, left: on ? 23 : 3, width: 18, height: 18,
+  borderRadius: "50%", background: "#fff", transition: "left 0.2s",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+});
 const wrap: React.CSSProperties = { background: "#fff", borderRadius: 12, padding: "2rem", border: "1px solid #e5e7eb" };
 const title: React.CSSProperties = { fontSize: "1.25rem", fontWeight: 700, marginBottom: "1.5rem" };
 const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1rem" };

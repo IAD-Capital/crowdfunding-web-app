@@ -42,6 +42,7 @@ export async function GET() {
       )
     `;
     await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS images TEXT[] NOT NULL DEFAULT '{}'`;
+    await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT false`;
 
     // Units (UF - Unidades Funcionales)
     await db`

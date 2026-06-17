@@ -2,8 +2,8 @@ import { getSession } from "@/lib/session";
 import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import PublicShell from "@/components/PublicShell";
 import CatalogSection from "@/components/CatalogSection";
+import FeaturedSlider from "@/components/FeaturedSlider";
 import Link from "next/link";
-import Image from "next/image";
 import db from "@/lib/db";
 
 export default async function Home({ params }: { params: { lang: string } }) {
@@ -33,7 +33,17 @@ export default async function Home({ params }: { params: { lang: string } }) {
     ORDER BY u.price_usd ASC
   `;
 
-  const featured = developments.slice(0, 3);
+  const featuredRows = await db`
+    SELECT d.id, d.name, d.address, d.status,
+           d.completion_date, d.amenities, d.images,
+           COUNT(u.id)::int AS unit_count
+    FROM developments d
+    LEFT JOIN units u ON u.development_id = d.id
+    WHERE d.featured = true AND d.status = 'active'
+    GROUP BY d.id
+    ORDER BY d.created_at DESC
+  `;
+  const featured = featuredRows;
 
   const serialized = {
     developments: developments.map((d) => ({
@@ -122,12 +132,14 @@ export default async function Home({ params }: { params: { lang: string } }) {
                 <p style={featuredSub}>Oportunidades seleccionadas en las mejores ubicaciones</p>
               </div>
             </div>
-            <div style={featuredGrid}>
-              {featured.map((d, i) => (
-                <FeaturedCard key={d.id} d={d} lang={lang} big={i === 0} />
-              ))}
-            </div>
           </div>
+          <FeaturedSlider
+            developments={featured.map((d) => ({
+              ...d,
+              completion_date: d.completion_date ? new Date(d.completion_date).toISOString() : null,
+            }))}
+            lang={lang}
+          />
         </section>
       )}
 
@@ -161,40 +173,6 @@ export default async function Home({ params }: { params: { lang: string } }) {
         />
       </div>
     </PublicShell>
-  );
-}
-
-function FeaturedCard({ d, lang, big }: { d: ReturnType<typeof Object.assign>, lang: string; big: boolean }) {
-  const fmtDate = d.completion_date
-    ? new Date(d.completion_date).toLocaleDateString("es-AR", { month: "long", year: "numeric" })
-    : null;
-
-  return (
-    <Link
-      href={`/${lang}/emprendimientos/${d.id}`}
-      style={{ ...featCard, ...(big ? featCardBig : {}) }}
-    >
-      <div style={{ ...featCover, ...(big ? { height: 280 } : { height: 180 }) }}>
-        {d.images?.[0] ? (
-          <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover" }} />
-        ) : (
-          <div style={featPlaceholder}><span style={{ fontSize: "2.5rem", opacity: 0.15 }}>🏢</span></div>
-        )}
-        <div style={featGradient} />
-        <div style={featOverlay}>
-          <h3 style={featName}>{d.name}</h3>
-          <p style={featAddr}>{d.address}</p>
-        </div>
-        <span style={featBadge}>🏠 {d.unit_count} unidades{fmtDate ? ` · ${fmtDate}` : ""}</span>
-      </div>
-      {d.amenities?.length > 0 && (
-        <div style={featAmenRow}>
-          {d.amenities.slice(0, 4).map((a: string) => (
-            <span key={a} style={featAmenChip}>{a}</span>
-          ))}
-        </div>
-      )}
-    </Link>
   );
 }
 
@@ -253,27 +231,11 @@ const heroCardFill: React.CSSProperties = { height: "100%", background: "linear-
 const heroCardSub: React.CSSProperties = { fontSize: "0.72rem", color: "#6b7280", lineHeight: 1.4 };
 
 /* Featured */
-const featuredSection: React.CSSProperties = { padding: "5rem 1.5rem", background: "#fff" };
-const featuredInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto" };
+const featuredSection: React.CSSProperties = { padding: "5rem 0", background: "#fff", overflow: "hidden" };
+const featuredInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "0 1.5rem" };
 const featuredHeader: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "2rem" };
 const featuredTitle: React.CSSProperties = { fontSize: "1.75rem", fontWeight: 800, margin: "0 0 0.25rem", letterSpacing: "-0.03em" };
 const featuredSub: React.CSSProperties = { color: "#6b7280", margin: 0, fontSize: "0.95rem" };
-const featuredGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" };
-const featCard: React.CSSProperties = {
-  borderRadius: 14, overflow: "hidden", textDecoration: "none", color: "inherit",
-  border: "1px solid #e5e7eb", display: "flex", flexDirection: "column",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)", transition: "transform 0.2s",
-};
-const featCardBig: React.CSSProperties = { gridColumn: "1 / 3" };
-const featCover: React.CSSProperties = { position: "relative", background: "#f3f4f6", flexShrink: 0 };
-const featPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#f9fafb,#e5e7eb)" };
-const featGradient: React.CSSProperties = { position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)" };
-const featOverlay: React.CSSProperties = { position: "absolute", bottom: 48, left: 16, right: 16 };
-const featName: React.CSSProperties = { color: "#fff", fontWeight: 800, fontSize: "1.1rem", margin: "0 0 0.2rem", textShadow: "0 1px 3px rgba(0,0,0,0.4)" };
-const featAddr: React.CSSProperties = { color: "rgba(255,255,255,0.75)", fontSize: "0.82rem", margin: 0 };
-const featBadge: React.CSSProperties = { position: "absolute", bottom: 10, left: 16, background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: "0.72rem", padding: "0.2rem 0.6rem", borderRadius: 999 };
-const featAmenRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem", padding: "0.75rem 1rem" };
-const featAmenChip: React.CSSProperties = { fontSize: "0.72rem", padding: "0.15rem 0.5rem", background: "#f3f4f6", color: "#374151", borderRadius: 999 };
 
 /* How it works */
 const howSection: React.CSSProperties = { padding: "5rem 1.5rem", background: "#0f0f0f", color: "#fff" };
