@@ -36,7 +36,8 @@ export default function LoginForm({ t, lang }: Props) {
       return;
     }
 
-    router.push(`/${lang}`);
+    const dest = data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
+    router.push(dest);
     router.refresh();
   }
 

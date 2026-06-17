@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     avatar: user.avatar ?? null,
   });
 
-  const res = NextResponse.json({ ok: true });
+  const res = NextResponse.json({ ok: true, role: user.role });
   res.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
