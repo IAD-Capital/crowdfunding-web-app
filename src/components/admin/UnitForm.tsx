@@ -22,6 +22,7 @@ type Initial = {
   status: string;
   description?: string;
   images?: string[];
+  group_expires_at?: string | null;
 };
 
 type Props = {
@@ -49,6 +50,9 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
   const [status, setStatus] = useState(initial?.status ?? "available");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
+  const [groupExpiresAt, setGroupExpiresAt] = useState(
+    initial?.group_expires_at ? new Date(initial.group_expires_at).toISOString().slice(0, 16) : ""
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -77,6 +81,7 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
       status,
       description: description.trim() || null,
       images,
+      group_expires_at: groupExpiresAt || null,
     };
 
     const url = isEdit
@@ -174,6 +179,21 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
           <ImageUploader images={images} onChange={setImages} />
         </Field>
 
+        <div style={groupSection}>
+          <p style={groupLabel}>Grupo de inversión</p>
+          <Field label="Fecha de vencimiento del grupo">
+            <input
+              style={input}
+              type="datetime-local"
+              value={groupExpiresAt}
+              onChange={(e) => setGroupExpiresAt(e.target.value)}
+            />
+          </Field>
+          <p style={groupHint}>
+            Fecha límite para que los inversores se sumen al grupo de esta unidad. Editable solo por el superadmin.
+          </p>
+        </div>
+
         {error && <p style={errorStyle}>{error}</p>}
 
         <div style={actions}>
@@ -219,3 +239,9 @@ const btnSecondary: React.CSSProperties = {
   padding: "0.6rem 1.25rem", background: "#fff", color: "#111",
   border: "1px solid #d1d5db", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: "0.9rem",
 };
+const groupSection: React.CSSProperties = {
+  background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 10, padding: "1rem 1.25rem",
+  display: "flex", flexDirection: "column", gap: "0.75rem",
+};
+const groupLabel: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 700, color: "#0369a1", margin: 0, textTransform: "uppercase", letterSpacing: "0.04em" };
+const groupHint: React.CSSProperties = { fontSize: "0.75rem", color: "#0284c7", margin: 0, lineHeight: 1.5 };

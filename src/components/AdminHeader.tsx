@@ -26,9 +26,14 @@ export default async function AdminHeader({ lang }: Props) {
             {t.admin.nav.units}
           </Link>
           {session?.role === "superadmin" && (
-            <Link href={`/${lang}/admin/users`} style={navLink}>
-              {t.admin.nav.users}
-            </Link>
+            <>
+              <Link href={`/${lang}/admin/investments`} style={navLink}>
+                Inversiones
+              </Link>
+              <Link href={`/${lang}/admin/users`} style={navLink}>
+                {t.admin.nav.users}
+              </Link>
+            </>
           )}
         </nav>
 

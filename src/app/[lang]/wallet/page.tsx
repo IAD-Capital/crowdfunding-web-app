@@ -10,39 +10,24 @@ export default async function WalletPage({ params }: { params: { lang: string } 
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const session = await getSession();
 
-  if (!session || (session.role !== "investor" && session.role !== "superadmin")) {
+  if (!session) {
     redirect(`/${lang}/login`);
   }
 
-  // Superadmin sees all; investor sees own
-  const investments = session.role === "superadmin"
-    ? await db`
-        SELECT
-          i.id, i.percentage, i.amount_usd, i.status, i.created_at,
-          u.id AS unit_id, u.identifier, u.floor, u.total_m2,
-          u.price_usd AS unit_price_usd, u.status AS unit_status, u.images AS unit_images,
-          d.id AS development_id, d.name AS development_name, d.address AS development_address,
-          d.images AS development_images,
-          usr.full_name, usr.email, usr.avatar
-        FROM investments i
-        JOIN units u ON u.id = i.unit_id
-        JOIN developments d ON d.id = u.development_id
-        JOIN users usr ON usr.id = i.user_id
-        ORDER BY i.created_at DESC
-      `
-    : await db`
-        SELECT
-          i.id, i.percentage, i.amount_usd, i.status, i.created_at,
-          u.id AS unit_id, u.identifier, u.floor, u.total_m2,
-          u.price_usd AS unit_price_usd, u.status AS unit_status, u.images AS unit_images,
-          d.id AS development_id, d.name AS development_name, d.address AS development_address,
-          d.images AS development_images
-        FROM investments i
-        JOIN units u ON u.id = i.unit_id
-        JOIN developments d ON d.id = u.development_id
-        WHERE i.user_id = ${session.sub}
-        ORDER BY i.created_at DESC
-      `;
+  // Always show the current user's own investments
+  const investments = await db`
+    SELECT
+      i.id, i.percentage, i.amount_usd, i.status, i.created_at,
+      u.id AS unit_id, u.identifier, u.floor, u.total_m2,
+      u.price_usd AS unit_price_usd, u.status AS unit_status, u.images AS unit_images,
+      d.id AS development_id, d.name AS development_name, d.address AS development_address,
+      d.images AS development_images
+    FROM investments i
+    JOIN units u ON u.id = i.unit_id
+    JOIN developments d ON d.id = u.development_id
+    WHERE i.user_id = ${Number(session.sub)}
+    ORDER BY i.created_at DESC
+  `;
 
   const totalInvested = investments
     .filter((i) => i.status === "active")
@@ -64,14 +49,8 @@ export default async function WalletPage({ params }: { params: { lang: string } 
         {/* Header */}
         <div style={pageHeader}>
           <div>
-            <h1 style={pageTitle}>
-              {session.role === "superadmin" ? "Todas las inversiones" : "Mi cartera"}
-            </h1>
-            <p style={pageSub}>
-              {session.role === "superadmin"
-                ? "Visión global de todas las inversiones realizadas"
-                : `Bienvenido, ${session.fullName}`}
-            </p>
+            <h1 style={pageTitle}>Mi cartera</h1>
+            <p style={pageSub}>Bienvenido, {session.fullName}</p>
           </div>
         </div>
 
@@ -126,23 +105,6 @@ export default async function WalletPage({ params }: { params: { lang: string } 
 
                   {/* Body */}
                   <div style={cardBody}>
-                    {/* Superadmin: show investor info */}
-                    {session.role === "superadmin" && (
-                      <div style={investorRow}>
-                        <div style={investorAvatar}>
-                          {inv.avatar ? (
-                            <Image src={inv.avatar} alt={inv.full_name} fill style={{ objectFit: "cover", borderRadius: "50%" }} />
-                          ) : (
-                            <div style={investorFallback}>{(inv.full_name as string).charAt(0)}</div>
-                          )}
-                        </div>
-                        <div>
-                          <p style={{ fontSize: "0.78rem", fontWeight: 600, margin: 0 }}>{inv.full_name}</p>
-                          <p style={{ fontSize: "0.72rem", color: "#9ca3af", margin: 0 }}>{inv.email}</p>
-                        </div>
-                      </div>
-                    )}
-
                     <p style={devName}>{inv.development_name}</p>
                     <h3 style={unitId}>{inv.identifier}</h3>
 
@@ -239,6 +201,3 @@ const cardFooter: React.CSSProperties = { display: "flex", justifyContent: "spac
 const dateLabel: React.CSSProperties = { fontSize: "0.72rem", color: "#9ca3af" };
 const viewLink: React.CSSProperties = { fontSize: "0.78rem", color: "#111", fontWeight: 600, textDecoration: "none" };
 
-const investorRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.5rem", paddingBottom: "0.4rem", borderBottom: "1px solid #f3f4f6" };
-const investorAvatar: React.CSSProperties = { position: "relative", width: 28, height: 28, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: "#f3f4f6" };
-const investorFallback: React.CSSProperties = { width: "100%", height: "100%", background: "#111", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 700 };

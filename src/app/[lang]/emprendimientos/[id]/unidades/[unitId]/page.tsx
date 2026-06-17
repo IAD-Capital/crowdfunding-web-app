@@ -15,7 +15,9 @@ export default async function PublicUnitPage({
 }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const session = await getSession();
-  const isInvestor = session?.role === "investor" || session?.role === "superadmin";
+  // Only investors (not superadmin) can invest
+  const canInvest = session?.role === "investor";
+  const isAuthenticated = !!session;
 
   const [unit] = await db`
     SELECT u.*,
@@ -31,12 +33,35 @@ export default async function PublicUnitPage({
   const [dev] = await db`SELECT id, name, address, images FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
 
+  // Co-investors: visible to investors only (other active investors in this unit)
+  const coInvestors = canInvest
+    ? await db`
+        SELECT
+          u.full_name, u.avatar,
+          i.percentage, i.created_at
+        FROM investments i
+        JOIN users u ON u.id = i.user_id
+        WHERE i.unit_id = ${unit.id}
+          AND i.status = 'active'
+          AND i.user_id != ${Number(session!.sub)}
+        ORDER BY i.percentage DESC
+      `
+    : [];
+
+  const groupExpires = unit.group_expires_at ? new Date(unit.group_expires_at as string) : null;
+  const groupExpired = groupExpires ? groupExpires < new Date() : false;
+
   const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
     available: { bg: "#dcfce7", fg: "#166534", label: "Disponible" },
     partial:   { bg: "#fef9c3", fg: "#854d0e", label: "Parcial" },
     sold:      { bg: "#fee2e2", fg: "#991b1b", label: "Vendida" },
   };
   const sc = STATUS_UNIT[unit.status] ?? { bg: "#f3f4f6", fg: "#374151", label: unit.status };
+
+  const fmtDate = (d: Date) =>
+    d.toLocaleDateString(lang === "es" ? "es-AR" : "en-US", {
+      day: "2-digit", month: "long", year: "numeric",
+    });
 
   return (
     <PublicShell lang={lang}>
@@ -92,6 +117,60 @@ export default async function PublicUnitPage({
                 <ImageGallery images={unit.images} />
               </div>
             )}
+
+            {/* Co-investors section — visible only to investors */}
+            {canInvest && (
+              <div>
+                <h2 style={sectionTitle}>Grupo de inversión</h2>
+
+                {/* Group expiration banner */}
+                {groupExpires && (
+                  <div style={{ ...groupBanner, ...(groupExpired ? groupBannerExpired : {}) }}>
+                    <span style={{ fontWeight: 700 }}>
+                      {groupExpired ? "⛔ Grupo cerrado" : "⏳ Cierre del grupo"}
+                    </span>
+                    <span style={{ opacity: 0.85 }}>
+                      {groupExpired
+                        ? `Venció el ${fmtDate(groupExpires)}`
+                        : `Vence el ${fmtDate(groupExpires)}`}
+                    </span>
+                  </div>
+                )}
+
+                {coInvestors.length === 0 ? (
+                  <div style={emptyGroup}>
+                    <span style={{ fontSize: "2rem", opacity: 0.15 }}>👥</span>
+                    <p style={{ margin: 0, color: "#9ca3af", fontSize: "0.9rem" }}>
+                      Sos el primer inversor en esta unidad.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={coList}>
+                    <p style={coListNote}>
+                      {coInvestors.length} inversor{coInvestors.length !== 1 ? "es" : ""} en este grupo
+                    </p>
+                    {coInvestors.map((ci, i) => (
+                      <div key={i} style={coRow}>
+                        <div style={coAvatar}>
+                          {ci.avatar ? (
+                            <Image src={ci.avatar} alt={ci.full_name} fill style={{ objectFit: "cover", borderRadius: "50%" }} />
+                          ) : (
+                            <span style={coAvatarLetter}>{String(ci.full_name)[0]?.toUpperCase()}</span>
+                          )}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={coName}>{ci.full_name}</p>
+                          <div style={coPctBar}>
+                            <div style={{ ...coPctFill, width: `${Number(ci.percentage)}%` }} />
+                          </div>
+                        </div>
+                        <span style={coPctLabel}>{Number(ci.percentage)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -112,7 +191,7 @@ export default async function PublicUnitPage({
 
               <div style={sideDivider} />
 
-              {isInvestor && unit.status !== "sold" && unit.price_usd != null ? (
+              {canInvest && unit.status !== "sold" && unit.price_usd != null && !groupExpired ? (
                 <BuyPanel
                   unitId={unit.id}
                   priceUsd={Number(unit.price_usd)}
@@ -120,14 +199,21 @@ export default async function PublicUnitPage({
                   lang={lang}
                   availablePct={Number(unit.available_pct)}
                 />
+              ) : canInvest && groupExpired ? (
+                <p style={soldNote}>El grupo de inversión para esta unidad ya está cerrado.</p>
               ) : unit.status === "sold" ? (
                 <p style={soldNote}>Esta unidad ya fue vendida en su totalidad.</p>
-              ) : !session ? (
+              ) : !isAuthenticated ? (
                 <>
                   <Link href={`/${lang}/signup`} style={sideBtnPrimary}>Invertir en esta unidad</Link>
                   <Link href={`/${lang}/login`} style={sideBtnOutline}>Ya tengo cuenta</Link>
                 </>
-              ) : null}
+              ) : (
+                // superadmin or other role: show info but no buy button
+                <p style={{ fontSize: "0.82rem", color: "#6b7280", textAlign: "center", margin: 0 }}>
+                  Solo los inversores pueden comprar participaciones.
+                </p>
+              )}
 
               <div style={sideFact}>
                 <span style={sideFactNum}>5%</span>
@@ -167,6 +253,29 @@ const infoGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "r
 const infoCard: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "0.85rem 1rem" };
 const sectionTitle: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem", letterSpacing: "-0.02em" };
 const descText: React.CSSProperties = { color: "#374151", lineHeight: 1.7, margin: 0 };
+
+/* Group / co-investors */
+const groupBanner: React.CSSProperties = {
+  display: "flex", flexDirection: "column", gap: "0.2rem",
+  background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10,
+  padding: "0.75rem 1rem", fontSize: "0.85rem", color: "#92400e", marginBottom: "1rem",
+};
+const groupBannerExpired: React.CSSProperties = {
+  background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b",
+};
+const emptyGroup: React.CSSProperties = {
+  display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem",
+  padding: "2rem", background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb",
+};
+const coList: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" };
+const coListNote: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", margin: 0, padding: "0.75rem 1rem", borderBottom: "1px solid #f3f4f6", fontWeight: 600 };
+const coRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 1rem", borderBottom: "1px solid #f9fafb" };
+const coAvatar: React.CSSProperties = { position: "relative", width: 36, height: 36, borderRadius: "50%", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" };
+const coAvatarLetter: React.CSSProperties = { fontSize: "0.9rem", fontWeight: 700, color: "#374151" };
+const coName: React.CSSProperties = { fontSize: "0.85rem", fontWeight: 600, margin: "0 0 0.3rem", color: "#111" };
+const coPctBar: React.CSSProperties = { height: 4, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" };
+const coPctFill: React.CSSProperties = { height: "100%", background: "linear-gradient(90deg, #4ade80, #22c55e)", borderRadius: 999 };
+const coPctLabel: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, color: "#111", flexShrink: 0 };
 
 const sidebar: React.CSSProperties = { position: "sticky", top: 80 };
 const sideCard: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" };

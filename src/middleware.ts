@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken, COOKIE_NAME } from "@/lib/auth";
 import { LOCALES, DEFAULT_LOCALE } from "@/i18n";
 
-const PROTECTED_SEGMENTS = ["/dashboard", "/admin", "/account", "/wallet"];
-
 function getLocaleFromPath(pathname: string) {
   const segment = pathname.split("/")[1];
   return LOCALES.includes(segment as (typeof LOCALES)[number]) ? segment : null;
@@ -12,7 +10,6 @@ function getLocaleFromPath(pathname: string) {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Skip Next.js internals and API routes
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
@@ -21,7 +18,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // If path has no valid locale prefix, redirect to the default locale
   const locale = getLocaleFromPath(pathname);
   if (!locale) {
     const url = req.nextUrl.clone();
@@ -29,22 +25,39 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Strip the locale to get the plain path (e.g. /es/dashboard → /dashboard)
   const plainPath = pathname.slice(locale.length + 1) || "/";
-  const isProtected = PROTECTED_SEGMENTS.some((p) => plainPath.startsWith(p));
 
-  if (isProtected) {
-    const token = req.cookies.get(COOKIE_NAME)?.value;
-    const session = token ? await verifyToken(token) : null;
+  const isAdmin  = plainPath.startsWith("/admin");
+  const isWallet = plainPath.startsWith("/wallet");
 
-    const isAdmin = plainPath.startsWith("/admin");
-    const isWallet = plainPath.startsWith("/wallet");
-    if (!session || (isAdmin && session.role !== "superadmin") || (isWallet && session.role !== "investor" && session.role !== "superadmin")) {
+  if (!isAdmin && !isWallet) return NextResponse.next();
+
+  const token = req.cookies.get(COOKIE_NAME)?.value;
+  const session = token ? await verifyToken(token) : null;
+
+  const loginUrl = (next: string) => {
+    const url = req.nextUrl.clone();
+    url.pathname = `/${locale}/login`;
+    url.searchParams.set("next", next);
+    return NextResponse.redirect(url);
+  };
+
+  // /admin → superadmin only
+  if (isAdmin) {
+    if (session?.role === "superadmin") return NextResponse.next();
+    // investor trying to reach admin → send to wallet
+    if (session?.role === "investor") {
       const url = req.nextUrl.clone();
-      url.pathname = `/${locale}/login`;
-      url.searchParams.set("next", pathname);
+      url.pathname = `/${locale}/wallet`;
       return NextResponse.redirect(url);
     }
+    return loginUrl(pathname);
+  }
+
+  // /wallet → any authenticated user
+  if (isWallet) {
+    if (session) return NextResponse.next();
+    return loginUrl(pathname);
   }
 
   return NextResponse.next();

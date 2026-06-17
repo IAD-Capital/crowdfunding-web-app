@@ -6,6 +6,10 @@ export async function POST(req: NextRequest) {
   const { session, error } = await requireAdmin();
   if (error) return error;
 
+  if (session!.role !== "investor") {
+    return NextResponse.json({ error: "Solo los inversores pueden comprar participaciones." }, { status: 403 });
+  }
+
   const { unit_id, percentage } = await req.json();
 
   const validPct = (percentage >= 5 && percentage <= 50 && percentage % 5 === 0) || percentage === 100;

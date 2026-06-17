@@ -10,7 +10,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const [session] = await Promise.all([getSession(), getDictionary(lang)]);
 
-  const isInvestor = session?.role === "investor";
+  const isInvestor = session?.role === "investor" || session?.role === "superadmin";
 
   const developments = await db`
     SELECT d.id, d.name, d.address, d.description, d.status,
