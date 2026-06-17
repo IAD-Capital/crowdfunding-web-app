@@ -68,6 +68,19 @@ export async function GET() {
     `;
     await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS images TEXT[] NOT NULL DEFAULT '{}'`;
 
+    // Investments
+    await db`
+      CREATE TABLE IF NOT EXISTS investments (
+        id           SERIAL PRIMARY KEY,
+        user_id      INTEGER        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        unit_id      INTEGER        NOT NULL REFERENCES units(id) ON DELETE CASCADE,
+        percentage   NUMERIC(5,2)   NOT NULL CHECK (percentage >= 1 AND percentage <= 100),
+        amount_usd   NUMERIC(14,2)  NOT NULL,
+        status       TEXT           NOT NULL DEFAULT 'active',
+        created_at   TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+      )
+    `;
+
     const hash = await hashPassword("Test123@");
     await db`
       INSERT INTO users (full_name, email, password_hash, role)

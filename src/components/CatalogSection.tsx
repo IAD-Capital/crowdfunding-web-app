@@ -175,7 +175,7 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
 
 /* ─── Unit card ─────────────────────────────────── */
 function UnitCard({
-  u, devName, isInvestor, selected, onSelect,
+  u, devName, isInvestor, selected, onSelect, lang,
 }: {
   u: Unit; devName: string; isInvestor: boolean;
   selected: boolean; onSelect: () => void; lang: string;
@@ -184,38 +184,42 @@ function UnitCard({
   const canBuy = isInvestor && u.status !== "sold";
 
   return (
-    <div
-      style={{ ...unitCard, ...(selected ? { borderColor: "#111", boxShadow: "0 0 0 2px #111" } : {}) }}
-      onClick={canBuy ? onSelect : undefined}
-    >
-      <div style={unitCover}>
-        {u.images?.[0] ? (
-          <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} />
-        ) : (
-          <div style={unitPlaceholder}><span style={{ fontSize: "1.5rem", opacity: 0.15 }}>🏠</span></div>
-        )}
-        <span style={{ ...badge, background: sc.bg, color: sc.fg }}>{sc.label}</span>
-      </div>
-      <div style={unitBody}>
-        <p style={devNameLabel}>{devName}</p>
-        <h3 style={unitId}>{u.identifier}</h3>
-        <div style={unitStats}>
-          {u.floor != null && <span style={statChip}>Piso {u.floor}</span>}
-          {u.total_m2 != null && <span style={statChip}>{u.total_m2} m²</span>}
-          {u.rooms != null && <span style={statChip}>{u.rooms} amb.</span>}
-          {u.bedrooms != null && <span style={statChip}>{u.bedrooms} dorm.</span>}
+    <div style={{ ...unitCard, ...(selected ? { borderColor: "#111", boxShadow: "0 0 0 2px #111" } : {}) }}>
+      <Link href={`/${lang}/emprendimientos/${u.development_id}/unidades/${u.id}`} style={unitLink}>
+        <div style={unitCover}>
+          {u.images?.[0] ? (
+            <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} />
+          ) : (
+            <div style={unitPlaceholder}><span style={{ fontSize: "1.5rem", opacity: 0.15 }}>🏠</span></div>
+          )}
+          <span style={{ ...badge, background: sc.bg, color: sc.fg }}>{sc.label}</span>
         </div>
-        <p style={priceLabel}>
-          {u.price_usd != null
-            ? `USD ${Number(u.price_usd).toLocaleString("es-AR")}`
-            : "Consultar"}
-        </p>
-        {canBuy && (
-          <button style={{ ...btnInvest, ...(selected ? { background: "#111", color: "#fff" } : {}) }}>
+        <div style={unitBody}>
+          <p style={devNameLabel}>{devName}</p>
+          <h3 style={unitId}>{u.identifier}</h3>
+          <div style={unitStats}>
+            {u.floor != null && <span style={statChip}>Piso {u.floor}</span>}
+            {u.total_m2 != null && <span style={statChip}>{u.total_m2} m²</span>}
+            {u.rooms != null && <span style={statChip}>{u.rooms} amb.</span>}
+            {u.bedrooms != null && <span style={statChip}>{u.bedrooms} dorm.</span>}
+          </div>
+          <p style={priceLabel}>
+            {u.price_usd != null
+              ? `USD ${Number(u.price_usd).toLocaleString("es-AR")}`
+              : "Consultar"}
+          </p>
+        </div>
+      </Link>
+      {canBuy && (
+        <div style={{ padding: "0 0.875rem 0.875rem" }}>
+          <button
+            style={{ ...btnInvest, ...(selected ? { background: "#111", color: "#fff" } : {}) }}
+            onClick={(e) => { e.preventDefault(); onSelect(); }}
+          >
             {selected ? "✕ Cerrar" : "Invertir →"}
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -261,6 +265,8 @@ const devAddr: React.CSSProperties = { fontSize: "0.82rem", color: "#6b7280", ma
 const devStats: React.CSSProperties = { display: "flex", gap: "0.5rem", flexWrap: "wrap" };
 const amenRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.25rem" };
 const amenChip: React.CSSProperties = { fontSize: "0.72rem", padding: "0.15rem 0.5rem", background: "#f3f4f6", color: "#374151", borderRadius: 999 };
+
+const unitLink: React.CSSProperties = { textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column" };
 
 /* Unit card */
 const unitGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" };

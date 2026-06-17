@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import db from "@/lib/db";
 import PublicShell from "@/components/PublicShell";
 import ImageGallery from "@/components/admin/ImageGallery";
-import BuyPanel from "@/components/BuyPanel";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -15,15 +14,11 @@ export default async function PublicDevelopmentPage({
 }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const session = await getSession();
-  const isInvestor = session?.role === "investor";
 
   const [dev] = await db`SELECT * FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
 
-  const units = await db`
-    SELECT * FROM units WHERE development_id = ${params.id}
-    ORDER BY floor, identifier
-  `;
+  const units = await db`SELECT * FROM units WHERE development_id = ${params.id} ORDER BY floor, identifier`;
 
   const fmtDate = (d: unknown) =>
     d ? new Date(d as string).toLocaleDateString(lang === "es" ? "es-AR" : "en-US", { month: "long", year: "numeric", day: "numeric" }) : null;
@@ -105,7 +100,7 @@ export default async function PublicDevelopmentPage({
                   {units.map((u) => {
                     const sc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
                     return (
-                      <div key={u.id} style={unitCard}>
+                      <Link key={u.id} href={`/${lang}/emprendimientos/${dev.id}/unidades/${u.id}`} style={{ ...unitCard, textDecoration: "none", color: "inherit" }}>
                         <div style={unitCover}>
                           {u.images?.[0] ? (
                             <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} />
@@ -133,21 +128,9 @@ export default async function PublicDevelopmentPage({
                               ? `USD ${Number(u.price_usd).toLocaleString("es-AR")}`
                               : "Consultar precio"}
                           </p>
-                          {isInvestor && u.status !== "sold" && (
-                            <BuyPanel
-                              unitId={u.id}
-                              priceUsd={Number(u.price_usd)}
-                              identifier={u.identifier}
-                              lang={lang}
-                            />
-                          )}
-                          {!session && (
-                            <Link href={`/${lang}/signup`} style={btnSignup}>
-                              Invertir en esta unidad →
-                            </Link>
-                          )}
+                          <span style={viewUnitLink}>Ver detalle →</span>
                         </div>
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>
@@ -168,9 +151,9 @@ export default async function PublicDevelopmentPage({
                 {availableUnits.length} {availableUnits.length === 1 ? "unidad disponible" : "unidades disponibles"}
               </p>
               <div style={sideDivider} />
-              {isInvestor ? (
+              {session?.role === "investor" || session?.role === "superadmin" ? (
                 <p style={{ fontSize: "0.82rem", color: "#374151", textAlign: "center" }}>
-                  Seleccioná una unidad abajo para calcular tu inversión.
+                  Hacé click en una unidad para invertir.
                 </p>
               ) : session ? null : (
                 <>
@@ -247,7 +230,7 @@ const unitsSection: React.CSSProperties = {};
 
 /* Unit cards */
 const unitGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.75rem" };
-const unitCard: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden" };
+const unitCard: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden", scrollMarginTop: 80 };
 const unitCover: React.CSSProperties = { position: "relative", height: 110, background: "#f3f4f6" };
 const imgPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#f9fafb,#e5e7eb)" };
 const unitBody: React.CSSProperties = { padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.35rem" };
@@ -256,6 +239,7 @@ const unitStats: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap:
 const chip: React.CSSProperties = { fontSize: "0.72rem", padding: "0.15rem 0.45rem", background: "#f3f4f6", borderRadius: 999, color: "#374151" };
 const badge: React.CSSProperties = { padding: "0.1rem 0.45rem", borderRadius: 999, fontSize: "0.68rem", fontWeight: 700, flexShrink: 0 };
 const unitPrice: React.CSSProperties = { fontSize: "0.95rem", fontWeight: 800, color: "#111", margin: "0.1rem 0 0" };
+const viewUnitLink: React.CSSProperties = { fontSize: "0.78rem", color: "#6b7280", fontWeight: 600, marginTop: "0.25rem" };
 const btnSignup: React.CSSProperties = {
   display: "block", textAlign: "center", padding: "0.6rem 1rem",
   background: "#111", color: "#fff", borderRadius: 10, textDecoration: "none",

@@ -21,6 +21,11 @@ export default async function Header({ lang }: Props) {
 
           {session ? (
             <>
+              {(session.role === "investor" || session.role === "superadmin") && (
+                <Link href={`/${lang}/wallet`} style={navLink}>
+                  💼 Mi cartera
+                </Link>
+              )}
               {session.role === "superadmin" && (
                 <Link href={`/${lang}/admin`} style={navLink}>
                   {t.header.admin}

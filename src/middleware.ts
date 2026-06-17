@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken, COOKIE_NAME } from "@/lib/auth";
 import { LOCALES, DEFAULT_LOCALE } from "@/i18n";
 
-const PROTECTED_SEGMENTS = ["/dashboard", "/admin", "/account"];
+const PROTECTED_SEGMENTS = ["/dashboard", "/admin", "/account", "/wallet"];
 
 function getLocaleFromPath(pathname: string) {
   const segment = pathname.split("/")[1];
@@ -38,7 +38,8 @@ export async function middleware(req: NextRequest) {
     const session = token ? await verifyToken(token) : null;
 
     const isAdmin = plainPath.startsWith("/admin");
-    if (!session || (isAdmin && session.role !== "superadmin")) {
+    const isWallet = plainPath.startsWith("/wallet");
+    if (!session || (isAdmin && session.role !== "superadmin") || (isWallet && session.role !== "investor" && session.role !== "superadmin")) {
       const url = req.nextUrl.clone();
       url.pathname = `/${locale}/login`;
       url.searchParams.set("next", pathname);
