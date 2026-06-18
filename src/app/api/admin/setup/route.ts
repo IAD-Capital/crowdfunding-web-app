@@ -68,6 +68,8 @@ export async function GET() {
     `;
     await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS images TEXT[] NOT NULL DEFAULT '{}'`;
     await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS group_expires_at TIMESTAMPTZ`;
+    await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS current_price_usd NUMERIC(14,2)`;
+    await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS group_duration_months INTEGER`;
 
     // Investments
     await db`

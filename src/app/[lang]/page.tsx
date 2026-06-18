@@ -27,11 +27,15 @@ export default async function Home({ params }: { params: { lang: string } }) {
   const units = await db`
     SELECT u.id, u.development_id, u.identifier, u.floor,
            u.total_m2, u.covered_m2, u.rooms, u.bedrooms,
-           u.orientation, u.price_usd, u.status, u.images, u.description,
+           u.orientation, u.price_usd, u.current_price_usd, u.status, u.images, u.description,
            100 - COALESCE((
              SELECT SUM(percentage) FROM investments
              WHERE unit_id = u.id AND status = 'active'
-           ), 0) AS available_pct
+           ), 0) AS available_pct,
+           CASE WHEN u.group_duration_months IS NOT NULL THEN
+             (SELECT MIN(i2.created_at) + (u.group_duration_months || ' months')::interval
+              FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'active')
+           ELSE NULL END AS group_expires_at
     FROM units u
     JOIN developments d ON d.id = u.development_id
     WHERE d.status = 'active'
@@ -58,7 +62,9 @@ export default async function Home({ params }: { params: { lang: string } }) {
     units: units.map((u) => ({
       ...u,
       price_usd: u.price_usd != null ? Number(u.price_usd) : null,
+      current_price_usd: u.current_price_usd != null ? Number(u.current_price_usd) : null,
       available_pct: Number(u.available_pct),
+      group_expires_at: u.group_expires_at ? new Date(u.group_expires_at as string).toISOString() : null,
     })),
   };
 

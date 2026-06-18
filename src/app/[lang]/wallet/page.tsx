@@ -21,7 +21,10 @@ export default async function WalletPage({ params }: { params: { lang: string } 
       i.id, i.percentage, i.amount_usd, i.status, i.created_at, i.removal_requested_at,
       u.id AS unit_id, u.identifier, u.floor, u.total_m2,
       u.price_usd AS unit_price_usd, u.status AS unit_status, u.images AS unit_images,
-      u.group_expires_at,
+      CASE WHEN u.group_duration_months IS NOT NULL THEN
+        (SELECT MIN(i2.created_at) + (u.group_duration_months || ' months')::interval
+         FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'active')
+      ELSE NULL END AS group_expires_at,
       d.id AS development_id, d.name AS development_name, d.address AS development_address,
       d.images AS development_images
     FROM investments i

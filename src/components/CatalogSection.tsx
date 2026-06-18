@@ -28,6 +28,7 @@ type Unit = {
   bedrooms?: number | null;
   orientation?: string | null;
   price_usd: number;
+  current_price_usd?: number | null;
   status: string;
   images: string[];
   description?: string;
@@ -220,11 +221,7 @@ function UnitCard({
             {u.rooms != null && <span style={statChip}>{u.rooms} amb.</span>}
             {u.bedrooms != null && <span style={statChip}>{u.bedrooms} dorm.</span>}
           </div>
-          <p style={priceLabel}>
-            {u.price_usd != null
-              ? `USD ${Number(u.price_usd).toLocaleString("es-AR")}`
-              : "Consultar"}
-          </p>
+          <PriceBlock entryPrice={u.price_usd} currentPrice={u.current_price_usd ?? null} />
         </div>
       </Link>
       {canBuy && (
@@ -235,6 +232,44 @@ function UnitCard({
           >
             {selected ? "✕ Cerrar" : "Invertir →"}
           </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Price block ───────────────────────────────── */
+function PriceBlock({ entryPrice, currentPrice }: { entryPrice: number | null; currentPrice: number | null }) {
+  const fmtUsd = (n: number) => `USD ${n.toLocaleString("es-AR")}`;
+
+  if (entryPrice == null) return <p style={priceLabel}>Consultar</p>;
+
+  const hasCurrent = currentPrice != null && currentPrice !== entryPrice;
+  const gain = hasCurrent ? ((currentPrice - entryPrice) / entryPrice) * 100 : 0;
+  const positive = gain >= 0;
+
+  return (
+    <div style={priceBlock}>
+      <div style={priceRow}>
+        <div>
+          <p style={priceSublabel}>Precio de entrada</p>
+          <p style={priceEntry}>{fmtUsd(entryPrice)}</p>
+        </div>
+        {hasCurrent && (
+          <div style={{ textAlign: "right" }}>
+            <p style={priceSublabel}>Precio actual</p>
+            <p style={{ ...priceCurrent, color: positive ? "#166534" : "#991b1b" }}>
+              {fmtUsd(currentPrice!)}
+            </p>
+          </div>
+        )}
+      </div>
+      {hasCurrent && (
+        <div style={{ ...yieldBadge, background: positive ? "#dcfce7" : "#fee2e2", color: positive ? "#166534" : "#991b1b" }}>
+          <span>{positive ? "▲" : "▼"} {Math.abs(gain).toFixed(1)}% rendimiento</span>
+          <span style={{ opacity: 0.6, fontSize: "0.68rem" }}>
+            {positive ? "+" : ""}{fmtUsd(currentPrice! - entryPrice)} vs entrada
+          </span>
         </div>
       )}
     </div>
@@ -301,6 +336,14 @@ const unitId: React.CSSProperties = { fontSize: "1rem", fontWeight: 700, margin:
 const unitStats: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.1rem" };
 const statChip: React.CSSProperties = { fontSize: "0.75rem", padding: "0.15rem 0.5rem", background: "#f3f4f6", color: "#374151", borderRadius: 999 };
 const priceLabel: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 800, color: "#111", margin: "0.25rem 0 0" };
+
+/* PriceBlock */
+const priceBlock: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.35rem", marginTop: "0.35rem" };
+const priceRow: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "flex-end" };
+const priceSublabel: React.CSSProperties = { fontSize: "0.62rem", color: "#9ca3af", margin: "0 0 0.1rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" };
+const priceEntry: React.CSSProperties = { fontSize: "0.92rem", fontWeight: 700, color: "#6b7280", margin: 0 };
+const priceCurrent: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 900, margin: 0 };
+const yieldBadge: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", borderRadius: 8, padding: "0.35rem 0.6rem", fontSize: "0.75rem", fontWeight: 700 };
 const btnInvest: React.CSSProperties = {
   width: "100%", padding: "0.5rem", background: "#fff",
   border: "1.5px solid #111", borderRadius: 8, fontWeight: 700,

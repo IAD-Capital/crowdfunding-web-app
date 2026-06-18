@@ -24,7 +24,11 @@ export default async function PublicUnitPage({
       100 - COALESCE((
         SELECT SUM(percentage) FROM investments
         WHERE unit_id = u.id AND status = 'active'
-      ), 0) AS available_pct
+      ), 0) AS available_pct,
+      CASE WHEN u.group_duration_months IS NOT NULL THEN
+        (SELECT MIN(i2.created_at) + (u.group_duration_months || ' months')::interval
+         FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'active')
+      ELSE NULL END AS group_expires_at
     FROM units u
     WHERE u.id = ${params.unitId} AND u.development_id = ${params.id}
   `;

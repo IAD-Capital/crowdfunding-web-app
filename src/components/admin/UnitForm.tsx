@@ -19,10 +19,11 @@ type Initial = {
   bathrooms?: number;
   orientation?: string;
   price_usd: number;
+  current_price_usd?: number | null;
   status: string;
   description?: string;
   images?: string[];
-  group_expires_at?: string | null;
+  group_duration_months?: number | null;
 };
 
 type Props = {
@@ -47,11 +48,12 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
   const [bathrooms, setBathrooms] = useState(initial?.bathrooms?.toString() ?? "");
   const [orientation, setOrientation] = useState(initial?.orientation ?? "");
   const [priceUsd, setPriceUsd] = useState(initial?.price_usd?.toString() ?? "");
+  const [currentPriceUsd, setCurrentPriceUsd] = useState(initial?.current_price_usd?.toString() ?? "");
   const [status, setStatus] = useState(initial?.status ?? "available");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
-  const [groupExpiresAt, setGroupExpiresAt] = useState(
-    initial?.group_expires_at ? new Date(initial.group_expires_at).toISOString().slice(0, 16) : ""
+  const [groupDurationMonths, setGroupDurationMonths] = useState<string>(
+    initial?.group_duration_months?.toString() ?? ""
   );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -78,10 +80,11 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
       bathrooms: bathrooms ? parseInt(bathrooms) : null,
       orientation: orientation || null,
       price_usd: parseFloat(priceUsd),
+      current_price_usd: currentPriceUsd ? parseFloat(currentPriceUsd) : null,
       status,
       description: description.trim() || null,
       images,
-      group_expires_at: groupExpiresAt || null,
+      group_duration_months: groupDurationMonths ? parseInt(groupDurationMonths) : null,
     };
 
     const url = isEdit
@@ -168,6 +171,11 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
             <input style={input} type="number" step="0.01" min="0" value={priceUsd}
               onChange={(e) => setPriceUsd(e.target.value)} required />
           </Field>
+          <Field label="Precio actual (mercado)">
+            <input style={input} type="number" step="0.01" min="0" value={currentPriceUsd}
+              onChange={(e) => setCurrentPriceUsd(e.target.value)}
+              placeholder="Dejar vacío si no cambió" />
+          </Field>
         </Row>
 
         <Field label={t.form.description}>
@@ -181,16 +189,22 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
 
         <div style={groupSection}>
           <p style={groupLabel}>Grupo de inversión</p>
-          <Field label="Fecha de vencimiento del grupo">
-            <input
+          <Field label="Duración del grupo">
+            <select
               style={input}
-              type="datetime-local"
-              value={groupExpiresAt}
-              onChange={(e) => setGroupExpiresAt(e.target.value)}
-            />
+              value={groupDurationMonths}
+              onChange={(e) => setGroupDurationMonths(e.target.value)}
+            >
+              <option value="">Sin vencimiento</option>
+              <option value="3">3 meses</option>
+              <option value="6">6 meses</option>
+              <option value="12">12 meses</option>
+              <option value="24">24 meses</option>
+            </select>
           </Field>
           <p style={groupHint}>
-            Fecha límite para que los inversores se sumen al grupo de esta unidad. Editable solo por el superadmin.
+            La fecha de vencimiento se calcula automáticamente desde la primera inversión activa en la unidad.
+            Si esa inversión se cancela, el contador se reinicia.
           </p>
         </div>
 

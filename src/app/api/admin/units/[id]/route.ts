@@ -11,27 +11,28 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   const body = await req.json();
   const {
     identifier, floor, total_m2, covered_m2, uncovered_m2,
-    rooms, bedrooms, bathrooms, orientation, price_usd, status, description, images,
-    group_expires_at,
+    rooms, bedrooms, bathrooms, orientation, price_usd, current_price_usd, status, description, images,
+    group_duration_months,
   } = body;
 
   const [row] = await db`
     UPDATE units SET
-      identifier       = ${identifier},
-      floor            = ${floor ?? null},
-      total_m2         = ${total_m2 ?? null},
-      covered_m2       = ${covered_m2 ?? null},
-      uncovered_m2     = ${uncovered_m2 ?? null},
-      rooms            = ${rooms ?? null},
-      bedrooms         = ${bedrooms ?? null},
-      bathrooms        = ${bathrooms ?? null},
-      orientation      = ${orientation ?? null},
-      price_usd        = ${price_usd},
-      status           = ${status ?? "available"},
-      description      = ${description ?? null},
-      images           = ${images ?? []},
-      group_expires_at = ${group_expires_at ?? null},
-      updated_at       = NOW()
+      identifier            = ${identifier},
+      floor                 = ${floor ?? null},
+      total_m2              = ${total_m2 ?? null},
+      covered_m2            = ${covered_m2 ?? null},
+      uncovered_m2          = ${uncovered_m2 ?? null},
+      rooms                 = ${rooms ?? null},
+      bedrooms              = ${bedrooms ?? null},
+      bathrooms             = ${bathrooms ?? null},
+      orientation           = ${orientation ?? null},
+      price_usd             = ${price_usd},
+      current_price_usd     = ${current_price_usd ?? null},
+      status                = ${status ?? "available"},
+      description           = ${description ?? null},
+      images                = ${images ?? []},
+      group_duration_months = ${group_duration_months ?? null},
+      updated_at            = NOW()
     WHERE id = ${params.id}
     RETURNING *
   `;

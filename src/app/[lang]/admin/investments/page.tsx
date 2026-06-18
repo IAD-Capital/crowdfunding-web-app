@@ -13,7 +13,10 @@ export default async function AdminInvestmentsPage({ params }: { params: { lang:
     SELECT
       i.id, i.percentage, i.amount_usd, i.status, i.created_at,
       u.id AS unit_id, u.identifier, u.price_usd AS unit_price_usd,
-      u.group_expires_at,
+      CASE WHEN u.group_duration_months IS NOT NULL THEN
+        (SELECT MIN(i2.created_at) + (u.group_duration_months || ' months')::interval
+         FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'active')
+      ELSE NULL END AS group_expires_at,
       d.id AS development_id, d.name AS development_name,
       usr.id AS user_id, usr.full_name, usr.email, usr.avatar,
       i.removal_requested_at
