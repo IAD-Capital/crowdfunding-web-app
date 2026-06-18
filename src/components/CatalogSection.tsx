@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import BuyPanel from "./BuyPanel";
+import BuyDrawer from "./BuyDrawer";
 
 type Development = {
   id: number;
@@ -51,10 +51,11 @@ const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
 
 export default function CatalogSection({ developments, units, isInvestor, myInvestedUnitIds = [], lang }: Props) {
   const [devFilter, setDevFilter] = useState<number | "all">("all");
-  const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
+  const [drawerUnit, setDrawerUnit] = useState<Unit | null>(null);
 
   const visibleUnits = devFilter === "all" ? units : units.filter((u) => u.development_id === devFilter);
   const availableUnits = visibleUnits.filter((u) => u.status !== "sold");
+  const drawerDev = drawerUnit ? developments.find((d) => d.id === drawerUnit.development_id) : null;
 
   return (
     <section style={section}>
@@ -116,36 +117,33 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
         ) : (
           <div style={unitGrid}>
             {visibleUnits.map((u) => (
-              <div key={u.id} style={unitCardWrap}>
-                <UnitCard
-                  u={u}
-                  devName={developments.find((d) => d.id === u.development_id)?.name ?? ""}
-                  isInvestor={isInvestor}
-                  selected={selectedUnit === u.id}
-                  onSelect={() => setSelectedUnit(selectedUnit === u.id ? null : u.id)}
-                  lang={lang}
-                />
-                {isInvestor && selectedUnit === u.id && u.status !== "sold" && (
-                  myInvestedUnitIds.includes(u.id) ? (
-                    <div style={alreadyNote}>
-                      Ya tenés una participación activa en esta unidad.{" "}
-                      <a href={`/${lang}/wallet`} style={{ color: "#166534", fontWeight: 700 }}>Ver cartera →</a>
-                    </div>
-                  ) : (
-                    <BuyPanel
-                      unitId={u.id}
-                      priceUsd={u.price_usd}
-                      identifier={u.identifier}
-                      lang={lang}
-                      availablePct={u.available_pct ?? 100}
-                    />
-                  )
-                )}
-              </div>
+              <UnitCard
+                key={u.id}
+                u={u}
+                devName={developments.find((d) => d.id === u.development_id)?.name ?? ""}
+                isInvestor={isInvestor}
+                alreadyInvested={myInvestedUnitIds.includes(u.id)}
+                onInvest={() => setDrawerUnit(u)}
+                lang={lang}
+              />
             ))}
           </div>
         )}
       </div>
+
+      {/* ── Buy Drawer ───────────────────────────── */}
+      {drawerUnit && (
+        <BuyDrawer
+          unitId={drawerUnit.id}
+          priceUsd={drawerUnit.price_usd}
+          identifier={drawerUnit.identifier}
+          devName={drawerDev?.name ?? ""}
+          coverImg={drawerUnit.images?.[0] ?? null}
+          lang={lang}
+          availablePct={drawerUnit.available_pct ?? 100}
+          onClose={() => setDrawerUnit(null)}
+        />
+      )}
     </section>
   );
 }
@@ -193,16 +191,16 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
 
 /* ─── Unit card ─────────────────────────────────── */
 function UnitCard({
-  u, devName, isInvestor, selected, onSelect, lang,
+  u, devName, isInvestor, alreadyInvested, onInvest, lang,
 }: {
   u: Unit; devName: string; isInvestor: boolean;
-  selected: boolean; onSelect: () => void; lang: string;
+  alreadyInvested: boolean; onInvest: () => void; lang: string;
 }) {
   const sc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
-  const canBuy = isInvestor && u.status !== "sold";
+  const canBuy = isInvestor && u.status !== "sold" && !alreadyInvested;
 
   return (
-    <div style={{ ...unitCard, ...(selected ? { borderColor: "#111", boxShadow: "0 0 0 2px #111" } : {}) }}>
+    <div style={unitCard}>
       <Link href={`/${lang}/emprendimientos/${u.development_id}/unidades/${u.id}`} style={unitLink}>
         <div style={unitCover}>
           {u.images?.[0] ? (
@@ -224,16 +222,15 @@ function UnitCard({
           <PriceBlock entryPrice={u.price_usd} currentPrice={u.current_price_usd ?? null} />
         </div>
       </Link>
-      {canBuy && (
-        <div style={{ padding: "0 0.875rem 0.875rem" }}>
-          <button
-            style={{ ...btnInvest, ...(selected ? { background: "#111", color: "#fff" } : {}) }}
-            onClick={(e) => { e.preventDefault(); onSelect(); }}
-          >
-            {selected ? "✕ Cerrar" : "Invertir →"}
+      <div style={{ padding: "0 0.875rem 0.875rem" }}>
+        {canBuy ? (
+          <button style={btnInvest} onClick={(e) => { e.preventDefault(); onInvest(); }}>
+            Invertir →
           </button>
-        </div>
-      )}
+        ) : alreadyInvested ? (
+          <a href={`/${lang}/wallet`} style={btnAlready}>Ya invertido · Ver cartera →</a>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -321,7 +318,6 @@ const unitLink: React.CSSProperties = { textDecoration: "none", color: "inherit"
 
 /* Unit card */
 const unitGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" };
-const unitCardWrap: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.75rem" };
 const unitCard: React.CSSProperties = {
   background: "#fff", borderRadius: 14, overflow: "hidden",
   border: "1.5px solid #e5e7eb", display: "flex", flexDirection: "column",
@@ -345,11 +341,13 @@ const priceEntry: React.CSSProperties = { fontSize: "0.92rem", fontWeight: 700, 
 const priceCurrent: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 900, margin: 0 };
 const yieldBadge: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", borderRadius: 8, padding: "0.35rem 0.6rem", fontSize: "0.75rem", fontWeight: 700 };
 const btnInvest: React.CSSProperties = {
-  width: "100%", padding: "0.5rem", background: "#fff",
+  display: "block", width: "100%", padding: "0.5rem", background: "#fff",
   border: "1.5px solid #111", borderRadius: 8, fontWeight: 700,
   fontSize: "0.85rem", cursor: "pointer", color: "#111", transition: "all 0.15s",
+  textAlign: "center",
 };
-const alreadyNote: React.CSSProperties = {
-  background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 10,
-  padding: "0.75rem 1rem", fontSize: "0.82rem", color: "#166534", marginTop: "0.5rem",
+const btnAlready: React.CSSProperties = {
+  display: "block", width: "100%", padding: "0.5rem", textAlign: "center",
+  background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8,
+  fontWeight: 700, fontSize: "0.82rem", color: "#166534", textDecoration: "none",
 };
