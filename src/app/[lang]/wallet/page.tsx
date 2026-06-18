@@ -21,6 +21,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
       i.id, i.percentage, i.amount_usd, i.status, i.created_at, i.removal_requested_at,
       u.id AS unit_id, u.identifier, u.floor, u.total_m2,
       u.price_usd AS unit_price_usd, u.status AS unit_status, u.images AS unit_images,
+      u.group_expires_at,
       d.id AS development_id, d.name AS development_name, d.address AS development_address,
       d.images AS development_images
     FROM investments i
@@ -29,6 +30,27 @@ export default async function WalletPage({ params }: { params: { lang: string } 
     WHERE i.user_id = ${Number(session.sub)}
     ORDER BY i.created_at DESC
   `;
+
+  // Co-investors per unit (other active investors in the same units)
+  const unitIds = [...new Set(investments.map((i) => Number(i.unit_id)))];
+  const coInvestors = unitIds.length > 0
+    ? await db`
+        SELECT i.unit_id, i.percentage, usr.full_name, usr.avatar
+        FROM investments i
+        JOIN users usr ON usr.id = i.user_id
+        WHERE i.unit_id = ANY(${unitIds}::int[])
+          AND i.user_id != ${Number(session.sub)}
+          AND i.status = 'active'
+        ORDER BY i.percentage DESC
+      `
+    : [];
+
+  const coInvestorsByUnit = coInvestors.reduce<Record<number, typeof coInvestors>>((acc, r) => {
+    const uid = Number(r.unit_id);
+    if (!acc[uid]) acc[uid] = [];
+    acc[uid].push(r);
+    return acc;
+  }, {});
 
   const totalInvested = investments
     .filter((i) => i.status === "active")
@@ -43,6 +65,9 @@ export default async function WalletPage({ params }: { params: { lang: string } 
     new Date(d as string).toLocaleDateString(lang === "es" ? "es-AR" : "en-US", {
       day: "2-digit", month: "short", year: "numeric", timeZone: "UTC",
     });
+
+  const daysUntil = (iso: string) =>
+    Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
 
   return (
     <PublicShell lang={lang}>
@@ -90,6 +115,11 @@ export default async function WalletPage({ params }: { params: { lang: string } 
             {investments.map((inv) => {
               const coverImg = inv.unit_images?.[0] ?? inv.development_images?.[0] ?? null;
               const statusColor = STATUS[inv.status] ?? STATUS.active;
+              const peers = coInvestorsByUnit[Number(inv.unit_id)] ?? [];
+              const groupExpires = inv.group_expires_at ? new Date(inv.group_expires_at as string) : null;
+              const days = groupExpires ? daysUntil(inv.group_expires_at as string) : null;
+              const expired = days !== null && days < 0;
+              const urgent = days !== null && !expired && days <= 30;
               return (
                 <div key={inv.id} style={card}>
                   {/* Cover */}
@@ -126,6 +156,47 @@ export default async function WalletPage({ params }: { params: { lang: string } 
                       </div>
                       <p style={unitTotal}>Valor total UF: {fmtUsd(Number(inv.unit_price_usd))}</p>
                     </div>
+
+                    {/* Group expiration */}
+                    {groupExpires && (
+                      <div style={{ ...expiryBanner, ...(expired ? expiryBannerExpired : urgent ? expiryBannerUrgent : expiryBannerOk) }}>
+                        <span style={{ fontWeight: 700 }}>
+                          {expired
+                            ? `⛔ Grupo vencido hace ${Math.abs(days!)} día${Math.abs(days!) !== 1 ? "s" : ""}`
+                            : days === 0
+                            ? "⏳ El grupo vence hoy"
+                            : `⏳ Grupo vence en ${days} día${days !== 1 ? "s" : ""}`}
+                        </span>
+                        <span style={{ opacity: 0.7, fontSize: "0.7rem" }}>{fmtDate(inv.group_expires_at as string)}</span>
+                      </div>
+                    )}
+
+                    {/* Co-investors */}
+                    {peers.length > 0 && (
+                      <div style={coSection}>
+                        <p style={coTitle}>Co-inversores ({peers.length})</p>
+                        <div style={coList}>
+                          {peers.map((p, i) => (
+                            <div key={i} style={coRow}>
+                              <div style={coAvatar}>
+                                {p.avatar ? (
+                                  <img src={p.avatar} alt={p.full_name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
+                                ) : (
+                                  <span style={coInitial}>{String(p.full_name)[0]?.toUpperCase()}</span>
+                                )}
+                              </div>
+                              <div style={coInfo}>
+                                <span style={coName}>{p.full_name}</span>
+                                <div style={coBar}>
+                                  <div style={{ ...coBarFill, width: `${Number(p.percentage)}%` }} />
+                                </div>
+                              </div>
+                              <span style={coPct}>{Number(p.percentage)}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <div style={cardFooter}>
                       <span style={dateLabel}>{fmtDate(inv.created_at)}</span>
@@ -208,4 +279,23 @@ const unitTotal: React.CSSProperties = { fontSize: "0.72rem", color: "#9ca3af", 
 const cardFooter: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.25rem", paddingTop: "0.75rem", borderTop: "1px solid #f3f4f6" };
 const dateLabel: React.CSSProperties = { fontSize: "0.72rem", color: "#9ca3af" };
 const viewLink: React.CSSProperties = { fontSize: "0.78rem", color: "#111", fontWeight: 600, textDecoration: "none" };
+
+/* Expiry banner */
+const expiryBanner: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", borderRadius: 8, padding: "0.5rem 0.75rem", fontSize: "0.75rem", gap: "0.5rem" };
+const expiryBannerOk: React.CSSProperties = { background: "#dcfce7", color: "#166534" };
+const expiryBannerUrgent: React.CSSProperties = { background: "#fffbeb", color: "#92400e" };
+const expiryBannerExpired: React.CSSProperties = { background: "#fee2e2", color: "#991b1b" };
+
+/* Co-investors */
+const coSection: React.CSSProperties = { borderTop: "1px solid #f3f4f6", paddingTop: "0.65rem", display: "flex", flexDirection: "column", gap: "0.45rem" };
+const coTitle: React.CSSProperties = { fontSize: "0.7rem", fontWeight: 700, color: "#9ca3af", margin: 0, textTransform: "uppercase", letterSpacing: "0.04em" };
+const coList: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.35rem" };
+const coRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.5rem" };
+const coAvatar: React.CSSProperties = { width: 24, height: 24, borderRadius: "50%", background: "#e5e7eb", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" };
+const coInitial: React.CSSProperties = { fontSize: "0.65rem", fontWeight: 700, color: "#374151" };
+const coInfo: React.CSSProperties = { flex: 1, display: "flex", flexDirection: "column", gap: "0.15rem" };
+const coName: React.CSSProperties = { fontSize: "0.75rem", fontWeight: 600, color: "#374151" };
+const coBar: React.CSSProperties = { height: 4, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" };
+const coBarFill: React.CSSProperties = { height: "100%", background: "linear-gradient(90deg, #60a5fa, #3b82f6)", borderRadius: 999 };
+const coPct: React.CSSProperties = { fontSize: "0.72rem", fontWeight: 800, color: "#111", flexShrink: 0 };
 
