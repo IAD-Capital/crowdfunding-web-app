@@ -10,6 +10,26 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
 
   const { status, percentage, amount_usd, clear_removal_request } = await req.json();
 
+  // If activating this investment, check no other active investment exists for the same user+unit
+  if (status === "active") {
+    const [current] = await db`SELECT unit_id, user_id FROM investments WHERE id = ${params.id}`;
+    if (current) {
+      const [conflict] = await db`
+        SELECT id FROM investments
+        WHERE unit_id = ${current.unit_id}
+          AND user_id = ${current.user_id}
+          AND status = 'active'
+          AND id != ${params.id}
+      `;
+      if (conflict) {
+        return NextResponse.json(
+          { error: "Este inversor ya tiene una inversión activa en esta unidad." },
+          { status: 409 }
+        );
+      }
+    }
+  }
+
   const [row] = await db`
     UPDATE investments SET
       status                = COALESCE(${status ?? null}, status),
