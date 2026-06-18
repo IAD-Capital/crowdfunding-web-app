@@ -3,6 +3,7 @@ import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18
 import PublicShell from "@/components/PublicShell";
 import CatalogSection from "@/components/CatalogSection";
 import FeaturedSlider from "@/components/FeaturedSlider";
+import AuthCTASection from "@/components/AuthCTASection";
 import Link from "next/link";
 import db from "@/lib/db";
 
@@ -186,6 +187,9 @@ export default async function Home({ params }: { params: { lang: string } }) {
           lang={lang}
         />
       </div>
+
+      {/* ─── Auth CTA (only for unauthenticated visitors) ── */}
+      {!session && <AuthCTASection lang={lang} />}
     </PublicShell>
   );
 }

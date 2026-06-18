@@ -42,8 +42,6 @@ type Props = {
   lang: string;
 };
 
-type Tab = "developments" | "units";
-
 const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
   available: { bg: "#dcfce7", fg: "#166534", label: "Disponible" },
   partial:   { bg: "#fef9c3", fg: "#854d0e", label: "Parcial" },
@@ -51,7 +49,6 @@ const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
 };
 
 export default function CatalogSection({ developments, units, isInvestor, myInvestedUnitIds = [], lang }: Props) {
-  const [tab, setTab] = useState<Tab>("developments");
   const [devFilter, setDevFilter] = useState<number | "all">("all");
   const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
 
@@ -61,82 +58,91 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
   return (
     <section style={section}>
       <div style={inner}>
-        <h2 style={sectionTitle}>Catálogo completo</h2>
 
-        {/* Tabs */}
-        <div style={tabs}>
-          <button style={tabBtn(tab === "developments")} onClick={() => setTab("developments")}>
-            Emprendimientos ({developments.length})
-          </button>
-          <button style={tabBtn(tab === "units")} onClick={() => setTab("units")}>
-            Departamentos ({units.length})
-          </button>
+        {/* ── Emprendimientos ─────────────────────── */}
+        <div style={blockHeader}>
+          <div>
+            <h2 style={blockTitle}>Emprendimientos</h2>
+            <p style={blockSub}>{developments.length} proyecto{developments.length !== 1 ? "s" : ""} activo{developments.length !== 1 ? "s" : ""}</p>
+          </div>
         </div>
 
-        {tab === "developments" ? (
+        {developments.length === 0 ? (
+          <p style={emptyMsg}>No hay emprendimientos activos en este momento.</p>
+        ) : (
           <div style={devGrid}>
             {developments.map((d) => (
               <DevCard key={d.id} d={d} lang={lang} />
             ))}
           </div>
+        )}
+
+        {/* ── Departamentos ───────────────────────── */}
+        <div style={{ ...blockHeader, marginTop: "4rem" }}>
+          <div>
+            <h2 style={blockTitle}>Departamentos</h2>
+            <p style={blockSub}>{units.length} unidad{units.length !== 1 ? "es" : ""} en total</p>
+          </div>
+        </div>
+
+        {/* Filter by development */}
+        {developments.length > 1 && (
+          <div style={filterRow}>
+            <button style={filterChip(devFilter === "all")} onClick={() => setDevFilter("all")}>
+              Todos
+            </button>
+            {developments.map((d) => (
+              <button
+                key={d.id}
+                style={filterChip(devFilter === d.id)}
+                onClick={() => setDevFilter(d.id)}
+              >
+                {d.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {isInvestor && availableUnits.length > 0 && (
+          <p style={investorHint}>
+            💡 Como inversor podés adquirir entre el 5% y el 100% de cada departamento.
+            Seleccioná uno para calcular tu inversión.
+          </p>
+        )}
+
+        {visibleUnits.length === 0 ? (
+          <p style={emptyMsg}>No hay unidades disponibles para este emprendimiento.</p>
         ) : (
-          <>
-            {/* Filter by development */}
-            {developments.length > 1 && (
-              <div style={filterRow}>
-                <button style={filterChip(devFilter === "all")} onClick={() => setDevFilter("all")}>
-                  Todos
-                </button>
-                {developments.map((d) => (
-                  <button
-                    key={d.id}
-                    style={filterChip(devFilter === d.id)}
-                    onClick={() => setDevFilter(d.id)}
-                  >
-                    {d.name}
-                  </button>
-                ))}
+          <div style={unitGrid}>
+            {visibleUnits.map((u) => (
+              <div key={u.id} style={unitCardWrap}>
+                <UnitCard
+                  u={u}
+                  devName={developments.find((d) => d.id === u.development_id)?.name ?? ""}
+                  isInvestor={isInvestor}
+                  selected={selectedUnit === u.id}
+                  onSelect={() => setSelectedUnit(selectedUnit === u.id ? null : u.id)}
+                  lang={lang}
+                />
+                {isInvestor && selectedUnit === u.id && u.status !== "sold" && (
+                  myInvestedUnitIds.includes(u.id) ? (
+                    <div style={alreadyNote}>
+                      Ya tenés una participación activa en esta unidad.{" "}
+                      <a href={`/${lang}/wallet`} style={{ color: "#166534", fontWeight: 700 }}>Ver cartera →</a>
+                    </div>
+                  ) : (
+                    <BuyPanel
+                      unitId={u.id}
+                      priceUsd={u.price_usd}
+                      identifier={u.identifier}
+                      lang={lang}
+                      availablePct={u.available_pct ?? 100}
+                    />
+                  )
+                )}
               </div>
-            )}
-
-            {isInvestor && availableUnits.length > 0 && (
-              <p style={investorHint}>
-                💡 Como inversor podés adquirir entre el 5% y el 100% de cada departamento.
-                Seleccioná uno para calcular tu inversión.
-              </p>
-            )}
-
-            <div style={unitGrid}>
-              {visibleUnits.map((u) => (
-                <div key={u.id} style={unitCardWrap}>
-                  <UnitCard
-                    u={u}
-                    devName={developments.find((d) => d.id === u.development_id)?.name ?? ""}
-                    isInvestor={isInvestor}
-                    selected={selectedUnit === u.id}
-                    onSelect={() => setSelectedUnit(selectedUnit === u.id ? null : u.id)}
-                    lang={lang}
-                  />
-                  {isInvestor && selectedUnit === u.id && u.status !== "sold" && (
-                    myInvestedUnitIds.includes(u.id) ? (
-                      <div style={alreadyNote}>
-                        Ya tenés una participación activa en esta unidad.{" "}
-                        <a href={`/${lang}/wallet`} style={{ color: "#166534", fontWeight: 700 }}>Ver cartera →</a>
-                      </div>
-                    ) : (
-                      <BuyPanel
-                        unitId={u.id}
-                        priceUsd={u.price_usd}
-                        identifier={u.identifier}
-                        lang={lang}
-                        availablePct={u.available_pct ?? 100}
-                      />
-                    )
-                  )}
-                </div>
-              ))}
-            </div>
-          </>
+            ))}
+          </div>
         )}
       </div>
     </section>
@@ -178,6 +184,7 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
             )}
           </div>
         )}
+        <span style={devCta}>Ver emprendimiento →</span>
       </div>
     </Link>
   );
@@ -237,15 +244,13 @@ function UnitCard({
 /* ─── Styles ────────────────────────────────────── */
 const section: React.CSSProperties = { background: "#f9fafb", padding: "5rem 1.5rem" };
 const inner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto" };
-const sectionTitle: React.CSSProperties = { fontSize: "1.75rem", fontWeight: 800, marginBottom: "1.5rem", letterSpacing: "-0.03em" };
-const tabs: React.CSSProperties = { display: "flex", gap: "0.5rem", marginBottom: "2rem", borderBottom: "2px solid #e5e7eb", paddingBottom: "0" };
-const tabBtn = (active: boolean): React.CSSProperties => ({
-  padding: "0.6rem 1.25rem", background: "none", border: "none",
-  borderBottom: active ? "2px solid #111" : "2px solid transparent",
-  marginBottom: "-2px", fontWeight: active ? 700 : 500,
-  fontSize: "0.95rem", color: active ? "#111" : "#6b7280",
-  cursor: "pointer", transition: "all 0.15s",
-});
+
+const blockHeader: React.CSSProperties = { marginBottom: "1.75rem" };
+const blockTitle: React.CSSProperties = { fontSize: "1.75rem", fontWeight: 800, margin: "0 0 0.25rem", letterSpacing: "-0.03em" };
+const blockSub: React.CSSProperties = { fontSize: "0.9rem", color: "#9ca3af", margin: 0 };
+
+const emptyMsg: React.CSSProperties = { color: "#9ca3af", fontSize: "0.95rem" };
+
 const filterRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "1.25rem" };
 const filterChip = (active: boolean): React.CSSProperties => ({
   padding: "0.3rem 0.75rem", borderRadius: 999, fontSize: "0.82rem", fontWeight: 600,
@@ -275,6 +280,7 @@ const devAddr: React.CSSProperties = { fontSize: "0.82rem", color: "#6b7280", ma
 const devStats: React.CSSProperties = { display: "flex", gap: "0.5rem", flexWrap: "wrap" };
 const amenRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.25rem" };
 const amenChip: React.CSSProperties = { fontSize: "0.72rem", padding: "0.15rem 0.5rem", background: "#f3f4f6", color: "#374151", borderRadius: 999 };
+const devCta: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, color: "#111", marginTop: "auto", paddingTop: "0.5rem" };
 
 const unitLink: React.CSSProperties = { textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column" };
 
@@ -296,7 +302,7 @@ const unitStats: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap:
 const statChip: React.CSSProperties = { fontSize: "0.75rem", padding: "0.15rem 0.5rem", background: "#f3f4f6", color: "#374151", borderRadius: 999 };
 const priceLabel: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 800, color: "#111", margin: "0.25rem 0 0" };
 const btnInvest: React.CSSProperties = {
-  marginTop: "0.5rem", padding: "0.45rem 0", background: "#fff",
+  width: "100%", padding: "0.5rem", background: "#fff",
   border: "1.5px solid #111", borderRadius: 8, fontWeight: 700,
   fontSize: "0.85rem", cursor: "pointer", color: "#111", transition: "all 0.15s",
 };
