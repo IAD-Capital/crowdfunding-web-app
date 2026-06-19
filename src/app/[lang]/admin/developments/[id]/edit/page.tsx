@@ -14,5 +14,5 @@ export default async function EditDevelopmentPage({
   const [dev] = await db`SELECT * FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
 
-  return <DevelopmentForm t={t.admin.developments} lang={lang} initial={dev} />;
+  return <DevelopmentForm t={t.admin.developments} lang={lang} initial={dev as any} />;
 }
