@@ -1,0 +1,40 @@
+.footer {
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+  margin-top: auto;
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.brand {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #111;
+  text-decoration: none;
+  letter-spacing: -0.03em;
+}
+
+.tagline {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.copy {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
