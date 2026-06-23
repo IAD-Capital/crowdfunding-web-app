@@ -7,6 +7,34 @@ import Image from "next/image";
 import Link from "next/link";
 import RemovalRequestButton from "@/components/RemovalRequestButton";
 
+type InvestmentRow = {
+  id: number;
+  percentage: number | string;
+  amount_usd: number | string;
+  status: string;
+  created_at: Date | string;
+  removal_requested_at: Date | string | null;
+  unit_id: number;
+  identifier: string;
+  floor: number | null;
+  total_m2: number | null;
+  unit_price_usd: number | string;
+  unit_status: string;
+  unit_images: string[] | null;
+  group_expires_at: Date | string | null;
+  development_id: number;
+  development_name: string;
+  development_address: string;
+  development_images: string[] | null;
+};
+
+type CoInvestorRow = {
+  unit_id: number;
+  percentage: number | string;
+  full_name: string;
+  avatar: string | null;
+};
+
 export default async function WalletPage({ params }: { params: { lang: string } }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const session = await getSession();
@@ -16,7 +44,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
   }
 
   // Always show the current user's own investments
-  const investments = await db`
+  const investments = await db<InvestmentRow[]>`
     SELECT
       i.id, i.percentage, i.amount_usd, i.status, i.created_at, i.removal_requested_at,
       u.id AS unit_id, u.identifier, u.floor, u.total_m2,
@@ -35,9 +63,9 @@ export default async function WalletPage({ params }: { params: { lang: string } 
   `;
 
   // Co-investors per unit (other active investors in the same units)
-  const unitIds = [...new Set(investments.map((i) => Number(i.unit_id)))];
+  const unitIds = Array.from(new Set(investments.map((i) => Number(i.unit_id))));
   const coInvestors = unitIds.length > 0
-    ? await db`
+    ? await db<CoInvestorRow[]>`
         SELECT i.unit_id, i.percentage, usr.full_name, usr.avatar
         FROM investments i
         JOIN users usr ON usr.id = i.user_id
@@ -46,7 +74,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
           AND i.status = 'active'
         ORDER BY i.percentage DESC
       `
-    : [];
+    : ([] as CoInvestorRow[]);
 
   const coInvestorsByUnit = coInvestors.reduce<Record<number, typeof coInvestors>>((acc, r) => {
     const uid = Number(r.unit_id);

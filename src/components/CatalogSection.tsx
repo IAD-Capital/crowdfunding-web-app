@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import BuyDrawer from "./BuyDrawer";
 
-type Development = {
+export type Development = {
   id: number;
   name: string;
   address: string;
@@ -17,7 +17,7 @@ type Development = {
   unit_count: number;
 };
 
-type Unit = {
+export type Unit = {
   id: number;
   development_id: number;
   identifier: string;
@@ -33,6 +33,7 @@ type Unit = {
   images: string[];
   description?: string;
   available_pct?: number;
+  group_expires_at?: string | null;
 };
 
 type Props = {

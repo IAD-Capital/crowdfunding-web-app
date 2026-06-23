@@ -3,7 +3,7 @@ import db from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ImageGallery from "@/components/admin/ImageGallery";
-import UnitsView from "@/components/admin/UnitsView";
+import UnitsView, { type UnitRow } from "@/components/admin/UnitsView";
 
 export default async function DevelopmentDetailPage({
   params,
@@ -18,7 +18,7 @@ export default async function DevelopmentDetailPage({
   const [dev] = await db`SELECT * FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
 
-  const units = await db`
+  const units = await db<UnitRow[]>`
     SELECT * FROM units WHERE development_id = ${params.id} ORDER BY floor, identifier
   `;
 

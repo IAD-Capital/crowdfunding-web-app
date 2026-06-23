@@ -6,6 +6,16 @@ import FeaturedSlider from "@/components/FeaturedSlider";
 import AuthCTASection from "@/components/AuthCTASection";
 import Link from "next/link";
 import db from "@/lib/db";
+import type { Development, Unit } from "@/components/CatalogSection";
+
+type DevRow = Omit<Development, "unit_count"> & { unit_count: number; completion_date: Date | string | null };
+type FeaturedRow = Omit<DevRow, "description">;
+type UnitRow = Omit<Unit, "price_usd" | "current_price_usd" | "available_pct" | "group_expires_at"> & {
+  price_usd: number | string;
+  current_price_usd: number | string | null;
+  available_pct: number | string;
+  group_expires_at: Date | string | null;
+};
 
 export default async function Home({ params }: { params: { lang: string } }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
@@ -13,7 +23,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
   const isInvestor = session?.role === "investor";
 
-  const developments = await db`
+  const developments = await db<DevRow[]>`
     SELECT d.id, d.name, d.address, d.description, d.status,
            d.completion_date, d.amenities, d.images,
            COUNT(u.id)::int AS unit_count
@@ -24,7 +34,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
     ORDER BY d.created_at DESC
   `;
 
-  const units = await db`
+  const units = await db<UnitRow[]>`
     SELECT u.id, u.development_id, u.identifier, u.floor,
            u.total_m2, u.covered_m2, u.rooms, u.bedrooms,
            u.orientation, u.price_usd, u.current_price_usd, u.status, u.images, u.description,
@@ -42,7 +52,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
     ORDER BY u.price_usd ASC
   `;
 
-  const featuredRows = await db`
+  const featuredRows = await db<FeaturedRow[]>`
     SELECT d.id, d.name, d.address, d.status,
            d.completion_date, d.amenities, d.images,
            COUNT(u.id)::int AS unit_count

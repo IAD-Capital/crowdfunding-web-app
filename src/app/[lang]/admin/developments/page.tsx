@@ -1,13 +1,15 @@
 import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import db from "@/lib/db";
-import DevelopmentsView from "@/components/admin/DevelopmentsView";
+import DevelopmentsView, { type Development } from "@/components/admin/DevelopmentsView";
+
+type Row = Omit<Development, "completion_date"> & { completion_date: Date | string | null };
 
 export default async function DevelopmentsPage({ params }: { params: { lang: string } }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const t = await getDictionary(lang);
   const td = t.admin.developments;
 
-  const rows = await db`
+  const rows = await db<Row[]>`
     SELECT d.*, COUNT(u.id)::int AS unit_count
     FROM developments d
     LEFT JOIN units u ON u.development_id = d.id
@@ -16,11 +18,9 @@ export default async function DevelopmentsPage({ params }: { params: { lang: str
   `;
 
   // Serialize dates for client component
-  const developments = rows.map((d) => ({
+  const developments: Development[] = rows.map((d) => ({
     ...d,
-    completion_date: d.completion_date ? new Date(d.completion_date).toISOString() : null,
-    created_at: undefined,
-    updated_at: undefined,
+    completion_date: d.completion_date ? new Date(d.completion_date).toISOString() : undefined,
   }));
 
   return (

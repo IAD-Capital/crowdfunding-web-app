@@ -6,7 +6,7 @@ import Image from "next/image";
 import DuplicateButton from "./DuplicateButton";
 import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
 
-type Development = {
+export type Development = {
   id: number;
   name: string;
   address: string;

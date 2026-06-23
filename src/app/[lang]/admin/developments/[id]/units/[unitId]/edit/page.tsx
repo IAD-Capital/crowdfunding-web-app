@@ -1,7 +1,7 @@
 import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import { notFound } from "next/navigation";
 import db from "@/lib/db";
-import UnitForm from "@/components/admin/UnitForm";
+import UnitForm, { type Initial as UnitInitial } from "@/components/admin/UnitForm";
 
 export default async function EditUnitPage({
   params,
@@ -13,7 +13,7 @@ export default async function EditUnitPage({
 
   const [[dev], [unit]] = await Promise.all([
     db`SELECT id, name FROM developments WHERE id = ${params.id}`,
-    db`SELECT * FROM units WHERE id = ${params.unitId} AND development_id = ${params.id}`,
+    db<UnitInitial[]>`SELECT * FROM units WHERE id = ${params.unitId} AND development_id = ${params.id}`,
   ]);
   if (!dev || !unit) notFound();
 

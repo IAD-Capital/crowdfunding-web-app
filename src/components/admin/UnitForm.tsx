@@ -8,7 +8,7 @@ import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
 
 type T = Dictionary["admin"]["units"];
 
-type Initial = {
+export type Initial = {
   id: number;
   identifier: string;
   floor?: number;

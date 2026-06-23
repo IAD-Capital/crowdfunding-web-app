@@ -1,13 +1,13 @@
 import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import db from "@/lib/db";
-import UnitsView from "@/components/admin/UnitsView";
+import UnitsView, { type UnitRow } from "@/components/admin/UnitsView";
 
 export default async function UnitsPage({ params }: { params: { lang: string } }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const t = await getDictionary(lang);
   const tu = t.admin.units;
 
-  const rows = await db`
+  const rows = await db<UnitRow[]>`
     SELECT u.*, d.name AS development_name, d.id AS development_id
     FROM units u
     JOIN developments d ON d.id = u.development_id
