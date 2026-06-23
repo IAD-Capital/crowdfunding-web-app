@@ -38,9 +38,11 @@ export default async function DevelopmentDetailPage({
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{dev.name}</h1>
           <p style={{ color: "#6b7280", marginTop: "0.25rem" }}>{dev.address}</p>
         </div>
-        <Link href={`/${lang}/admin/developments/${dev.id}/edit`} style={btnSecondary}>
-          Editar
-        </Link>
+        <div style={{ display: "flex", gap: "0.75rem" }}>
+          <Link href={`/${lang}/admin/developments/${dev.id}/edit`} style={btnSecondary}>
+            Editar
+          </Link>
+        </div>
       </div>
 
       {/* Info cards */}

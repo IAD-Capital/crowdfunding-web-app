@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import DuplicateButton from "./DuplicateButton";
+import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
 
 type Development = {
   id: number;
@@ -66,54 +68,69 @@ function GridView({ developments, t, lang }: Props) {
   return (
     <div style={grid}>
       {developments.map((d) => (
-        <Link key={d.id} href={`/${lang}/admin/developments/${d.id}`} style={card}>
-          {/* Cover image */}
-          <div style={coverWrap}>
-            {d.images?.[0] ? (
-              <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover" }} />
-            ) : (
-              <div style={coverPlaceholder}>
-                <span style={{ fontSize: "2rem", opacity: 0.25 }}>🏢</span>
-              </div>
-            )}
-            <span style={statusChip(d.status)}>
-              {t.status[d.status] ?? d.status}
-            </span>
-            {d.images?.length > 0 && (
-              <span style={photoCount}>📷 {d.images.length}</span>
-            )}
-          </div>
-
-          {/* Body */}
-          <div style={cardBody}>
-            <h2 style={cardTitle}>{d.name}</h2>
-            <p style={cardAddr}>{d.address}</p>
-
-            {/* Stats */}
-            <div style={statsRow}>
-              <span style={stat}>🏠 {d.unit_count} {t.units}</span>
-              {d.completion_date && (
-                <span style={stat}>
-                  📅 {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric", timeZone: "UTC" })}
-                </span>
+        <div key={d.id} style={card}>
+          <Link href={`/${lang}/admin/developments/${d.id}`} style={cardLinkArea}>
+            {/* Cover image */}
+            <div style={coverWrap}>
+              {d.images?.[0] ? (
+                <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover" }} />
+              ) : (
+                <div style={coverPlaceholder}>
+                  <span style={{ fontSize: "2rem", opacity: 0.25 }}>🏢</span>
+                </div>
+              )}
+              <span style={statusChip(d.status)}>
+                {t.status[d.status] ?? d.status}
+              </span>
+              {d.images?.length > 0 && (
+                <span style={photoCount}>📷 {d.images.length}</span>
               )}
             </div>
 
-            {/* Amenities */}
-            {d.amenities?.length > 0 && (
-              <div style={amenitiesRow}>
-                {d.amenities.slice(0, 3).map((a) => (
-                  <span key={a} style={amenityChip}>{a}</span>
-                ))}
-                {d.amenities.length > 3 && (
-                  <span style={{ ...amenityChip, background: "#f3f4f6", color: "#9ca3af" }}>
-                    +{d.amenities.length - 3}
+            {/* Body */}
+            <div style={cardBody}>
+              <h2 style={cardTitle}>{d.name}</h2>
+              <p style={cardAddr}>{d.address}</p>
+
+              {/* Stats */}
+              <div style={statsRow}>
+                <span style={stat}>🏠 {d.unit_count} {t.units}</span>
+                {d.completion_date && (
+                  <span style={stat}>
+                    📅 {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric", timeZone: "UTC" })}
                   </span>
                 )}
               </div>
-            )}
+
+              {/* Amenities */}
+              {d.amenities?.length > 0 && (
+                <div style={amenitiesRow}>
+                  {d.amenities.slice(0, 3).map((a) => (
+                    <span key={a} style={amenityChip}>{a}</span>
+                  ))}
+                  {d.amenities.length > 3 && (
+                    <span style={{ ...amenityChip, background: "#f3f4f6", color: "#9ca3af" }}>
+                      +{d.amenities.length - 3}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </Link>
+
+          {/* Actions */}
+          <div style={cardActions}>
+            <Link href={`/${lang}/admin/developments/${d.id}/edit`} style={actionLink}>Editar</Link>
+            <DuplicateButton
+              duplicateUrl={`/api/admin/developments/${d.id}/duplicate`}
+              redirectBase={`/${lang}/admin/developments`}
+            />
+            <DeleteWithConfirmButton
+              deleteUrl={`/api/admin/developments/${d.id}`}
+              confirmText={d.name}
+            />
           </div>
-        </Link>
+        </div>
       ))}
     </div>
   );
@@ -124,46 +141,61 @@ function ListView({ developments, t, lang }: Props) {
   return (
     <div style={listWrap}>
       {developments.map((d) => (
-        <Link key={d.id} href={`/${lang}/admin/developments/${d.id}`} style={listRow}>
-          {/* Thumbnail */}
-          <div style={listThumb}>
-            {d.images?.[0] ? (
-              <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover", borderRadius: 8 }} />
-            ) : (
-              <div style={{ ...coverPlaceholder, borderRadius: 8 }}>
-                <span style={{ fontSize: "1.25rem", opacity: 0.25 }}>🏢</span>
-              </div>
-            )}
-          </div>
-
-          {/* Info */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem" }}>
-              <h2 style={{ fontSize: "1rem", fontWeight: 700, margin: 0 }}>{d.name}</h2>
-              <span style={statusChip(d.status)}>{t.status[d.status] ?? d.status}</span>
-            </div>
-            <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0 0 0.5rem" }}>{d.address}</p>
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              <span style={stat}>🏠 {d.unit_count} {t.units}</span>
-              {d.completion_date && (
-                <span style={stat}>
-                  📅 {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric", timeZone: "UTC" })}
-                </span>
+        <div key={d.id} style={listRow}>
+          <Link href={`/${lang}/admin/developments/${d.id}`} style={listLinkArea}>
+            {/* Thumbnail */}
+            <div style={listThumb}>
+              {d.images?.[0] ? (
+                <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover", borderRadius: 8 }} />
+              ) : (
+                <div style={{ ...coverPlaceholder, borderRadius: 8 }}>
+                  <span style={{ fontSize: "1.25rem", opacity: 0.25 }}>🏢</span>
+                </div>
               )}
-              {d.images?.length > 0 && <span style={stat}>📷 {d.images.length}</span>}
             </div>
-            {d.amenities?.length > 0 && (
-              <div style={{ ...amenitiesRow, marginTop: "0.4rem" }}>
-                {d.amenities.slice(0, 4).map((a) => (
-                  <span key={a} style={amenityChip}>{a}</span>
-                ))}
-                {d.amenities.length > 4 && (
-                  <span style={{ ...amenityChip, color: "#9ca3af" }}>+{d.amenities.length - 4}</span>
-                )}
+
+            {/* Info */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem" }}>
+                <h2 style={{ fontSize: "1rem", fontWeight: 700, margin: 0 }}>{d.name}</h2>
+                <span style={statusChip(d.status)}>{t.status[d.status] ?? d.status}</span>
               </div>
-            )}
+              <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0 0 0.5rem" }}>{d.address}</p>
+              <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <span style={stat}>🏠 {d.unit_count} {t.units}</span>
+                {d.completion_date && (
+                  <span style={stat}>
+                    📅 {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric", timeZone: "UTC" })}
+                  </span>
+                )}
+                {d.images?.length > 0 && <span style={stat}>📷 {d.images.length}</span>}
+              </div>
+              {d.amenities?.length > 0 && (
+                <div style={{ ...amenitiesRow, marginTop: "0.4rem" }}>
+                  {d.amenities.slice(0, 4).map((a) => (
+                    <span key={a} style={amenityChip}>{a}</span>
+                  ))}
+                  {d.amenities.length > 4 && (
+                    <span style={{ ...amenityChip, color: "#9ca3af" }}>+{d.amenities.length - 4}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </Link>
+
+          {/* Actions */}
+          <div style={listActions}>
+            <Link href={`/${lang}/admin/developments/${d.id}/edit`} style={actionLink}>Editar</Link>
+            <DuplicateButton
+              duplicateUrl={`/api/admin/developments/${d.id}/duplicate`}
+              redirectBase={`/${lang}/admin/developments`}
+            />
+            <DeleteWithConfirmButton
+              deleteUrl={`/api/admin/developments/${d.id}`}
+              confirmText={d.name}
+            />
           </div>
-        </Link>
+        </div>
       ))}
     </div>
   );
@@ -214,10 +246,21 @@ const grid: React.CSSProperties = {
 };
 const card: React.CSSProperties = {
   background: "#fff", borderRadius: 12, overflow: "hidden",
-  border: "1px solid #e5e7eb", textDecoration: "none", color: "inherit",
+  border: "1px solid #e5e7eb",
   display: "flex", flexDirection: "column",
   boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
   transition: "box-shadow 0.2s, transform 0.2s",
+};
+const cardLinkArea: React.CSSProperties = {
+  display: "flex", flexDirection: "column", textDecoration: "none", color: "inherit",
+};
+const cardActions: React.CSSProperties = {
+  display: "flex", gap: "0.5rem", padding: "0 1rem 1rem", flexWrap: "wrap",
+};
+const actionLink: React.CSSProperties = {
+  padding: "0.4rem 0.9rem", background: "#fff", color: "#111",
+  borderRadius: 6, textDecoration: "none", fontWeight: 600, fontSize: "0.8rem",
+  border: "1px solid #d1d5db",
 };
 const coverWrap: React.CSSProperties = {
   position: "relative", height: 180, background: "#f3f4f6", flexShrink: 0,
@@ -247,8 +290,15 @@ const listWrap: React.CSSProperties = { display: "flex", flexDirection: "column"
 const listRow: React.CSSProperties = {
   display: "flex", gap: "1rem", alignItems: "center",
   background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb",
-  padding: "0.85rem 1rem", textDecoration: "none", color: "inherit",
+  padding: "0.85rem 1rem",
   boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+};
+const listLinkArea: React.CSSProperties = {
+  display: "flex", gap: "1rem", alignItems: "center", flex: 1, minWidth: 0,
+  textDecoration: "none", color: "inherit",
+};
+const listActions: React.CSSProperties = {
+  display: "flex", gap: "0.5rem", flexShrink: 0,
 };
 const listThumb: React.CSSProperties = {
   position: "relative", width: 72, height: 72, flexShrink: 0,

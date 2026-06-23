@@ -4,6 +4,7 @@ import { useState, FormEvent, KeyboardEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Dictionary } from "@/i18n";
 import ImageUploader from "./ImageUploader";
+import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
 
 type T = Dictionary["admin"]["developments"];
 
@@ -197,6 +198,14 @@ export default function DevelopmentForm({ t, lang, initial }: Props) {
         {error && <p style={errorStyle}>{error}</p>}
 
         <div style={actions}>
+          {isEdit && (
+            <DeleteWithConfirmButton
+              deleteUrl={`/api/admin/developments/${initial!.id}`}
+              confirmText={initial!.name}
+              redirectTo={`/${lang}/admin/developments`}
+            />
+          )}
+          <div style={{ flex: 1 }} />
           <button type="button" onClick={() => router.back()} style={btnSecondary}>
             {t.form.cancel}
           </button>

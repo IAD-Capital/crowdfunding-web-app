@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import DuplicateButton from "./DuplicateButton";
+import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
 
 export type UnitRow = {
   id: number;
@@ -89,9 +91,17 @@ export default function UnitsView({
                   </td>
                   <td style={td}>{u.images?.length ?? 0}</td>
                   <td style={td}>
-                    <div style={{ display: "flex", gap: "0.75rem" }}>
+                    <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
                       <Link href={`/${lang}/admin/developments/${u.development_id}/units/${u.id}`} style={linkPrimary}>Ver</Link>
                       <Link href={`/${lang}/admin/developments/${u.development_id}/units/${u.id}/edit`} style={linkSecondary}>Editar</Link>
+                      <DuplicateButton
+                        duplicateUrl={`/api/admin/units/${u.id}/duplicate`}
+                        redirectBase={`/${lang}/admin/developments/${u.development_id}/units`}
+                      />
+                      <DeleteWithConfirmButton
+                        deleteUrl={`/api/admin/units/${u.id}`}
+                        confirmText={u.identifier}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -150,6 +160,16 @@ export default function UnitsView({
                   <Link href={`/${lang}/admin/developments/${u.development_id}/units/${u.id}/edit`} style={btnSecondary}>
                     Editar
                   </Link>
+                </div>
+                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                  <DuplicateButton
+                    duplicateUrl={`/api/admin/units/${u.id}/duplicate`}
+                    redirectBase={`/${lang}/admin/developments/${u.development_id}/units`}
+                  />
+                  <DeleteWithConfirmButton
+                    deleteUrl={`/api/admin/units/${u.id}`}
+                    confirmText={u.identifier}
+                  />
                 </div>
               </div>
             </div>

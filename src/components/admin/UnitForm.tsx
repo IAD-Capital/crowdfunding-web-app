@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { Dictionary } from "@/i18n";
 import ImageUploader from "./ImageUploader";
+import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
 
 type T = Dictionary["admin"]["units"];
 
@@ -211,6 +212,14 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
         {error && <p style={errorStyle}>{error}</p>}
 
         <div style={actions}>
+          {isEdit && (
+            <DeleteWithConfirmButton
+              deleteUrl={`/api/admin/units/${initial!.id}`}
+              confirmText={initial!.identifier}
+              redirectTo={`/${lang}/admin/developments/${developmentId}`}
+            />
+          )}
+          <div style={{ flex: 1 }} />
           <button type="button" onClick={() => router.back()} style={btnSecondary}>
             {t.form.cancel}
           </button>
