@@ -69,3 +69,11 @@ sudo sed -i '' '/iadcapital.local/d' /etc/hosts
 ## Environment variables
 
 Copy `.env.example` to `.env.local` and fill in the values before running.
+
+---
+
+## Deploying to production (Vercel + Supabase)
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full checklist: required
+env vars, Supabase pooler vs. direct connection, image upload storage
+strategy, schema setup/reset scripts, and the investment tiers feature.
