@@ -4,8 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import BuyDrawer from "./BuyDrawer";
-import { Shield, Layers, Star, Gem, type LucideIcon } from "lucide-react";
-import { getTierDefs, unitQualifiesForTier, type TierThresholds, type TierKey } from "@/lib/investmentTiers";
+import {
+  Shield, Layers, Star, Gem, Building2, Maximize2, Sofa, BedDouble,
+  ChevronLeft, ChevronRight, type LucideIcon,
+} from "lucide-react";
+import { getTierDefs, unitQualifiesForTier, MIN_ENTRY_PCT, type TierThresholds, type TierKey } from "@/lib/investmentTiers";
 
 export type Development = {
   id: number;
@@ -265,22 +268,23 @@ function UnitCard({
   return (
     <div style={unitCard}>
       <Link href={`/${lang}/emprendimientos/${u.development_id}/unidades/${u.id}`} style={unitLink}>
-        <div style={unitCover}>
-          {u.images?.[0] ? (
-            <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} />
-          ) : (
-            <div style={unitPlaceholder}><span style={{ fontSize: "1.5rem", opacity: 0.15 }}>🏠</span></div>
-          )}
-          <span style={{ ...badge, background: sc.bg, color: sc.fg }}>{sc.label}</span>
-        </div>
+        <UnitCoverSlider images={u.images} identifier={u.identifier} statusBadge={{ background: sc.bg, color: sc.fg, label: sc.label }} />
         <div style={unitBody}>
           <p style={devNameLabel}>{devName}</p>
           <h3 style={unitId}>{u.identifier}</h3>
           <div style={unitStats}>
-            {u.floor != null && <span style={statChip}>Piso {u.floor}</span>}
-            {u.total_m2 != null && <span style={statChip}>{u.total_m2} m²</span>}
-            {u.rooms != null && <span style={statChip}>{u.rooms} amb.</span>}
-            {u.bedrooms != null && <span style={statChip}>{u.bedrooms} dorm.</span>}
+            {u.floor != null && (
+              <span style={statChip}><Building2 size={13} /> Piso {u.floor}</span>
+            )}
+            {u.total_m2 != null && (
+              <span style={statChip}><Maximize2 size={13} /> {u.total_m2} m²</span>
+            )}
+            {u.rooms != null && (
+              <span style={statChip}><Sofa size={13} /> {u.rooms} amb.</span>
+            )}
+            {u.bedrooms != null && (
+              <span style={statChip}><BedDouble size={13} /> {u.bedrooms} dorm.</span>
+            )}
           </div>
           <PriceBlock entryPrice={u.price_usd} currentPrice={u.current_price_usd ?? null} />
         </div>
@@ -298,6 +302,54 @@ function UnitCard({
   );
 }
 
+/* ─── Unit cover slider ──────────────────────────── */
+function UnitCoverSlider({
+  images, identifier, statusBadge,
+}: {
+  images: string[] | undefined;
+  identifier: string;
+  statusBadge: { background: string; color: string; label: string };
+}) {
+  const [index, setIndex] = useState(0);
+  const list = images ?? [];
+  const hasMultiple = list.length > 1;
+
+  function go(delta: number, e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIndex((i) => (i + delta + list.length) % list.length);
+  }
+
+  return (
+    <div style={unitCover}>
+      {list.length > 0 ? (
+        <Image src={list[index]} alt={identifier} fill style={{ objectFit: "cover" }} />
+      ) : (
+        <div style={unitPlaceholder}><Building2 size={28} style={{ opacity: 0.2 }} /></div>
+      )}
+      <span style={{ ...badge, background: statusBadge.background, color: statusBadge.color }}>
+        {statusBadge.label}
+      </span>
+
+      {hasMultiple && (
+        <>
+          <button type="button" style={{ ...sliderArrow, left: 6 }} onClick={(e) => go(-1, e)} aria-label="Foto anterior">
+            <ChevronLeft size={16} />
+          </button>
+          <button type="button" style={{ ...sliderArrow, right: 6 }} onClick={(e) => go(1, e)} aria-label="Foto siguiente">
+            <ChevronRight size={16} />
+          </button>
+          <div style={sliderDots}>
+            {list.map((_, i) => (
+              <span key={i} style={sliderDot(i === index)} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ─── Price block ───────────────────────────────── */
 function PriceBlock({ entryPrice, currentPrice }: { entryPrice: number | null; currentPrice: number | null }) {
   const fmtUsd = (n: number) => `USD ${n.toLocaleString("es-AR")}`;
@@ -307,6 +359,7 @@ function PriceBlock({ entryPrice, currentPrice }: { entryPrice: number | null; c
   const hasCurrent = currentPrice != null && currentPrice !== entryPrice;
   const gain = hasCurrent ? ((currentPrice - entryPrice) / entryPrice) * 100 : 0;
   const positive = gain >= 0;
+  const minInvest = Math.round((currentPrice ?? entryPrice) * MIN_ENTRY_PCT);
 
   return (
     <div style={priceBlock}>
@@ -324,12 +377,10 @@ function PriceBlock({ entryPrice, currentPrice }: { entryPrice: number | null; c
           </div>
         )}
       </div>
+      <p style={minInvestLabel}>Invertí desde {fmtUsd(minInvest)}</p>
       {hasCurrent && (
         <div style={{ ...yieldBadge, background: positive ? "#dcfce7" : "#fee2e2", color: positive ? "#166534" : "#991b1b" }}>
-          <span>{positive ? "▲" : "▼"} {Math.abs(gain).toFixed(1)}% rendimiento</span>
-          <span style={{ opacity: 0.6, fontSize: "0.68rem" }}>
-            {positive ? "+" : ""}{fmtUsd(currentPrice! - entryPrice)} vs entrada
-          </span>
+          <span>{positive ? "▲" : "▼"} {Math.abs(gain).toFixed(1)}% sobre el valor original</span>
         </div>
       )}
     </div>
@@ -402,7 +453,7 @@ const investorHint: React.CSSProperties = {
 };
 
 /* Dev card */
-const devGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.5rem" };
+const devGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", gap: "1.5rem" };
 const devCard: React.CSSProperties = {
   background: "#fff", borderRadius: 14, overflow: "hidden",
   border: "1px solid #e5e7eb", textDecoration: "none", color: "inherit",
@@ -423,7 +474,7 @@ const devCta: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, colo
 const unitLink: React.CSSProperties = { textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column" };
 
 /* Unit card */
-const unitGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" };
+const unitGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", gap: "1.5rem" };
 const unitCard: React.CSSProperties = {
   background: "#fff", borderRadius: 14, overflow: "hidden",
   border: "1.5px solid #e5e7eb", display: "flex", flexDirection: "column",
@@ -436,7 +487,24 @@ const unitBody: React.CSSProperties = { padding: "1rem", display: "flex", flexDi
 const devNameLabel: React.CSSProperties = { fontSize: "0.72rem", color: "#9ca3af", margin: 0, fontWeight: 600 };
 const unitId: React.CSSProperties = { fontSize: "1rem", fontWeight: 700, margin: 0 };
 const unitStats: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.1rem" };
-const statChip: React.CSSProperties = { fontSize: "0.75rem", padding: "0.15rem 0.5rem", background: "#f3f4f6", color: "#374151", borderRadius: 999 };
+const statChip: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+  fontSize: "0.75rem", padding: "0.15rem 0.55rem", background: "#f3f4f6", color: "#374151", borderRadius: 999,
+};
+const sliderArrow: React.CSSProperties = {
+  position: "absolute", top: "50%", transform: "translateY(-50%)",
+  width: 26, height: 26, borderRadius: "50%", border: "none", cursor: "pointer",
+  background: "rgba(0,0,0,0.45)", color: "#fff",
+  display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
+};
+const sliderDots: React.CSSProperties = {
+  position: "absolute", bottom: 8, left: 0, right: 0,
+  display: "flex", justifyContent: "center", gap: "0.3rem", zIndex: 2,
+};
+const sliderDot = (active: boolean): React.CSSProperties => ({
+  width: 5, height: 5, borderRadius: "50%",
+  background: active ? "#fff" : "rgba(255,255,255,0.5)",
+});
 const priceLabel: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 800, color: "#111", margin: "0.25rem 0 0" };
 
 /* PriceBlock */
@@ -445,7 +513,12 @@ const priceRow: React.CSSProperties = { display: "flex", justifyContent: "space-
 const priceSublabel: React.CSSProperties = { fontSize: "0.62rem", color: "#9ca3af", margin: "0 0 0.1rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" };
 const priceEntry: React.CSSProperties = { fontSize: "0.92rem", fontWeight: 700, color: "#6b7280", margin: 0 };
 const priceCurrent: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 900, margin: 0 };
-const yieldBadge: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center", borderRadius: 8, padding: "0.35rem 0.6rem", fontSize: "0.75rem", fontWeight: 700 };
+const minInvestLabel: React.CSSProperties = {
+  fontSize: "0.78rem", fontWeight: 700, color: "#166534",
+  background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 6,
+  padding: "0.3rem 0.55rem", margin: 0, display: "inline-block",
+};
+const yieldBadge: React.CSSProperties = { display: "flex", alignItems: "center", borderRadius: 8, padding: "0.35rem 0.6rem", fontSize: "0.75rem", fontWeight: 700 };
 const btnInvest: React.CSSProperties = {
   display: "block", width: "100%", padding: "0.5rem", background: "#fff",
   border: "1.5px solid #111", borderRadius: 8, fontWeight: 700,

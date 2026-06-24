@@ -2,6 +2,7 @@ import { getSession } from "@/lib/session";
 import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import PublicShell from "@/components/PublicShell";
 import CatalogSection from "@/components/CatalogSection";
+import InvestmentSimulator from "@/components/InvestmentSimulator";
 import FeaturedSlider from "@/components/FeaturedSlider";
 import AuthCTASection from "@/components/AuthCTASection";
 import Link from "next/link";
@@ -102,8 +103,14 @@ export default async function Home({ params }: { params: { lang: string } }) {
   return (
     <PublicShell lang={lang}>
       {/* ─── Hero ──────────────────────────────────── */}
+      <style>{`
+        @media (max-width: 768px) {
+          .hero-inner { grid-template-columns: 1fr !important; gap: 2rem !important; }
+          .hero-visual { justify-self: start; }
+        }
+      `}</style>
       <section style={hero}>
-        <div style={heroInner}>
+        <div style={heroInner} className="hero-inner">
           <div style={heroText}>
             {isInvestor && (
               <span style={heroBadge}>
@@ -150,7 +157,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
               </div>
             </div>
           </div>
-          <div style={heroVisual}>
+          <div style={heroVisual} className="hero-visual">
             <div style={heroCard}>
               <div style={heroCardInner}>
                 <span style={heroCardLabel}>Rendimiento promedio</span>
@@ -205,6 +212,13 @@ export default async function Home({ params }: { params: { lang: string } }) {
           </div>
         </div>
       </section>
+
+      {/* ─── Simulador de inversión ─────────────────── */}
+      <InvestmentSimulator
+        developments={serialized.developments as Parameters<typeof InvestmentSimulator>[0]["developments"]}
+        units={serialized.units as Parameters<typeof InvestmentSimulator>[0]["units"]}
+        lang={lang}
+      />
 
       {/* ─── Full catalog ───────────────────────────── */}
       <div id="catalogo">

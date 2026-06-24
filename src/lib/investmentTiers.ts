@@ -1,3 +1,5 @@
+export const MIN_ENTRY_PCT = 0.05;
+
 export type TierThresholds = {
   bronze_from: number;
   silver_from: number;
@@ -34,7 +36,7 @@ export function unitQualifiesForTier(
   tier: TierDef
 ): boolean {
   const availablePct = unit.available_pct ?? 100;
-  const minInvest = unit.price_usd * 0.05;
+  const minInvest = unit.price_usd * MIN_ENTRY_PCT;
   const maxInvest = unit.price_usd * (availablePct / 100);
 
   if (tier.key === "platinum") {
