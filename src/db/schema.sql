@@ -57,3 +57,12 @@ CREATE TABLE IF NOT EXISTS investments (
   removal_ack_at       TIMESTAMPTZ,
   created_at           TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  id            SMALLINT      PRIMARY KEY DEFAULT 1,
+  silver_from   NUMERIC(14,2) NOT NULL DEFAULT 10000,
+  gold_from     NUMERIC(14,2) NOT NULL DEFAULT 25000,
+  platinum_from NUMERIC(14,2) NOT NULL DEFAULT 150000,
+  CONSTRAINT app_settings_singleton CHECK (id = 1)
+);
+INSERT INTO app_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;

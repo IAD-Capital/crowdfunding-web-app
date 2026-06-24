@@ -76,6 +76,9 @@ export default async function AdminHeader({ lang }: Props) {
               <Link href={`/${lang}/admin/users`} className={s.navLink}>
                 {t.admin.nav.users}
               </Link>
+              <Link href={`/${lang}/admin/settings`} className={s.navLink}>
+                Configuración
+              </Link>
             </>
           )}
         </nav>

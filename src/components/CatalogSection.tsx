@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import BuyDrawer from "./BuyDrawer";
+import { getTierDefs, unitQualifiesForTier, type TierThresholds, type TierKey } from "@/lib/investmentTiers";
 
 export type Development = {
   id: number;
@@ -42,6 +43,7 @@ type Props = {
   isInvestor: boolean;
   myInvestedUnitIds?: number[];
   lang: string;
+  tierThresholds: TierThresholds;
 };
 
 const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
@@ -50,11 +52,20 @@ const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
   sold:      { bg: "#fee2e2", fg: "#991b1b", label: "Vendida" },
 };
 
-export default function CatalogSection({ developments, units, isInvestor, myInvestedUnitIds = [], lang }: Props) {
+export default function CatalogSection({ developments, units, isInvestor, myInvestedUnitIds = [], lang, tierThresholds }: Props) {
   const [devFilter, setDevFilter] = useState<number | "all">("all");
+  const [tierFilter, setTierFilter] = useState<TierKey | "all">("all");
   const [drawerUnit, setDrawerUnit] = useState<Unit | null>(null);
 
-  const visibleUnits = devFilter === "all" ? units : units.filter((u) => u.development_id === devFilter);
+  const tierDefs = getTierDefs(tierThresholds);
+
+  const devFiltered = devFilter === "all" ? units : units.filter((u) => u.development_id === devFilter);
+  const visibleUnits = tierFilter === "all"
+    ? devFiltered
+    : devFiltered.filter((u) => {
+        const tier = tierDefs.find((t) => t.key === tierFilter);
+        return tier ? unitQualifiesForTier(u, tier) : true;
+      });
   const availableUnits = visibleUnits.filter((u) => u.status !== "sold");
   const drawerDev = drawerUnit ? developments.find((d) => d.id === drawerUnit.development_id) : null;
 
@@ -85,6 +96,25 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
           <div>
             <h2 style={blockTitle}>Departamentos</h2>
             <p style={blockSub}>{units.length} unidad{units.length !== 1 ? "es" : ""} en total</p>
+          </div>
+        </div>
+
+        {/* Filter by investment tier */}
+        <div style={tierFilterBlock}>
+          <p style={tierFilterLabel}>¿Cuánto querés invertir?</p>
+          <div style={filterRow}>
+            <button style={filterChip(tierFilter === "all")} onClick={() => setTierFilter("all")}>
+              Todos
+            </button>
+            {tierDefs.map((t) => (
+              <button
+                key={t.key}
+                style={{ ...filterChip(tierFilter === t.key), ...(tierFilter === t.key ? {} : tierChipColor(t.key)) }}
+                onClick={() => setTierFilter(t.key)}
+              >
+                {t.label} · desde USD {t.from.toLocaleString("es-AR")}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -290,6 +320,18 @@ const filterChip = (active: boolean): React.CSSProperties => ({
   cursor: "pointer", border: `1.5px solid ${active ? "#111" : "#d1d5db"}`,
   background: active ? "#111" : "#fff", color: active ? "#fff" : "#374151",
 });
+const tierFilterBlock: React.CSSProperties = { marginBottom: "1.5rem" };
+const tierFilterLabel: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, color: "#374151", margin: "0 0 0.5rem" };
+const TIER_COLORS: Record<string, { border: string; color: string }> = {
+  bronze: { border: "#d97706", color: "#92400e" },
+  silver: { border: "#94a3b8", color: "#475569" },
+  gold: { border: "#ca8a04", color: "#854d0e" },
+  platinum: { border: "#7c3aed", color: "#5b21b6" },
+};
+const tierChipColor = (key: string): React.CSSProperties => {
+  const c = TIER_COLORS[key];
+  return c ? { borderColor: c.border, color: c.color } : {};
+};
 const investorHint: React.CSSProperties = {
   background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10,
   padding: "0.75rem 1rem", fontSize: "0.85rem", color: "#92400e",

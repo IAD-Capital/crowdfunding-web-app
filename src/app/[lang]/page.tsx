@@ -7,6 +7,7 @@ import AuthCTASection from "@/components/AuthCTASection";
 import Link from "next/link";
 import db from "@/lib/db";
 import type { Development, Unit } from "@/components/CatalogSection";
+import type { TierThresholds } from "@/lib/investmentTiers";
 
 type DevRow = Omit<Development, "unit_count"> & { unit_count: number; completion_date: Date | string | null };
 type FeaturedRow = Omit<DevRow, "description">;
@@ -22,6 +23,17 @@ export default async function Home({ params }: { params: { lang: string } }) {
   const [session] = await Promise.all([getSession(), getDictionary(lang)]);
 
   const isInvestor = session?.role === "investor";
+
+  const [tierRow] = await db<TierThresholds[]>`
+    SELECT silver_from, gold_from, platinum_from FROM app_settings WHERE id = 1
+  `;
+  const tierThresholds: TierThresholds = tierRow
+    ? {
+        silver_from: Number(tierRow.silver_from),
+        gold_from: Number(tierRow.gold_from),
+        platinum_from: Number(tierRow.platinum_from),
+      }
+    : { silver_from: 10000, gold_from: 25000, platinum_from: 150000 };
 
   const developments = await db<DevRow[]>`
     SELECT d.id, d.name, d.address, d.description, d.status,
@@ -201,6 +213,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
           isInvestor={isInvestor}
           myInvestedUnitIds={myInvestedUnitIds}
           lang={lang}
+          tierThresholds={tierThresholds}
         />
       </div>
 
