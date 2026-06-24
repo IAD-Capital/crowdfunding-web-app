@@ -3,6 +3,36 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { requireAdmin } from "@/lib/requireAdmin";
 
+export const dynamic = "force-dynamic";
+
+const BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? "uploads";
+
+async function uploadToSupabase(file: File, filename: string, supabaseUrl: string, serviceRoleKey: string) {
+  const res = await fetch(`${supabaseUrl}/storage/v1/object/${BUCKET}/${filename}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${serviceRoleKey}`,
+      apikey: serviceRoleKey,
+      "Content-Type": file.type,
+    },
+    body: Buffer.from(await file.arrayBuffer()),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Error al subir imagen: ${detail}`);
+  }
+
+  return `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${filename}`;
+}
+
+async function uploadToLocalDisk(file: File, filename: string) {
+  const uploadDir = join(process.cwd(), "public", "uploads");
+  await mkdir(uploadDir, { recursive: true });
+  await writeFile(join(uploadDir, filename), Buffer.from(await file.arrayBuffer()));
+  return `/uploads/${filename}`;
+}
+
 export async function POST(req: NextRequest) {
   const { error } = await requireAdmin();
   if (error) return error;
@@ -22,10 +52,17 @@ export async function POST(req: NextRequest) {
 
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const uploadDir = join(process.cwd(), "public", "uploads");
 
-  await mkdir(uploadDir, { recursive: true });
-  await writeFile(join(uploadDir, filename), Buffer.from(await file.arrayBuffer()));
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  return NextResponse.json({ path: `/uploads/${filename}` });
+  try {
+    const path = supabaseUrl && serviceRoleKey
+      ? await uploadToSupabase(file, filename, supabaseUrl, serviceRoleKey)
+      : await uploadToLocalDisk(file, filename);
+
+    return NextResponse.json({ path });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Error al subir imagen." }, { status: 500 });
+  }
 }

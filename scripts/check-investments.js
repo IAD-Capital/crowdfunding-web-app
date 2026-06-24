@@ -4,20 +4,19 @@ const sql = postgres(url, { ssl: "require" });
 
 (async () => {
   try {
-    const tables = await sql`
-      SELECT table_name FROM information_schema.tables
-      WHERE table_schema = 'public' ORDER BY table_name
+    const devs = await sql`
+      SELECT id, images FROM developments
+      WHERE EXISTS (SELECT 1 FROM unnest(images) i WHERE i LIKE '/uploads/%')
     `;
-    console.log("public tables:", tables.map((t) => t.table_name));
-
-    const cols = await sql`
-      SELECT column_name, data_type FROM information_schema.columns
-      WHERE table_name = 'investments' ORDER BY ordinal_position
+    const units = await sql`
+      SELECT id, images FROM units
+      WHERE EXISTS (SELECT 1 FROM unnest(images) i WHERE i LIKE '/uploads/%')
     `;
-    console.log("investments columns:", cols);
-
-    const admin = await sql`SELECT id, email, role FROM users WHERE email = 'admin@iadcapital.app'`;
-    console.log("seeded admin:", admin);
+    console.log("developments still referencing local /uploads:", devs);
+    console.log("units still referencing local /uploads:", units);
+    if (devs.length === 0 && units.length === 0) {
+      console.log("✓ Migration looks complete — no rows reference local paths.");
+    }
   } catch (e) {
     console.error("ERR", e.message);
   } finally {
