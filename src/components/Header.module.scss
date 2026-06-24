@@ -31,10 +31,155 @@
 }
 
 .navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   color: #374151;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
+}
+
+.centerNav {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+}
+
+.navTrigger {
+  height: 100%;
+  padding: 0 0.4rem;
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+
+  &:hover .navLink,
+  &:focus-within .navLink {
+    color: #111;
+  }
+
+  &:hover .chevron,
+  &:focus-within .chevron {
+    transform: rotate(180deg);
+  }
+
+  &:hover .megaMenu,
+  &:focus-within .megaMenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+}
+
+.megaMenu {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
+  padding: 2rem 1.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+  z-index: 60;
+
+  // invisible bridge so the cursor can travel from the trigger to the panel
+  &::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 0;
+    right: 0;
+    height: 14px;
+  }
+}
+
+.megaMenuInner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.megaMenuGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+  gap: 1rem;
+}
+
+.megaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 12px;
+  padding: 0.5rem;
+  transition: background 0.15s;
+
+  &:hover {
+    background: #f9fafb;
+  }
+}
+
+.megaItemImage {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.megaItemPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+}
+
+.megaItemBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.megaItemName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.megaItemAddr {
+  font-size: 0.72rem;
+  color: #9ca3af;
+}
+
+.megaFooterLink {
+  display: block;
+  text-align: center;
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #f3f4f6;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #111;
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .centerNav {
+    display: none;
+  }
 }
 
 .btnOutline {

@@ -121,7 +121,7 @@ export default async function PublicDevelopmentPage({
                             {u.orientation && <span style={chip}>{u.orientation}</span>}
                           </div>
                           {u.description && (
-                            <p style={{ fontSize: "0.82rem", color: "#6b7280", margin: "0.35rem 0 0", lineHeight: 1.5 }}>{u.description}</p>
+                            <p style={descClamp}>{u.description}</p>
                           )}
                           <p style={unitPrice}>
                             {u.price_usd != null
@@ -222,6 +222,13 @@ const infoCard: React.CSSProperties = { background: "#fff", border: "1px solid #
 const sectionTitle: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem", letterSpacing: "-0.02em" };
 const descSection: React.CSSProperties = {};
 const descText: React.CSSProperties = { color: "#374151", lineHeight: 1.7, margin: 0 };
+const descClamp: React.CSSProperties = {
+  fontSize: "0.82rem", color: "#6b7280", margin: "0.35rem 0 0", lineHeight: 1.5,
+  display: "-webkit-box",
+  WebkitLineClamp: 4,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+};
 const amenSection: React.CSSProperties = {};
 const amenRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.4rem" };
 const amenChip: React.CSSProperties = { padding: "0.35rem 0.9rem", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 999, fontSize: "0.85rem", color: "#374151" };
