@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import BuyDrawer from "./BuyDrawer";
+import { Shield, Layers, Star, Gem, type LucideIcon } from "lucide-react";
 import { getTierDefs, unitQualifiesForTier, type TierThresholds, type TierKey } from "@/lib/investmentTiers";
 
 export type Development = {
@@ -101,20 +102,37 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
 
         {/* Filter by investment tier */}
         <div style={tierFilterBlock}>
-          <p style={tierFilterLabel}>¿Cuánto querés invertir?</p>
-          <div style={filterRow}>
-            <button style={filterChip(tierFilter === "all")} onClick={() => setTierFilter("all")}>
-              Todos
-            </button>
-            {tierDefs.map((t) => (
-              <button
-                key={t.key}
-                style={{ ...filterChip(tierFilter === t.key), ...(tierFilter === t.key ? {} : tierChipColor(t.key)) }}
-                onClick={() => setTierFilter(t.key)}
-              >
-                {t.label} · desde USD {t.from.toLocaleString("es-AR")}
+          <div style={tierFilterHeader}>
+            <h3 style={tierFilterTitle}>¿Cuánto querés invertir?</h3>
+            {tierFilter !== "all" && (
+              <button style={tierClearBtn} onClick={() => setTierFilter("all")}>
+                Ver todos
               </button>
-            ))}
+            )}
+          </div>
+          <div style={tierCardGrid}>
+            {tierDefs.map((t) => {
+              const active = tierFilter === t.key;
+              const count = devFiltered.filter((u) => unitQualifiesForTier(u, t)).length;
+              return (
+                <button
+                  key={t.key}
+                  style={tierCard(t.key, active)}
+                  onClick={() => setTierFilter(active ? "all" : t.key)}
+                >
+                  <span style={tierCardIconWrap(t.key)}>
+                    <TierIcon tierKey={t.key} />
+                  </span>
+                  <span style={tierCardLabel}>{t.label}</span>
+                  <span style={tierCardRange}>
+                    Desde USD {t.from.toLocaleString("es-AR")}
+                  </span>
+                  <span style={tierCardCount(active)}>
+                    {count} unidad{count !== 1 ? "es" : ""} disponible{count !== 1 ? "s" : ""}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -177,6 +195,20 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
       )}
     </section>
   );
+}
+
+/* ─── Tier icon ────────────────────────────────── */
+const TIER_ICONS: Record<string, LucideIcon> = {
+  bronze: Shield,
+  silver: Layers,
+  gold: Star,
+  platinum: Gem,
+};
+
+function TierIcon({ tierKey }: { tierKey: string }) {
+  const Icon = TIER_ICONS[tierKey];
+  if (!Icon) return null;
+  return <Icon size={20} strokeWidth={1.8} />;
 }
 
 /* ─── Dev card ─────────────────────────────────── */
@@ -320,18 +352,49 @@ const filterChip = (active: boolean): React.CSSProperties => ({
   cursor: "pointer", border: `1.5px solid ${active ? "#111" : "#d1d5db"}`,
   background: active ? "#111" : "#fff", color: active ? "#fff" : "#374151",
 });
-const tierFilterBlock: React.CSSProperties = { marginBottom: "1.5rem" };
-const tierFilterLabel: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, color: "#374151", margin: "0 0 0.5rem" };
-const TIER_COLORS: Record<string, { border: string; color: string }> = {
-  bronze: { border: "#d97706", color: "#92400e" },
-  silver: { border: "#94a3b8", color: "#475569" },
-  gold: { border: "#ca8a04", color: "#854d0e" },
-  platinum: { border: "#7c3aed", color: "#5b21b6" },
+const tierFilterBlock: React.CSSProperties = { marginBottom: "2rem" };
+const tierFilterHeader: React.CSSProperties = { display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "0.9rem", flexWrap: "wrap", gap: "0.5rem" };
+const tierFilterTitle: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, color: "#111", margin: 0 };
+const tierClearBtn: React.CSSProperties = {
+  fontSize: "0.8rem", fontWeight: 600, color: "#6b7280", background: "none",
+  border: "none", cursor: "pointer", textDecoration: "underline",
 };
-const tierChipColor = (key: string): React.CSSProperties => {
-  const c = TIER_COLORS[key];
-  return c ? { borderColor: c.border, color: c.color } : {};
+
+const TIER_META: Record<string, { bg: string; border: string; activeBg: string }> = {
+  bronze:   { bg: "#fff7ed", border: "#d97706", activeBg: "#fdebd3" },
+  silver:   { bg: "#f8fafc", border: "#94a3b8", activeBg: "#e9edf2" },
+  gold:     { bg: "#fefce8", border: "#ca8a04", activeBg: "#fdf3c7" },
+  platinum: { bg: "#f5f3ff", border: "#7c3aed", activeBg: "#e9e2fc" },
 };
+
+const tierCardGrid: React.CSSProperties = {
+  display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "0.75rem",
+};
+const tierCard = (key: string, active: boolean): React.CSSProperties => {
+  const m = TIER_META[key];
+  return {
+    display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.2rem",
+    padding: "1rem 1.1rem", borderRadius: 14, cursor: "pointer", textAlign: "left",
+    border: `2px solid ${active ? m.border : "#e5e7eb"}`,
+    background: active ? m.activeBg : "#fff",
+    boxShadow: active ? `0 2px 10px ${m.border}33` : "0 1px 3px rgba(0,0,0,0.04)",
+    transition: "all 0.15s",
+  };
+};
+const tierCardIconWrap = (key: string): React.CSSProperties => {
+  const m = TIER_META[key];
+  return {
+    display: "flex", alignItems: "center", justifyContent: "center",
+    width: 36, height: 36, borderRadius: 10, marginBottom: "0.3rem",
+    background: m.bg, color: "#111",
+  };
+};
+const tierCardLabel: React.CSSProperties = { fontSize: "0.95rem", fontWeight: 800, color: "#111" };
+const tierCardRange: React.CSSProperties = { fontSize: "0.78rem", color: "#6b7280", fontWeight: 600 };
+const tierCardCount = (active: boolean): React.CSSProperties => ({
+  fontSize: "0.72rem", fontWeight: 700, marginTop: "0.3rem",
+  color: active ? "#111" : "#9ca3af",
+});
 const investorHint: React.CSSProperties = {
   background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10,
   padding: "0.75rem 1rem", fontSize: "0.85rem", color: "#92400e",

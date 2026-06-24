@@ -6,6 +6,7 @@ import type { TierThresholds } from "@/lib/investmentTiers";
 type Props = { initial: TierThresholds };
 
 export default function InvestmentTiersForm({ initial }: Props) {
+  const [bronzeFrom, setBronzeFrom] = useState(String(initial.bronze_from));
   const [silverFrom, setSilverFrom] = useState(String(initial.silver_from));
   const [goldFrom, setGoldFrom] = useState(String(initial.gold_from));
   const [platinumFrom, setPlatinumFrom] = useState(String(initial.platinum_from));
@@ -23,6 +24,7 @@ export default function InvestmentTiersForm({ initial }: Props) {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        bronze_from: Number(bronzeFrom),
         silver_from: Number(silverFrom),
         gold_from: Number(goldFrom),
         platinum_from: Number(platinumFrom),
@@ -42,15 +44,22 @@ export default function InvestmentTiersForm({ initial }: Props) {
     <div style={wrap}>
       <h2 style={title}>Tipos de inversión</h2>
       <p style={hint}>
-        Definí desde qué monto comienza cada tipo de inversión. Bronce siempre empieza en USD 0.
+        Definí desde qué monto comienza cada tipo de inversión.
         Platino representa la compra de la unidad funcional completa (100%).
       </p>
 
       <form onSubmit={handleSubmit} style={form}>
-        <div style={tierRow}>
-          <span style={tierBadge("#fde9d9", "#92400e")}>Bronce</span>
-          <span style={tierFrom}>desde USD 0</span>
-        </div>
+        <Field label="Bronce — desde (USD)">
+          <input
+            style={input}
+            type="number"
+            min={0}
+            step={100}
+            value={bronzeFrom}
+            onChange={(e) => setBronzeFrom(e.target.value)}
+            required
+          />
+        </Field>
 
         <Field label="Plata — desde (USD)">
           <input
@@ -122,11 +131,6 @@ const input: React.CSSProperties = {
   padding: "0.55rem 0.75rem", border: "1px solid #d1d5db",
   borderRadius: 8, fontSize: "0.9rem", width: "100%", outline: "none",
 };
-const tierRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem" };
-const tierBadge = (bg: string, fg: string): React.CSSProperties => ({
-  padding: "0.25rem 0.75rem", borderRadius: 999, fontSize: "0.8rem", fontWeight: 700, background: bg, color: fg,
-});
-const tierFrom: React.CSSProperties = { fontSize: "0.85rem", color: "#6b7280" };
 const errorStyle: React.CSSProperties = { fontSize: "0.8rem", color: "#dc2626" };
 const successStyle: React.CSSProperties = { fontSize: "0.8rem", color: "#166534" };
 const actions: React.CSSProperties = { display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" };

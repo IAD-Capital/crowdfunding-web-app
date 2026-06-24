@@ -1,4 +1,5 @@
 export type TierThresholds = {
+  bronze_from: number;
   silver_from: number;
   gold_from: number;
   platinum_from: number;
@@ -15,7 +16,7 @@ export type TierDef = {
 
 export function getTierDefs(thresholds: TierThresholds): TierDef[] {
   return [
-    { key: "bronze", label: "Bronce", from: 0, to: thresholds.silver_from },
+    { key: "bronze", label: "Bronce", from: thresholds.bronze_from, to: thresholds.silver_from },
     { key: "silver", label: "Plata", from: thresholds.silver_from, to: thresholds.gold_from },
     { key: "gold", label: "Oro", from: thresholds.gold_from, to: thresholds.platinum_from },
     { key: "platinum", label: "Platino", from: thresholds.platinum_from, to: null },

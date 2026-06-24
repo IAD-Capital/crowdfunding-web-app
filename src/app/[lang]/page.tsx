@@ -25,15 +25,16 @@ export default async function Home({ params }: { params: { lang: string } }) {
   const isInvestor = session?.role === "investor";
 
   const [tierRow] = await db<TierThresholds[]>`
-    SELECT silver_from, gold_from, platinum_from FROM app_settings WHERE id = 1
+    SELECT bronze_from, silver_from, gold_from, platinum_from FROM app_settings WHERE id = 1
   `;
   const tierThresholds: TierThresholds = tierRow
     ? {
+        bronze_from: Number(tierRow.bronze_from),
         silver_from: Number(tierRow.silver_from),
         gold_from: Number(tierRow.gold_from),
         platinum_from: Number(tierRow.platinum_from),
       }
-    : { silver_from: 10000, gold_from: 25000, platinum_from: 150000 };
+    : { bronze_from: 5000, silver_from: 10000, gold_from: 25000, platinum_from: 150000 };
 
   const developments = await db<DevRow[]>`
     SELECT d.id, d.name, d.address, d.description, d.status,

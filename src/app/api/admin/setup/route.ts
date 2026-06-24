@@ -92,12 +92,14 @@ export async function GET() {
     await db`
       CREATE TABLE IF NOT EXISTS app_settings (
         id           SMALLINT      PRIMARY KEY DEFAULT 1,
+        bronze_from  NUMERIC(14,2) NOT NULL DEFAULT 5000,
         silver_from  NUMERIC(14,2) NOT NULL DEFAULT 10000,
         gold_from    NUMERIC(14,2) NOT NULL DEFAULT 25000,
         platinum_from NUMERIC(14,2) NOT NULL DEFAULT 150000,
         CONSTRAINT app_settings_singleton CHECK (id = 1)
       )
     `;
+    await db`ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS bronze_from NUMERIC(14,2) NOT NULL DEFAULT 5000`;
     await db`INSERT INTO app_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`;
 
     const hash = await hashPassword("Test123@");
