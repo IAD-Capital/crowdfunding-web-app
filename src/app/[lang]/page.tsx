@@ -244,6 +244,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
 const hero: React.CSSProperties = {
   background: "linear-gradient(135deg, #0f0f0f 0%, #1f1f1f 100%)",
   color: "#fff", padding: "5rem 1.5rem",
+  marginTop: -92, paddingTop: "calc(5rem + 92px)",
 };
 const heroInner: React.CSSProperties = {
   maxWidth: 1200, margin: "0 auto",

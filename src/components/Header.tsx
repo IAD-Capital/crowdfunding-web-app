@@ -1,10 +1,11 @@
 import Link from "next/link";
-import Image from "next/image";
 import { getSession } from "@/lib/session";
 import { getDictionary, type Locale } from "@/i18n";
 import LanguageSwitcher from "./LanguageSwitcher";
 import LogoutButton from "./LogoutButton";
 import NotificationBell, { type Notification } from "./NotificationBell";
+import ScrollHeader from "./ScrollHeader";
+import DevelopmentsMenu from "./DevelopmentsMenu";
 import db from "@/lib/db";
 import s from "./Header.module.scss";
 
@@ -63,46 +64,12 @@ export default async function Header({ lang }: Props) {
   }
 
   return (
-    <header className={s.header}>
+    <ScrollHeader>
       <div className={s.inner}>
         <Link href={`/${lang}`} className={s.brand}>IAD Capital</Link>
 
         <nav className={s.centerNav}>
-          {navDevelopments.length > 0 && (
-            <div className={s.navItem}>
-              <Link href={`/${lang}#catalogo`} className={`${s.navLink} ${s.navTrigger}`}>
-                Emprendimientos
-                <svg className={s.chevron} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </Link>
-
-              <div className={s.megaMenu}>
-                <div className={s.megaMenuInner}>
-                  <div className={s.megaMenuGrid}>
-                    {navDevelopments.map((d) => (
-                      <Link key={d.id} href={`/${lang}/emprendimientos/${d.id}`} className={s.megaItem}>
-                        <div className={s.megaItemImage}>
-                          {d.image ? (
-                            <Image src={d.image} alt={d.name} fill style={{ objectFit: "cover" }} />
-                          ) : (
-                            <div className={s.megaItemPlaceholder} />
-                          )}
-                        </div>
-                        <div className={s.megaItemBody}>
-                          <span className={s.megaItemName}>{d.name}</span>
-                          <span className={s.megaItemAddr}>{d.address}</span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                  <Link href={`/${lang}#catalogo`} className={s.megaFooterLink}>
-                    Ver todos los emprendimientos →
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
+          <DevelopmentsMenu developments={navDevelopments} lang={lang} />
         </nav>
 
         <div className={s.right}>
@@ -134,6 +101,6 @@ export default async function Header({ lang }: Props) {
           )}
         </div>
       </div>
-    </header>
+    </ScrollHeader>
   );
 }
