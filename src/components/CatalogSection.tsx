@@ -20,6 +20,8 @@ export type Development = {
   amenities: string[];
   images: string[];
   unit_count: number;
+  developer_id?: number | null;
+  developer_name?: string | null;
 };
 
 export type Unit = {
@@ -58,12 +60,34 @@ const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
 
 export default function CatalogSection({ developments, units, isInvestor, myInvestedUnitIds = [], lang, tierThresholds }: Props) {
   const [devFilter, setDevFilter] = useState<number | "all">("all");
+  const [developerFilter, setDeveloperFilter] = useState<number | "all">("all");
   const [tierFilter, setTierFilter] = useState<TierKey | "all">("all");
   const [drawerUnit, setDrawerUnit] = useState<Unit | null>(null);
 
   const tierDefs = getTierDefs(tierThresholds);
 
-  const devFiltered = devFilter === "all" ? units : units.filter((u) => u.development_id === devFilter);
+  const developerOptions = Array.from(
+    new Map(
+      developments
+        .filter((d): d is Development & { developer_id: number; developer_name: string } =>
+          d.developer_id != null && !!d.developer_name)
+        .map((d) => [d.developer_id, d.developer_name])
+    ).entries()
+  ).sort((a, b) => a[1].localeCompare(b[1]));
+
+  const developerFilteredDevs = developerFilter === "all"
+    ? developments
+    : developments.filter((d) => d.developer_id === developerFilter);
+  const developerFilteredDevIds = new Set(developerFilteredDevs.map((d) => d.id));
+
+  function selectDeveloper(id: number | "all") {
+    setDeveloperFilter(id);
+    setDevFilter("all");
+  }
+
+  const devFiltered = units.filter((u) =>
+    developerFilteredDevIds.has(u.development_id) && (devFilter === "all" || u.development_id === devFilter)
+  );
   const visibleUnits = tierFilter === "all"
     ? devFiltered
     : devFiltered.filter((u) => {
@@ -81,15 +105,33 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
         <div style={blockHeader}>
           <div>
             <h2 style={blockTitle}>Emprendimientos</h2>
-            <p style={blockSub}>{developments.length} proyecto{developments.length !== 1 ? "s" : ""} activo{developments.length !== 1 ? "s" : ""}</p>
+            <p style={blockSub}>{developerFilteredDevs.length} proyecto{developerFilteredDevs.length !== 1 ? "s" : ""} activo{developerFilteredDevs.length !== 1 ? "s" : ""}</p>
           </div>
         </div>
 
-        {developments.length === 0 ? (
+        {/* Filter by developer */}
+        {developerOptions.length > 1 && (
+          <div style={filterRow}>
+            <button style={filterChip(developerFilter === "all")} onClick={() => selectDeveloper("all")}>
+              Todas las desarrolladoras
+            </button>
+            {developerOptions.map(([id, name]) => (
+              <button
+                key={id}
+                style={filterChip(developerFilter === id)}
+                onClick={() => selectDeveloper(id)}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {developerFilteredDevs.length === 0 ? (
           <p style={emptyMsg}>No hay emprendimientos activos en este momento.</p>
         ) : (
           <div style={devGrid}>
-            {developments.map((d) => (
+            {developerFilteredDevs.map((d) => (
               <DevCard key={d.id} d={d} lang={lang} />
             ))}
           </div>
@@ -140,12 +182,12 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
         </div>
 
         {/* Filter by development */}
-        {developments.length > 1 && (
+        {developerFilteredDevs.length > 1 && (
           <div style={filterRow}>
             <button style={filterChip(devFilter === "all")} onClick={() => setDevFilter("all")}>
               Todos
             </button>
-            {developments.map((d) => (
+            {developerFilteredDevs.map((d) => (
               <button
                 key={d.id}
                 style={filterChip(devFilter === d.id)}
@@ -235,6 +277,9 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
       <div style={devBody}>
         <h3 style={devName}>{d.name}</h3>
         <p style={devAddr}>{d.address}</p>
+        {d.developer_name && (
+          <p style={devDeveloper}>Desarrolladora {d.developer_name}</p>
+        )}
         <div style={devStats}>
           <span style={statChip}>🏠 {d.unit_count} unidades</span>
           {fmtDate && <span style={statChip}>📅 {fmtDate}</span>}
@@ -466,6 +511,7 @@ const photoBadge: React.CSSProperties = { position: "absolute", bottom: 8, right
 const devBody: React.CSSProperties = { padding: "1.25rem", flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" };
 const devName: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, margin: 0 };
 const devAddr: React.CSSProperties = { fontSize: "0.82rem", color: "#6b7280", margin: 0 };
+const devDeveloper: React.CSSProperties = { fontSize: "0.76rem", color: "#9ca3af", margin: 0, fontWeight: 600 };
 const devStats: React.CSSProperties = { display: "flex", gap: "0.5rem", flexWrap: "wrap" };
 const amenRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.25rem" };
 const amenChip: React.CSSProperties = { fontSize: "0.72rem", padding: "0.15rem 0.5rem", background: "#f3f4f6", color: "#374151", borderRadius: 999 };

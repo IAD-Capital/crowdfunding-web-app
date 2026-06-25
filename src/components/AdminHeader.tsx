@@ -113,6 +113,9 @@ export default async function AdminHeader({ lang }: Props) {
           </Link>
           {session?.role === "superadmin" && (
             <>
+              <Link href={`/${lang}/admin/developers`} className={s.navLink}>
+                Desarrolladoras
+              </Link>
               <Link href={`/${lang}/admin/investments`} className={s.navLink}>
                 Inversiones
               </Link>

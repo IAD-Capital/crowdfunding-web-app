@@ -3,14 +3,16 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 
-const MAX = 10;
+const DEFAULT_MAX = 10;
 
 type Props = {
   images: string[];
   onChange: (images: string[]) => void;
+  max?: number;
 };
 
-export default function ImageUploader({ images, onChange }: Props) {
+export default function ImageUploader({ images, onChange, max = DEFAULT_MAX }: Props) {
+  const MAX = max;
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");

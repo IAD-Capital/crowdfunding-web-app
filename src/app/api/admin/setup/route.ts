@@ -26,6 +26,18 @@ export async function GET() {
     // Migrate legacy 'admin' role to 'superadmin'
     await db`UPDATE users SET role = 'superadmin' WHERE role = 'admin'`;
 
+    // Developers (Desarrolladoras)
+    await db`
+      CREATE TABLE IF NOT EXISTS developers (
+        id         SERIAL PRIMARY KEY,
+        name       TEXT        NOT NULL,
+        website    TEXT,
+        logo       TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+
     // Developments (Emprendimientos)
     await db`
       CREATE TABLE IF NOT EXISTS developments (
@@ -45,6 +57,7 @@ export async function GET() {
     `;
     await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS images TEXT[] NOT NULL DEFAULT '{}'`;
     await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT false`;
+    await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS developer_id INTEGER REFERENCES developers(id) ON DELETE SET NULL`;
 
     // Units (UF - Unidades Funcionales)
     await db`

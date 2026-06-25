@@ -8,6 +8,15 @@ CREATE TABLE IF NOT EXISTS users (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS developers (
+  id         SERIAL PRIMARY KEY,
+  name       TEXT        NOT NULL,
+  website    TEXT,
+  logo       TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS developments (
   id                  SERIAL PRIMARY KEY,
   name                TEXT        NOT NULL,
@@ -20,6 +29,7 @@ CREATE TABLE IF NOT EXISTS developments (
   amenities           TEXT[]      NOT NULL DEFAULT '{}',
   images              TEXT[]      NOT NULL DEFAULT '{}',
   featured            BOOLEAN     NOT NULL DEFAULT FALSE,
+  developer_id        INTEGER     REFERENCES developers(id) ON DELETE SET NULL,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

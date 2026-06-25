@@ -40,11 +40,13 @@ export default async function Home({ params }: { params: { lang: string } }) {
   const developments = await db<DevRow[]>`
     SELECT d.id, d.name, d.address, d.description, d.status,
            d.completion_date, d.amenities, d.images,
+           d.developer_id, dv.name AS developer_name,
            COUNT(u.id)::int AS unit_count
     FROM developments d
     LEFT JOIN units u ON u.development_id = d.id
+    LEFT JOIN developers dv ON dv.id = d.developer_id
     WHERE d.status = 'active'
-    GROUP BY d.id
+    GROUP BY d.id, dv.name
     ORDER BY d.created_at DESC
   `;
 
