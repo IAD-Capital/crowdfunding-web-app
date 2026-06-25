@@ -9,9 +9,10 @@ type Props = {
   images: string[];
   onChange: (images: string[]) => void;
   max?: number;
+  existingImages?: string[];
 };
 
-export default function ImageUploader({ images, onChange, max = DEFAULT_MAX }: Props) {
+export default function ImageUploader({ images, onChange, max = DEFAULT_MAX, existingImages = [] }: Props) {
   const MAX = max;
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -86,7 +87,13 @@ export default function ImageUploader({ images, onChange, max = DEFAULT_MAX }: P
   }
   function onDragEnd() { dragIndex.current = null; setDragOver(null); }
 
+  function selectExisting(src: string) {
+    if (images.includes(src) || images.length >= MAX) return;
+    onChange([...images, src]);
+  }
+
   const canAdd = images.length < MAX;
+  const pickerImages = existingImages.filter((src) => !images.includes(src));
 
   return (
     <>
@@ -154,6 +161,26 @@ export default function ImageUploader({ images, onChange, max = DEFAULT_MAX }: P
           onChange={(e) => handleFiles(e.target.files)}
           onClick={(e) => ((e.target as HTMLInputElement).value = "")}
         />
+
+        {pickerImages.length > 0 && (
+          <div style={pickerWrap}>
+            <p style={pickerLabel}>O elegí una foto ya cargada para este emprendimiento:</p>
+            <div style={pickerGrid}>
+              {pickerImages.map((src) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => selectExisting(src)}
+                  style={pickerThumb}
+                  disabled={images.length >= MAX}
+                  title="Usar esta foto"
+                >
+                  <Image src={src} alt="" fill style={{ objectFit: "cover", borderRadius: 6 }} />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Lightbox */}
@@ -269,6 +296,17 @@ const addBtn: React.CSSProperties = {
 };
 const hint: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.4rem" };
 const errorStyle: React.CSSProperties = { fontSize: "0.8rem", color: "#dc2626", marginTop: "0.25rem" };
+
+/* Existing-photos picker */
+const pickerWrap: React.CSSProperties = { marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid #f3f4f6" };
+const pickerLabel: React.CSSProperties = { fontSize: "0.75rem", color: "#6b7280", margin: "0 0 0.5rem" };
+const pickerGrid: React.CSSProperties = {
+  display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))", gap: "0.4rem",
+};
+const pickerThumb: React.CSSProperties = {
+  position: "relative", aspectRatio: "1", borderRadius: 6, overflow: "hidden",
+  border: "1px solid #e5e7eb", background: "#f9fafb", cursor: "pointer", padding: 0,
+};
 
 /* Lightbox styles */
 const overlay: React.CSSProperties = {

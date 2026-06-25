@@ -11,8 +11,23 @@ export default async function NewUnitPage({
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const t = await getDictionary(lang);
 
-  const [dev] = await db`SELECT id, name FROM developments WHERE id = ${params.id}`;
+  const [dev] = await db`SELECT id, name, images FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
 
-  return <UnitForm t={t.admin.units} lang={lang} developmentId={params.id} developmentName={dev.name} />;
+  const unitImageRows = await db<{ images: string[] }[]>`
+    SELECT images FROM units WHERE development_id = ${params.id}
+  `;
+  const existingImages = Array.from(
+    new Set([...(dev.images ?? []), ...unitImageRows.flatMap((u) => u.images ?? [])])
+  );
+
+  return (
+    <UnitForm
+      t={t.admin.units}
+      lang={lang}
+      developmentId={params.id}
+      developmentName={dev.name}
+      existingImages={existingImages}
+    />
+  );
 }

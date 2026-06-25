@@ -20,9 +20,9 @@ export type Initial = {
   featured?: boolean;
 };
 
-type Props = { t: T; lang: string; initial?: Initial };
+type Props = { t: T; lang: string; initial?: Initial; existingImages?: string[] };
 
-export default function DevelopmentForm({ t, lang, initial }: Props) {
+export default function DevelopmentForm({ t, lang, initial, existingImages = [] }: Props) {
   const router = useRouter();
   const isEdit = !!initial;
 
@@ -192,7 +192,7 @@ export default function DevelopmentForm({ t, lang, initial }: Props) {
         </Field>
 
         <Field label="Fotos">
-          <ImageUploader images={images} onChange={setImages} />
+          <ImageUploader images={images} onChange={setImages} existingImages={existingImages} />
         </Field>
 
         {error && <p style={errorStyle}>{error}</p>}

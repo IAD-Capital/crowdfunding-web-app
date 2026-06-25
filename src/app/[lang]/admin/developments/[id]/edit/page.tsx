@@ -14,5 +14,19 @@ export default async function EditDevelopmentPage({
   const [dev] = await db`SELECT * FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
 
-  return <DevelopmentForm t={t.admin.developments} lang={lang} initial={dev as any} />;
+  const unitImageRows = await db<{ images: string[] }[]>`
+    SELECT images FROM units WHERE development_id = ${params.id}
+  `;
+  const existingImages = Array.from(
+    new Set([...(dev.images ?? []), ...unitImageRows.flatMap((u) => u.images ?? [])])
+  );
+
+  return (
+    <DevelopmentForm
+      t={t.admin.developments}
+      lang={lang}
+      initial={dev as any}
+      existingImages={existingImages}
+    />
+  );
 }

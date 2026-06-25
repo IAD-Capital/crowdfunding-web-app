@@ -33,9 +33,10 @@ type Props = {
   developmentId: string;
   developmentName: string;
   initial?: Initial;
+  existingImages?: string[];
 };
 
-export default function UnitForm({ t, lang, developmentId, developmentName, initial }: Props) {
+export default function UnitForm({ t, lang, developmentId, developmentName, initial, existingImages = [] }: Props) {
   const router = useRouter();
   const isEdit = !!initial;
 
@@ -185,7 +186,7 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
         </Field>
 
         <Field label="Fotos">
-          <ImageUploader images={images} onChange={setImages} />
+          <ImageUploader images={images} onChange={setImages} existingImages={existingImages} />
         </Field>
 
         <div style={groupSection}>
