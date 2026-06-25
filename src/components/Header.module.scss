@@ -238,6 +238,10 @@
   .centerNav {
     display: none;
   }
+
+  .right {
+    display: none;
+  }
 }
 
 .btnOutline {
@@ -253,4 +257,72 @@
 .userLabel {
   font-size: 0.875rem;
   color: #6b7280;
+}
+
+/* Mobile hamburger menu */
+.hamburgerBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .hamburgerBtn {
+    display: flex;
+  }
+}
+
+.mobileMenuBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 90;
+}
+
+.mobileMenuPanel {
+  position: fixed;
+  top: 92px;
+  right: 16px;
+  width: min(280px, calc(100vw - 32px));
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.16);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 0.25s cubic-bezier(0.22, 1, 0.36, 1), transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.25s;
+  z-index: 95;
+}
+
+.mobileMenuPanelOpen {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.mobileMenuSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+
+  &:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
 }

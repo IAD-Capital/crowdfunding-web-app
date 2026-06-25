@@ -6,6 +6,7 @@ import LogoutButton from "./LogoutButton";
 import NotificationBell, { type Notification } from "./NotificationBell";
 import ScrollHeader from "./ScrollHeader";
 import DevelopmentsMenu from "./DevelopmentsMenu";
+import MobileMenu from "./MobileMenu";
 import db from "@/lib/db";
 import s from "./Header.module.scss";
 
@@ -100,6 +101,13 @@ export default async function Header({ lang }: Props) {
             </>
           )}
         </div>
+
+        <MobileMenu
+          lang={lang}
+          session={session}
+          notifications={notifications}
+          labels={{ admin: t.header.admin, signIn: t.header.signIn, signUp: t.header.signUp, logout: t.auth.logout }}
+        />
       </div>
     </ScrollHeader>
   );
