@@ -54,11 +54,11 @@ export default async function Home({ params }: { params: { lang: string } }) {
            u.orientation, u.price_usd, u.current_price_usd, u.status, u.images, u.description,
            100 - COALESCE((
              SELECT SUM(percentage) FROM investments
-             WHERE unit_id = u.id AND status = 'active'
+             WHERE unit_id = u.id AND status = 'approved'
            ), 0) AS available_pct,
            CASE WHEN u.group_duration_months IS NOT NULL THEN
              (SELECT MIN(i2.created_at) + (u.group_duration_months || ' months')::interval
-              FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'active')
+              FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'approved')
            ELSE NULL END AS group_expires_at
     FROM units u
     JOIN developments d ON d.id = u.development_id
@@ -96,7 +96,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
   const myInvestedUnitIds: number[] = isInvestor
     ? (await db`
         SELECT DISTINCT unit_id FROM investments
-        WHERE user_id = ${Number(session!.sub)} AND status = 'active'
+        WHERE user_id = ${Number(session!.sub)} AND status IN ('pending', 'approved')
       `).map((r) => Number(r.unit_id))
     : [];
 

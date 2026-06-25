@@ -20,8 +20,8 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
   if (Number(inv.user_id) !== Number(session!.sub)) {
     return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   }
-  if (inv.status !== "active") {
-    return NextResponse.json({ error: "Solo se pueden solicitar remociones de inversiones activas." }, { status: 409 });
+  if (inv.status !== "approved") {
+    return NextResponse.json({ error: "Solo se pueden solicitar remociones de inversiones aprobadas." }, { status: 409 });
   }
   if (inv.removal_requested_at) {
     return NextResponse.json({ error: "Ya existe una solicitud de remoción pendiente." }, { status: 409 });

@@ -23,11 +23,11 @@ export default async function PublicUnitPage({
     SELECT u.*,
       100 - COALESCE((
         SELECT SUM(percentage) FROM investments
-        WHERE unit_id = u.id AND status = 'active'
+        WHERE unit_id = u.id AND status = 'approved'
       ), 0) AS available_pct,
       CASE WHEN u.group_duration_months IS NOT NULL THEN
         (SELECT MIN(i2.created_at) + (u.group_duration_months || ' months')::interval
-         FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'active')
+         FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'approved')
       ELSE NULL END AS group_expires_at
     FROM units u
     WHERE u.id = ${params.unitId} AND u.development_id = ${params.id}
@@ -37,28 +37,24 @@ export default async function PublicUnitPage({
   const [dev] = await db`SELECT id, name, address, images FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
 
-  // Check if this investor already holds a position in this unit
+  // Check if this investor already has a pending request or approved position in this unit
   const [myInvestment] = canInvest
     ? await db`
-        SELECT id, percentage, amount_usd FROM investments
-        WHERE unit_id = ${unit.id} AND user_id = ${Number(session!.sub)} AND status = 'active'
+        SELECT id, status, percentage, amount_usd FROM investments
+        WHERE unit_id = ${unit.id} AND user_id = ${Number(session!.sub)} AND status IN ('pending', 'approved')
       `
     : [null];
 
-  // Co-investors: visible to investors only (other active investors in this unit)
-  const coInvestors = canInvest
+  // Co-investors: visible to investors only — anonymous, just the aggregate
+  const [coInvestorAgg] = canInvest
     ? await db`
-        SELECT
-          u.full_name, u.avatar,
-          i.percentage, i.created_at
-        FROM investments i
-        JOIN users u ON u.id = i.user_id
-        WHERE i.unit_id = ${unit.id}
-          AND i.status = 'active'
-          AND i.user_id != ${Number(session!.sub)}
-        ORDER BY i.percentage DESC
+        SELECT COUNT(*)::int AS count, COALESCE(SUM(percentage), 0)::numeric AS total_pct
+        FROM investments
+        WHERE unit_id = ${unit.id}
+          AND status = 'approved'
+          AND user_id != ${Number(session!.sub)}
       `
-    : [];
+    : [{ count: 0, total_pct: 0 }];
 
   const groupExpires = unit.group_expires_at ? new Date(unit.group_expires_at as string) : null;
   const groupExpired = groupExpires ? groupExpires < new Date() : false;
@@ -149,7 +145,7 @@ export default async function PublicUnitPage({
                   </div>
                 )}
 
-                {coInvestors.length === 0 ? (
+                {coInvestorAgg.count === 0 ? (
                   <div style={emptyGroup}>
                     <span style={{ fontSize: "2rem", opacity: 0.15 }}>👥</span>
                     <p style={{ margin: 0, color: "#9ca3af", fontSize: "0.9rem" }}>
@@ -159,26 +155,11 @@ export default async function PublicUnitPage({
                 ) : (
                   <div style={coList}>
                     <p style={coListNote}>
-                      {coInvestors.length} inversor{coInvestors.length !== 1 ? "es" : ""} en este grupo
+                      {coInvestorAgg.count} inversor{coInvestorAgg.count !== 1 ? "es" : ""} en este grupo · {Number(coInvestorAgg.total_pct)}% invertido en total
                     </p>
-                    {coInvestors.map((ci, i) => (
-                      <div key={i} style={coRow}>
-                        <div style={coAvatar}>
-                          {ci.avatar ? (
-                            <Image src={ci.avatar} alt={ci.full_name} fill style={{ objectFit: "cover", borderRadius: "50%" }} />
-                          ) : (
-                            <span style={coAvatarLetter}>{String(ci.full_name)[0]?.toUpperCase()}</span>
-                          )}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <p style={coName}>{ci.full_name}</p>
-                          <div style={coPctBar}>
-                            <div style={{ ...coPctFill, width: `${Number(ci.percentage)}%` }} />
-                          </div>
-                        </div>
-                        <span style={coPctLabel}>{Number(ci.percentage)}%</span>
-                      </div>
-                    ))}
+                    <div style={coPctBar}>
+                      <div style={{ ...coPctFill, width: `${Number(coInvestorAgg.total_pct)}%` }} />
+                    </div>
                   </div>
                 )}
               </div>
@@ -205,11 +186,13 @@ export default async function PublicUnitPage({
 
               {canInvest && myInvestment ? (
                 <div style={alreadyInvested}>
-                  <p style={{ fontWeight: 700, margin: 0, fontSize: "0.88rem" }}>Tu participación</p>
+                  <p style={{ fontWeight: 700, margin: 0, fontSize: "0.88rem" }}>
+                    {myInvestment.status === "pending" ? "Solicitud pendiente de aprobación" : "Tu participación"}
+                  </p>
                   <p style={{ margin: "0.25rem 0 0", fontSize: "1.5rem", fontWeight: 900, letterSpacing: "-0.04em" }}>
                     {Number(myInvestment.percentage)}%
                   </p>
-                  <p style={{ margin: "0.15rem 0 0", fontSize: "0.82rem", color: "#166534" }}>
+                  <p style={{ margin: "0.15rem 0 0", fontSize: "0.82rem", color: myInvestment.status === "pending" ? "#92400e" : "#166534" }}>
                     USD {Number(myInvestment.amount_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })}
                   </p>
                   <a href={`/${lang}/wallet`} style={walletBtn}>Ver mi cartera →</a>
@@ -290,15 +273,10 @@ const emptyGroup: React.CSSProperties = {
   display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem",
   padding: "2rem", background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb",
 };
-const coList: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" };
-const coListNote: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", margin: 0, padding: "0.75rem 1rem", borderBottom: "1px solid #f3f4f6", fontWeight: 600 };
-const coRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 1rem", borderBottom: "1px solid #f9fafb" };
-const coAvatar: React.CSSProperties = { position: "relative", width: 36, height: 36, borderRadius: "50%", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" };
-const coAvatarLetter: React.CSSProperties = { fontSize: "0.9rem", fontWeight: 700, color: "#374151" };
-const coName: React.CSSProperties = { fontSize: "0.85rem", fontWeight: 600, margin: "0 0 0.3rem", color: "#111" };
-const coPctBar: React.CSSProperties = { height: 4, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" };
+const coList: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "1rem", display: "flex", flexDirection: "column", gap: "0.6rem" };
+const coListNote: React.CSSProperties = { fontSize: "0.82rem", color: "#374151", margin: 0, fontWeight: 600 };
+const coPctBar: React.CSSProperties = { height: 6, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" };
 const coPctFill: React.CSSProperties = { height: "100%", background: "linear-gradient(90deg, #4ade80, #22c55e)", borderRadius: 999 };
-const coPctLabel: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, color: "#111", flexShrink: 0 };
 
 const sidebar: React.CSSProperties = { position: "sticky", top: 80 };
 const sideCard: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" };

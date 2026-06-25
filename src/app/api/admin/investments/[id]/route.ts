@@ -10,20 +10,34 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
 
   const { status, percentage, amount_usd, clear_removal_request } = await req.json();
 
-  // If activating this investment, check no other active investment exists for the same user+unit
-  if (status === "active") {
-    const [current] = await db`SELECT unit_id, user_id FROM investments WHERE id = ${params.id}`;
+  // Approving an investment: no other approved investment for the same user+unit,
+  // and the unit must still have enough availability for this percentage.
+  if (status === "approved") {
+    const [current] = await db`SELECT unit_id, user_id, percentage FROM investments WHERE id = ${params.id}`;
     if (current) {
       const [conflict] = await db`
         SELECT id FROM investments
         WHERE unit_id = ${current.unit_id}
           AND user_id = ${current.user_id}
-          AND status = 'active'
+          AND status = 'approved'
           AND id != ${params.id}
       `;
       if (conflict) {
         return NextResponse.json(
-          { error: "Este inversor ya tiene una inversión activa en esta unidad." },
+          { error: "Este inversor ya tiene una inversión aprobada en esta unidad." },
+          { status: 409 }
+        );
+      }
+
+      const [agg] = await db`
+        SELECT COALESCE(SUM(percentage), 0)::numeric AS sold_pct
+        FROM investments WHERE unit_id = ${current.unit_id} AND status = 'approved' AND id != ${params.id}
+      `;
+      const soldPct = Number(agg.sold_pct);
+      const pct = percentage != null ? Number(percentage) : Number(current.percentage);
+      if (soldPct + pct > 100) {
+        return NextResponse.json(
+          { error: `Solo queda ${100 - soldPct}% disponible en esta unidad.` },
           { status: 409 }
         );
       }
@@ -44,7 +58,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   // Recalculate unit status after update
   const [agg] = await db`
     SELECT COALESCE(SUM(percentage), 0)::numeric AS sold_pct
-    FROM investments WHERE unit_id = ${row.unit_id} AND status = 'active'
+    FROM investments WHERE unit_id = ${row.unit_id} AND status = 'approved'
   `;
   const sold = Number(agg.sold_pct);
   const unitStatus = sold >= 100 ? "sold" : sold > 0 ? "partial" : "available";
@@ -63,7 +77,7 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
   // Recalculate unit status
   const [agg] = await db`
     SELECT COALESCE(SUM(percentage), 0)::numeric AS sold_pct
-    FROM investments WHERE unit_id = ${inv.unit_id} AND status = 'active'
+    FROM investments WHERE unit_id = ${inv.unit_id} AND status = 'approved'
   `;
   const sold = Number(agg.sold_pct);
   const unitStatus = sold >= 100 ? "sold" : sold > 0 ? "partial" : "available";

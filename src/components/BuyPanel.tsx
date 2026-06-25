@@ -45,9 +45,10 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
       <div style={panelSuccess}>
         <span style={{ fontSize: "1.5rem" }}>🎉</span>
         <div>
-          <p style={{ fontWeight: 700, margin: 0 }}>¡Inversión confirmada!</p>
+          <p style={{ fontWeight: 700, margin: 0 }}>¡Solicitud enviada!</p>
           <p style={{ color: "#166534", fontSize: "0.82rem", margin: "0.2rem 0 0" }}>
-            Adquiriste el {effectivePct}% de {identifier} por USD {amount.toLocaleString("es-AR", { maximumFractionDigits: 0 })}
+            Solicitaste el {effectivePct}% de {identifier} por USD {amount.toLocaleString("es-AR", { maximumFractionDigits: 0 })}.
+            Tu inversión quedará confirmada una vez que sea aprobada.
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "center" }}>

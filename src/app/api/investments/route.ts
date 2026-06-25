@@ -17,24 +17,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Porcentaje inválido. Debe ser entre 5% y 50% (múltiplos de 5) o el 100%." }, { status: 400 });
   }
 
-  // One investment per user per unit
+  // An investor can't have a pending request or an already-approved investment in the same unit
   const [existing] = await db`
     SELECT id FROM investments
-    WHERE unit_id = ${unit_id} AND user_id = ${session!.sub} AND status = 'active'
+    WHERE unit_id = ${unit_id} AND user_id = ${session!.sub} AND status IN ('pending', 'approved')
   `;
   if (existing) {
-    return NextResponse.json({ error: "Ya tenés una inversión activa en esta unidad." }, { status: 409 });
+    return NextResponse.json(
+      { error: "Ya tenés una solicitud pendiente o una inversión aprobada en esta unidad." },
+      { status: 409 }
+    );
   }
 
   const [unit] = await db`SELECT price_usd, status FROM units WHERE id = ${unit_id}`;
   if (!unit) return NextResponse.json({ error: "Unidad no encontrada." }, { status: 404 });
   if (unit.status === "sold") return NextResponse.json({ error: "Unidad ya vendida." }, { status: 409 });
 
-  // Check total percentage already sold for this unit
+  // Only approved investments count against the unit's availability —
+  // pending requests don't reserve any percentage until approved.
   const [agg] = await db`
     SELECT COALESCE(SUM(percentage), 0)::numeric AS sold_pct
     FROM investments
-    WHERE unit_id = ${unit_id} AND status = 'active'
+    WHERE unit_id = ${unit_id} AND status = 'approved'
   `;
   const soldPct = Number(agg.sold_pct);
   if (soldPct + Number(percentage) > 100) {
@@ -48,17 +52,9 @@ export async function POST(req: NextRequest) {
 
   const [inv] = await db`
     INSERT INTO investments (user_id, unit_id, percentage, amount_usd, status)
-    VALUES (${session!.sub}, ${unit_id}, ${percentage}, ${amount_usd}, 'active')
+    VALUES (${session!.sub}, ${unit_id}, ${percentage}, ${amount_usd}, 'pending')
     RETURNING *
   `;
-
-  // Update unit status if fully sold
-  const newSold = soldPct + Number(percentage);
-  if (newSold >= 100) {
-    await db`UPDATE units SET status = 'sold' WHERE id = ${unit_id}`;
-  } else if (newSold > 0) {
-    await db`UPDATE units SET status = 'partial' WHERE id = ${unit_id}`;
-  }
 
   return NextResponse.json(inv, { status: 201 });
 }

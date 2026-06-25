@@ -103,10 +103,11 @@ export default function BuyDrawer({
             /* ── Success state ── */
             <div style={successWrap}>
               <div style={successIcon}>🎉</div>
-              <h3 style={successTitle}>¡Inversión confirmada!</h3>
+              <h3 style={successTitle}>¡Solicitud enviada!</h3>
               <p style={successSub}>
-                Adquiriste el <strong>{effectivePct}%</strong> de {identifier} por{" "}
-                <strong>USD {amount.toLocaleString("es-AR", { maximumFractionDigits: 0 })}</strong>
+                Solicitaste el <strong>{effectivePct}%</strong> de {identifier} por{" "}
+                <strong>USD {amount.toLocaleString("es-AR", { maximumFractionDigits: 0 })}</strong>.
+                Tu inversión quedará confirmada una vez que sea aprobada.
               </p>
               <div style={successActions}>
                 <a href={`/${lang}/wallet`} style={btnPrimary}>Ver mi cartera →</a>

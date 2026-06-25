@@ -28,11 +28,10 @@ type InvestmentRow = {
   development_images: string[] | null;
 };
 
-type CoInvestorRow = {
+type CoInvestorAgg = {
   unit_id: number;
-  percentage: number | string;
-  full_name: string;
-  avatar: string | null;
+  count: number;
+  total_pct: number | string;
 };
 
 export default async function WalletPage({ params }: { params: { lang: string } }) {
@@ -51,7 +50,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
       u.price_usd AS unit_price_usd, u.status AS unit_status, u.images AS unit_images,
       CASE WHEN u.group_duration_months IS NOT NULL THEN
         (SELECT MIN(i2.created_at) + (u.group_duration_months || ' months')::interval
-         FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'active')
+         FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'approved')
       ELSE NULL END AS group_expires_at,
       d.id AS development_id, d.name AS development_name, d.address AS development_address,
       d.images AS development_images
@@ -62,32 +61,26 @@ export default async function WalletPage({ params }: { params: { lang: string } 
     ORDER BY i.created_at DESC
   `;
 
-  // Co-investors per unit (other active investors in the same units)
+  // Co-investors per unit — anonymous aggregate (count + total %), no names
   const unitIds = Array.from(new Set(investments.map((i) => Number(i.unit_id))));
-  const coInvestors = unitIds.length > 0
-    ? await db<CoInvestorRow[]>`
-        SELECT i.unit_id, i.percentage, usr.full_name, usr.avatar
+  const coInvestorAggs = unitIds.length > 0
+    ? await db<CoInvestorAgg[]>`
+        SELECT i.unit_id, COUNT(*)::int AS count, COALESCE(SUM(i.percentage), 0)::numeric AS total_pct
         FROM investments i
-        JOIN users usr ON usr.id = i.user_id
         WHERE i.unit_id = ANY(${unitIds}::int[])
           AND i.user_id != ${Number(session.sub)}
-          AND i.status = 'active'
-        ORDER BY i.percentage DESC
+          AND i.status = 'approved'
+        GROUP BY i.unit_id
       `
-    : ([] as CoInvestorRow[]);
+    : ([] as CoInvestorAgg[]);
 
-  const coInvestorsByUnit = coInvestors.reduce<Record<number, typeof coInvestors>>((acc, r) => {
-    const uid = Number(r.unit_id);
-    if (!acc[uid]) acc[uid] = [];
-    acc[uid].push(r);
-    return acc;
-  }, {});
+  const coInvestorAggByUnit = new Map(coInvestorAggs.map((r) => [Number(r.unit_id), r]));
 
   const totalInvested = investments
-    .filter((i) => i.status === "active")
+    .filter((i) => i.status === "approved")
     .reduce((sum, i) => sum + Number(i.amount_usd), 0);
 
-  const activeCount = investments.filter((i) => i.status === "active").length;
+  const activeCount = investments.filter((i) => i.status === "approved").length;
 
   const fmtUsd = (n: number) =>
     `USD ${n.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -116,11 +109,11 @@ export default async function WalletPage({ params }: { params: { lang: string } 
           <StatCard
             label="Total invertido"
             value={fmtUsd(totalInvested)}
-            sub="en inversiones activas"
+            sub="en inversiones aprobadas"
             accent
           />
           <StatCard
-            label="Inversiones activas"
+            label="Inversiones aprobadas"
             value={String(activeCount)}
             sub="unidades en cartera"
           />
@@ -145,8 +138,8 @@ export default async function WalletPage({ params }: { params: { lang: string } 
           <div style={cards}>
             {investments.map((inv) => {
               const coverImg = inv.unit_images?.[0] ?? inv.development_images?.[0] ?? null;
-              const statusColor = STATUS[inv.status] ?? STATUS.active;
-              const peers = coInvestorsByUnit[Number(inv.unit_id)] ?? [];
+              const statusColor = STATUS[inv.status] ?? STATUS.approved;
+              const peerAgg = coInvestorAggByUnit.get(Number(inv.unit_id)) ?? null;
               const groupExpires = inv.group_expires_at ? new Date(inv.group_expires_at as string) : null;
               const days = groupExpires ? daysUntil(inv.group_expires_at as string) : null;
               const expired = days !== null && days < 0;
@@ -202,29 +195,14 @@ export default async function WalletPage({ params }: { params: { lang: string } 
                       </div>
                     )}
 
-                    {/* Co-investors */}
-                    {peers.length > 0 && (
+                    {/* Co-investors — anonymous aggregate only */}
+                    {peerAgg && peerAgg.count > 0 && (
                       <div style={coSection}>
-                        <p style={coTitle}>Co-inversores ({peers.length})</p>
-                        <div style={coList}>
-                          {peers.map((p, i) => (
-                            <div key={i} style={coRow}>
-                              <div style={coAvatar}>
-                                {p.avatar ? (
-                                  <img src={p.avatar} alt={p.full_name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
-                                ) : (
-                                  <span style={coInitial}>{String(p.full_name)[0]?.toUpperCase()}</span>
-                                )}
-                              </div>
-                              <div style={coInfo}>
-                                <span style={coName}>{p.full_name}</span>
-                                <div style={coBar}>
-                                  <div style={{ ...coBarFill, width: `${Number(p.percentage)}%` }} />
-                                </div>
-                              </div>
-                              <span style={coPct}>{Number(p.percentage)}%</span>
-                            </div>
-                          ))}
+                        <p style={coTitle}>
+                          Co-inversores ({peerAgg.count}) · {Number(peerAgg.total_pct)}% invertido
+                        </p>
+                        <div style={coBar}>
+                          <div style={{ ...coBarFill, width: `${Number(peerAgg.total_pct)}%` }} />
                         </div>
                       </div>
                     )}
@@ -239,7 +217,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
                       </Link>
                     </div>
 
-                    {inv.status === "active" && session.role === "investor" && (
+                    {inv.status === "approved" && session.role === "investor" && (
                       <RemovalRequestButton
                         investmentId={inv.id}
                         hasPendingRequest={!!inv.removal_requested_at}
@@ -267,12 +245,13 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string;
 }
 
 const STATUS: Record<string, { bg: string; fg: string }> = {
-  active:    { bg: "#dcfce7", fg: "#166534" },
+  approved:  { bg: "#dcfce7", fg: "#166534" },
   pending:   { bg: "#fef9c3", fg: "#854d0e" },
+  rejected:  { bg: "#fee2e2", fg: "#991b1b" },
   cancelled: { bg: "#fee2e2", fg: "#991b1b" },
 };
 const STATUS_LABELS: Record<string, string> = {
-  active: "Activa", pending: "Pendiente", cancelled: "Cancelada",
+  approved: "Aprobada", pending: "Pendiente de aprobación", rejected: "Rechazada", cancelled: "Cancelada",
 };
 
 /* Styles */
@@ -320,13 +299,6 @@ const expiryBannerExpired: React.CSSProperties = { background: "#fee2e2", color:
 /* Co-investors */
 const coSection: React.CSSProperties = { borderTop: "1px solid #f3f4f6", paddingTop: "0.65rem", display: "flex", flexDirection: "column", gap: "0.45rem" };
 const coTitle: React.CSSProperties = { fontSize: "0.7rem", fontWeight: 700, color: "#9ca3af", margin: 0, textTransform: "uppercase", letterSpacing: "0.04em" };
-const coList: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.35rem" };
-const coRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.5rem" };
-const coAvatar: React.CSSProperties = { width: 24, height: 24, borderRadius: "50%", background: "#e5e7eb", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" };
-const coInitial: React.CSSProperties = { fontSize: "0.65rem", fontWeight: 700, color: "#374151" };
-const coInfo: React.CSSProperties = { flex: 1, display: "flex", flexDirection: "column", gap: "0.15rem" };
-const coName: React.CSSProperties = { fontSize: "0.75rem", fontWeight: 600, color: "#374151" };
-const coBar: React.CSSProperties = { height: 4, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" };
+const coBar: React.CSSProperties = { height: 6, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" };
 const coBarFill: React.CSSProperties = { height: "100%", background: "linear-gradient(90deg, #60a5fa, #3b82f6)", borderRadius: 999 };
-const coPct: React.CSSProperties = { fontSize: "0.72rem", fontWeight: 800, color: "#111", flexShrink: 0 };
 

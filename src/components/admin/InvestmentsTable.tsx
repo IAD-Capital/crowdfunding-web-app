@@ -33,13 +33,17 @@ type UnitGroup = {
   soldPct: number;
   totalAmount: number;
   pendingRemovals: number;
+  pendingApprovals: number;
 };
 
-const STATUS_OPTS = ["active", "pending", "cancelled"] as const;
-const STATUS_LABELS: Record<string, string> = { active: "Activa", pending: "Pendiente", cancelled: "Cancelada" };
+const STATUS_OPTS = ["pending", "approved", "rejected", "cancelled"] as const;
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Pendiente de aprobación", approved: "Aprobada", rejected: "Rechazada", cancelled: "Cancelada",
+};
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
-  active:    { bg: "#dcfce7", fg: "#166534" },
   pending:   { bg: "#fef9c3", fg: "#854d0e" },
+  approved:  { bg: "#dcfce7", fg: "#166534" },
+  rejected:  { bg: "#fee2e2", fg: "#991b1b" },
   cancelled: { bg: "#fee2e2", fg: "#991b1b" },
 };
 
@@ -57,15 +61,17 @@ function groupByUnit(investments: Investment[]): UnitGroup[] {
         soldPct: 0,
         totalAmount: 0,
         pendingRemovals: 0,
+        pendingApprovals: 0,
       });
     }
     const g = map.get(inv.unit_id)!;
     g.investments.push(inv);
-    if (inv.status === "active") {
+    if (inv.status === "approved") {
       g.soldPct += inv.percentage;
       g.totalAmount += inv.amount_usd;
     }
-    if (inv.removal_requested_at && inv.status === "active") g.pendingRemovals++;
+    if (inv.removal_requested_at && inv.status === "approved") g.pendingRemovals++;
+    if (inv.status === "pending") g.pendingApprovals++;
   }
   return Array.from(map.values());
 }
@@ -164,6 +170,30 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
     startTransition(() => router.refresh());
   }
 
+  async function approveInvestment(id: number) {
+    if (!confirm("¿Aprobar esta solicitud de inversión?")) return;
+    setError(null);
+    const res = await fetch(`/api/admin/investments/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "approved" }),
+    });
+    if (!res.ok) { const d = await res.json(); setError(d.error ?? "Error"); return; }
+    startTransition(() => router.refresh());
+  }
+
+  async function rejectInvestment(id: number) {
+    if (!confirm("¿Rechazar esta solicitud de inversión?")) return;
+    setError(null);
+    const res = await fetch(`/api/admin/investments/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "rejected" }),
+    });
+    if (!res.ok) { const d = await res.json(); setError(d.error ?? "Error"); return; }
+    startTransition(() => router.refresh());
+  }
+
   if (investments.length === 0) {
     return (
       <div style={empty}>
@@ -236,6 +266,9 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
                 <div>
                   <div style={groupTitle}>
                     {group.identifier}
+                    {group.pendingApprovals > 0 && (
+                      <span style={pendingPill}>🕓 {group.pendingApprovals} solicitud{group.pendingApprovals > 1 ? "es" : ""} por aprobar</span>
+                    )}
                     {group.pendingRemovals > 0 && (
                       <span style={pendingPill}>⚠️ {group.pendingRemovals} remoción{group.pendingRemovals > 1 ? "es" : ""} pendiente{group.pendingRemovals > 1 ? "s" : ""}</span>
                     )}
@@ -294,12 +327,13 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
                   </thead>
                   <tbody>
                     {group.investments.map((inv) => {
-                      const sc = STATUS_COLORS[inv.status] ?? STATUS_COLORS.active;
+                      const sc = STATUS_COLORS[inv.status] ?? STATUS_COLORS.pending;
                       const isEditing = editingId === inv.id;
                       const hasPendingRemoval = !!inv.removal_requested_at;
+                      const isPendingApproval = inv.status === "pending";
 
                       return (
-                        <tr key={inv.id} style={isEditing ? trEditing : hasPendingRemoval ? trPendingRemoval : tr}>
+                        <tr key={inv.id} style={isEditing ? trEditing : isPendingApproval ? trPendingApproval : hasPendingRemoval ? trPendingRemoval : tr}>
                           {/* Investor */}
                           <td style={td}>
                             <div style={userCell}>
@@ -353,6 +387,11 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
                               <div style={actionRow}>
                                 <button style={btnSave} onClick={() => saveEdit(inv.id)} disabled={isPending}>Guardar</button>
                                 <button style={btnCancel} onClick={() => setEditingId(null)}>Cancelar</button>
+                              </div>
+                            ) : isPendingApproval ? (
+                              <div style={actionRow}>
+                                <button style={btnApprove} onClick={() => approveInvestment(inv.id)} disabled={isPending}>Aprobar</button>
+                                <button style={btnReject} onClick={() => rejectInvestment(inv.id)} disabled={isPending}>Rechazar</button>
                               </div>
                             ) : hasPendingRemoval ? (
                               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.3rem" }}>
@@ -422,6 +461,7 @@ const th: React.CSSProperties = { padding: "0.6rem 1rem", textAlign: "left", fon
 const tr: React.CSSProperties = { borderBottom: "1px solid #f9fafb" };
 const trEditing: React.CSSProperties = { ...tr, background: "#f0f9ff" };
 const trPendingRemoval: React.CSSProperties = { ...tr, background: "#fffbeb" };
+const trPendingApproval: React.CSSProperties = { ...tr, background: "#fefce8" };
 const td: React.CSSProperties = { padding: "0.75rem 1rem", verticalAlign: "middle" };
 
 const userCell: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.6rem" };
