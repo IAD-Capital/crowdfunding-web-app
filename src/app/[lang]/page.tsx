@@ -3,9 +3,10 @@ import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18
 import PublicShell from "@/components/PublicShell";
 import CatalogSection from "@/components/CatalogSection";
 import InvestmentSimulator from "@/components/InvestmentSimulator";
-import FeaturedSlider from "@/components/FeaturedSlider";
 import AuthCTASection from "@/components/AuthCTASection";
 import Link from "next/link";
+import Image from "next/image";
+import { FileCheck2, Eye, Activity, ShieldCheck } from "lucide-react";
 import db from "@/lib/db";
 import type { Development, Unit } from "@/components/CatalogSection";
 import type { TierThresholds } from "@/lib/investmentTiers";
@@ -18,6 +19,13 @@ type UnitRow = Omit<Unit, "price_usd" | "current_price_usd" | "available_pct" | 
   available_pct: number | string;
   group_expires_at: Date | string | null;
 };
+
+const TRUST_ITEMS = [
+  { Icon: FileCheck2, title: "Escrituración legal", desc: "Cada inversión se formaliza con respaldo notarial y documentación a tu nombre." },
+  { Icon: Eye, title: "Transparencia total", desc: "Conocé el detalle de cada proyecto, costos y proyecciones antes de invertir." },
+  { Icon: Activity, title: "Seguimiento en vivo", desc: "Mirá el avance de obra y el estado de tu cartera en tiempo real desde la app." },
+  { Icon: ShieldCheck, title: "Retiro con aprobación", desc: "Solicitá el retiro de tu inversión mediante un proceso claro y supervisado." },
+];
 
 export default async function Home({ params }: { params: { lang: string } }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
@@ -68,17 +76,23 @@ export default async function Home({ params }: { params: { lang: string } }) {
     ORDER BY u.price_usd ASC
   `;
 
-  const featuredRows = await db<FeaturedRow[]>`
+  const featuredRows = await db<(FeaturedRow & { developer_name: string | null })[]>`
     SELECT d.id, d.name, d.address, d.status,
            d.completion_date, d.amenities, d.images,
+           dv.name AS developer_name,
            COUNT(u.id)::int AS unit_count
     FROM developments d
     LEFT JOIN units u ON u.development_id = d.id
+    LEFT JOIN developers dv ON dv.id = d.developer_id
     WHERE d.featured = true AND d.status = 'active'
-    GROUP BY d.id
+    GROUP BY d.id, dv.name
     ORDER BY d.created_at DESC
   `;
-  const featured = featuredRows;
+  const featuredDev = featuredRows[0] ?? null;
+  const featuredUnits = featuredDev ? units.filter((u) => u.development_id === featuredDev.id) : [];
+  const featuredMinPrice = featuredUnits.length > 0
+    ? Math.min(...featuredUnits.map((u) => Number(u.price_usd)))
+    : null;
 
   const serialized = {
     developments: developments.map((d) => ({
@@ -102,29 +116,44 @@ export default async function Home({ params }: { params: { lang: string } }) {
       `).map((r) => Number(r.unit_id))
     : [];
 
+  const fmtUsd = (n: number) => `USD ${Math.round(n).toLocaleString("es-AR")}`;
+  const fmtMonthYear = (d: string | Date | null) =>
+    d ? new Date(d).toLocaleDateString("es-AR", { month: "long", year: "numeric", timeZone: "UTC" }) : null;
+
   return (
     <PublicShell lang={lang}>
       {/* ─── Hero ──────────────────────────────────── */}
       <style>{`
-        @media (max-width: 768px) {
-          .hero-inner { grid-template-columns: 1fr !important; gap: 2rem !important; }
-          .hero-visual { justify-self: start; }
+        @media (max-width: 860px) {
+          .hero-inner { grid-template-columns: 1fr !important; gap: 2.5rem !important; }
+          .hero-visual { justify-self: stretch !important; }
+        }
+        @media (max-width: 760px) {
+          .stats-strip { grid-template-columns: 1fr 1fr !important; }
+          .stats-strip > div:nth-child(2) { border-right: none !important; }
+          .trust-grid { grid-template-columns: 1fr 1fr !important; }
+          .featured-card { grid-template-columns: 1fr !important; }
+          .how-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
       <section style={hero}>
         <div style={heroInner} className="hero-inner">
           <div style={heroText}>
-            {isInvestor && (
+            {isInvestor ? (
               <span style={heroBadge}>
+                <span style={heroBadgeDot} />
                 Bienvenido, {session!.fullName} 👋
               </span>
+            ) : (
+              <span style={heroBadge}>
+                <span style={heroBadgeDot} />
+                {developments.length} emprendimiento{developments.length !== 1 ? "s" : ""} activo{developments.length !== 1 ? "s" : ""} · invertí desde el 5%
+              </span>
             )}
-            <h1 style={heroTitle}>
-              Invertí en bienes raíces desde donde estés
-            </h1>
+            <h1 style={heroTitle}>Invertí en bienes raíces desde donde estés</h1>
             <p style={heroSubtitle}>
               Accedé a los mejores emprendimientos inmobiliarios y comprá desde un{" "}
-              <strong>5%</strong> de una unidad funcional. Simple, seguro y rentable.
+              <strong style={{ color: "var(--c-ink)" }}>5%</strong> de una unidad funcional. Simple, seguro y rentable.
             </p>
             <div style={heroCta}>
               {!session ? (
@@ -142,64 +171,142 @@ export default async function Home({ params }: { params: { lang: string } }) {
                 </a>
               ) : null}
             </div>
-            <div style={heroStats}>
-              <div style={heroStat}>
-                <span style={heroStatNum}>{developments.length}</span>
-                <span style={heroStatLabel}>Emprendimientos activos</span>
-              </div>
-              <div style={heroStatDivider} />
-              <div style={heroStat}>
-                <span style={heroStatNum}>{units.length}</span>
-                <span style={heroStatLabel}>Unidades disponibles</span>
-              </div>
-              <div style={heroStatDivider} />
-              <div style={heroStat}>
-                <span style={heroStatNum}>5%</span>
-                <span style={heroStatLabel}>Mínimo de inversión</span>
-              </div>
+            <div style={heroTrust}>
+              <span style={heroTrustItem}><span style={heroTrustCheck}>✓</span>Escrituración legal</span>
+              <span style={heroTrustItem}><span style={heroTrustCheck}>✓</span>Transparencia total</span>
             </div>
           </div>
+
           <div style={heroVisual} className="hero-visual">
-            <div style={heroCard}>
-              <div style={heroCardInner}>
-                <span style={heroCardLabel}>Rendimiento promedio</span>
-                <span style={heroCardValue}>+18% <span style={{ fontSize: "1rem", color: "#6b7280" }}>anual</span></span>
-                <div style={heroCardBar}>
-                  <div style={{ ...heroCardFill, width: "72%" }} />
-                </div>
-                <span style={heroCardSub}>Proyectado en base a emprendimientos anteriores</span>
+            <div style={heroImageFrame}>
+              {featuredDev?.images?.[0] ? (
+                <Image src={featuredDev.images[0]} alt={featuredDev.name} fill style={{ objectFit: "cover" }} priority />
+              ) : (
+                <div style={heroImagePlaceholder} />
+              )}
+              {featuredDev && (
+                <span style={heroImageTag}>{featuredDev.name} · {featuredDev.address}</span>
+              )}
+            </div>
+            <div style={heroChipReturn}>
+              <div style={heroChipLabel}>Rendimiento proyectado</div>
+              <div style={heroChipValue}>+18% <span style={heroChipUnit}>anual</span></div>
+            </div>
+            <div style={heroChipMin}>
+              <div style={heroChipMinLabel}>Entrada mínima</div>
+              <div style={heroChipMinValue}>
+                {featuredMinPrice != null ? fmtUsd(featuredMinPrice * 0.05) : "USD 5.000"}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── Featured developments ──────────────────── */}
-      {featured.length > 0 && (
-        <section style={featuredSection}>
-          <div style={featuredInner}>
-            <div style={featuredHeader}>
-              <div>
-                <h2 style={featuredTitle}>Emprendimientos destacados</h2>
-                <p style={featuredSub}>Oportunidades seleccionadas en las mejores ubicaciones</p>
+      {/* ─── Stats strip ─────────────────────────────── */}
+      <section style={statsSection}>
+        <div style={statsCard} className="stats-strip">
+          <div style={statCell}>
+            <div style={statNum}>{developments.length}</div>
+            <div style={statLabel}>Emprendimientos activos</div>
+          </div>
+          <div style={statCell}>
+            <div style={statNum}>{units.length}</div>
+            <div style={statLabel}>Unidades disponibles</div>
+          </div>
+          <div style={statCell}>
+            <div style={{ ...statNum, color: "var(--c-accent)" }}>5%</div>
+            <div style={statLabel}>Mínimo de inversión</div>
+          </div>
+          <div style={{ ...statCell, borderRight: "none" }}>
+            <div style={{ ...statNum, color: "var(--c-positive)" }}>+18%</div>
+            <div style={statLabel}>Rendimiento promedio anual <span style={{ color: "var(--c-text-faint)" }}>· proyectado</span></div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Trust band ──────────────────────────────── */}
+      <section style={trustSection}>
+        <div style={trustHeader}>
+          <div style={eyebrow}>Por qué IAD Capital</div>
+          <h2 style={trustTitle}>Tu inversión, protegida en cada paso</h2>
+        </div>
+        <div style={trustGrid} className="trust-grid">
+          {TRUST_ITEMS.map(({ Icon, title, desc }) => (
+            <div key={title} style={trustCard}>
+              <div style={trustIconWrap}>
+                <Icon size={20} color="var(--c-accent)" strokeWidth={2} />
               </div>
+              <h3 style={trustCardTitle}>{title}</h3>
+              <p style={trustCardDesc}>{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── Featured emprendimiento ─────────────────── */}
+      {featuredDev && (
+        <section id="emprendimientos" style={featuredSection}>
+          <div style={featuredHeader}>
+            <div>
+              <h2 style={featuredTitle}>Emprendimientos destacados</h2>
+              <p style={featuredSub}>Oportunidades seleccionadas en las mejores ubicaciones</p>
+            </div>
+            <a href="#catalogo" style={featuredAllLink}>Ver todos →</a>
+          </div>
+
+          <div style={featuredCard} className="featured-card">
+            <div style={featuredImageWrap}>
+              {featuredDev.images?.[0] ? (
+                <Image src={featuredDev.images[0]} alt={featuredDev.name} fill style={{ objectFit: "cover" }} />
+              ) : (
+                <div style={featuredImagePlaceholder} />
+              )}
+              <span style={featuredStatusBadge}>Disponible</span>
+            </div>
+            <div style={featuredBody}>
+              <div style={featuredDeveloperLine}>
+                {featuredDev.developer_name ? `Desarrolladora ${featuredDev.developer_name} · ` : ""}{featuredDev.address}
+              </div>
+              <h3 style={featuredName}>{featuredDev.name}</h3>
+              <div style={featuredAddrCaps}>{featuredDev.address.toUpperCase()}</div>
+
+              <div style={featuredChipsRow}>
+                <span style={featuredChip}>🏠 {featuredDev.unit_count} unidad{featuredDev.unit_count !== 1 ? "es" : ""}</span>
+                {fmtMonthYear(featuredDev.completion_date) && (
+                  <span style={featuredChip}>📅 Entrega {fmtMonthYear(featuredDev.completion_date)}</span>
+                )}
+                {featuredDev.amenities?.slice(0, 3).map((a) => (
+                  <span key={a} style={featuredChip}>{a}</span>
+                ))}
+              </div>
+
+              <div style={featuredPriceRow}>
+                <div>
+                  <div style={featuredPriceLabel}>Desde</div>
+                  <div style={featuredPriceValue}>{featuredMinPrice != null ? fmtUsd(featuredMinPrice) : "Consultar"}</div>
+                </div>
+                <div>
+                  <div style={featuredPriceLabel}>Proyectado</div>
+                  <div style={{ ...featuredPriceValue, color: "var(--c-positive)" }}>+18% anual</div>
+                </div>
+              </div>
+
+              <Link href={`/${lang}/emprendimientos/${featuredDev.id}`} style={featuredCta}>
+                Ver emprendimiento →
+              </Link>
             </div>
           </div>
-          <FeaturedSlider
-            developments={featured.map((d) => ({
-              ...d,
-              completion_date: d.completion_date ? new Date(d.completion_date).toISOString() : null,
-            }))}
-            lang={lang}
-          />
         </section>
       )}
 
       {/* ─── How it works ───────────────────────────── */}
-      <section style={howSection}>
+      <section id="como-funciona" style={howSection}>
         <div style={howInner}>
-          <h2 style={howTitle}>¿Cómo funciona?</h2>
-          <div style={howGrid}>
+          <div style={howHeader}>
+            <div style={{ ...eyebrow, color: "#7fa0ff" }}>Cómo funciona</div>
+            <h2 style={howTitle}>Invertí en tres pasos simples</h2>
+          </div>
+          <div style={howGrid} className="how-grid">
             {[
               { n: "01", title: "Elegí tu unidad", desc: "Explorá nuestro catálogo de departamentos en emprendimientos seleccionados." },
               { n: "02", title: "Definí tu porcentaje", desc: "Invertí desde el 5% hasta el 100% del valor de la unidad funcional." },
@@ -216,11 +323,13 @@ export default async function Home({ params }: { params: { lang: string } }) {
       </section>
 
       {/* ─── Simulador de inversión ─────────────────── */}
-      <InvestmentSimulator
-        developments={serialized.developments as Parameters<typeof InvestmentSimulator>[0]["developments"]}
-        units={serialized.units as Parameters<typeof InvestmentSimulator>[0]["units"]}
-        lang={lang}
-      />
+      <div id="simulador">
+        <InvestmentSimulator
+          developments={serialized.developments as Parameters<typeof InvestmentSimulator>[0]["developments"]}
+          units={serialized.units as Parameters<typeof InvestmentSimulator>[0]["units"]}
+          lang={lang}
+        />
+      </div>
 
       {/* ─── Full catalog ───────────────────────────── */}
       <div id="catalogo">
@@ -244,70 +353,146 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
 /* Hero */
 const hero: React.CSSProperties = {
-  background: "linear-gradient(135deg, #0f0f0f 0%, #1f1f1f 100%)",
-  color: "#fff", padding: "5rem 1.5rem",
-  marginTop: -92, paddingTop: "calc(5rem + 92px)",
+  background: "var(--c-bg)",
+  marginTop: -92, paddingTop: "calc(72px + 92px)", paddingBottom: "2.5rem",
+  paddingLeft: "1.5rem", paddingRight: "1.5rem",
 };
 const heroInner: React.CSSProperties = {
   maxWidth: 1200, margin: "0 auto",
-  display: "grid", gridTemplateColumns: "1fr auto",
-  gap: "4rem", alignItems: "center",
+  display: "grid", gridTemplateColumns: "1.05fr 0.95fr",
+  gap: "3.5rem", alignItems: "center",
 };
-const heroText: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1.5rem" };
+const heroText: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1.4rem" };
 const heroBadge: React.CSSProperties = {
-  display: "inline-block", width: "fit-content",
-  background: "rgba(255,255,255,0.1)", borderRadius: 999,
-  padding: "0.35rem 0.9rem", fontSize: "0.85rem", color: "#d1d5db",
+  display: "inline-flex", alignItems: "center", gap: "0.5rem", width: "fit-content",
+  background: "var(--c-positive-light)", color: "var(--c-positive)", borderRadius: 999,
+  padding: "0.45rem 0.85rem", fontSize: "0.8rem", fontWeight: 600,
 };
+const heroBadgeDot: React.CSSProperties = { width: 7, height: 7, borderRadius: "50%", background: "var(--c-positive)", display: "inline-block" };
 const heroTitle: React.CSSProperties = {
-  fontSize: "clamp(2rem, 5vw, 3.25rem)", fontWeight: 900,
-  lineHeight: 1.1, letterSpacing: "-0.04em", margin: 0,
+  fontSize: "clamp(2.1rem, 4.5vw, 3.4rem)", fontWeight: 800,
+  lineHeight: 1.06, letterSpacing: "-0.035em", margin: 0, color: "var(--c-ink)",
 };
 const heroSubtitle: React.CSSProperties = {
-  fontSize: "1.05rem", color: "#9ca3af", lineHeight: 1.6, maxWidth: 520, margin: 0,
+  fontSize: "1.1rem", color: "var(--c-text-secondary)", lineHeight: 1.55, maxWidth: 480, margin: 0,
 };
-const heroCta: React.CSSProperties = { display: "flex", gap: "0.75rem", flexWrap: "wrap" };
+const heroCta: React.CSSProperties = { display: "flex", gap: "0.85rem", flexWrap: "wrap" };
 const btnPrimary: React.CSSProperties = {
-  padding: "0.75rem 1.75rem", background: "#fff", color: "#111",
-  borderRadius: 10, textDecoration: "none", fontWeight: 700, fontSize: "0.95rem",
+  padding: "0.9rem 1.6rem", background: "var(--c-accent)", color: "#fff",
+  borderRadius: 11, textDecoration: "none", fontWeight: 600, fontSize: "0.98rem",
+  boxShadow: "0 10px 24px rgba(27,77,224,0.26)",
 };
 const btnOutline: React.CSSProperties = {
-  padding: "0.75rem 1.75rem", background: "transparent", color: "#fff",
-  border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 10,
-  textDecoration: "none", fontWeight: 600, fontSize: "0.95rem",
+  padding: "0.9rem 1.6rem", background: "var(--c-surface)", color: "var(--c-ink)",
+  border: "1px solid var(--c-border-input)", borderRadius: 11,
+  textDecoration: "none", fontWeight: 600, fontSize: "0.98rem",
 };
-const heroStats: React.CSSProperties = { display: "flex", gap: "0", alignItems: "center", flexWrap: "wrap" };
-const heroStat: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.15rem", padding: "0 1.5rem 0 0" };
-const heroStatNum: React.CSSProperties = { fontSize: "1.75rem", fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" };
-const heroStatLabel: React.CSSProperties = { fontSize: "0.75rem", color: "#6b7280" };
-const heroStatDivider: React.CSSProperties = { width: 1, height: 36, background: "rgba(255,255,255,0.1)", margin: "0 1.5rem 0 0" };
+const heroTrust: React.CSSProperties = { display: "flex", alignItems: "center", gap: "1.1rem", flexWrap: "wrap", color: "var(--c-text-tertiary)", fontSize: "0.85rem", fontWeight: 500, marginTop: "0.4rem" };
+const heroTrustItem: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.5rem" };
+const heroTrustCheck: React.CSSProperties = {
+  width: 18, height: 18, borderRadius: "50%", border: "2px solid var(--c-positive)",
+  display: "inline-flex", alignItems: "center", justifyContent: "center",
+  color: "var(--c-positive)", fontSize: "0.65rem", fontWeight: 800,
+};
 
-/* Hero visual card */
-const heroVisual: React.CSSProperties = { flexShrink: 0 };
-const heroCard: React.CSSProperties = {
-  width: 240, background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, overflow: "hidden",
+/* Hero visual */
+const heroVisual: React.CSSProperties = { position: "relative" };
+const heroImageFrame: React.CSSProperties = {
+  position: "relative", aspectRatio: "4 / 4.4", borderRadius: 22, overflow: "hidden",
+  boxShadow: "0 30px 60px -20px rgba(14,23,38,0.32)", border: "1px solid var(--c-border)",
+  background: "linear-gradient(135deg, #e8eef7, #dfe7f2)",
 };
-const heroCardInner: React.CSSProperties = { padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.6rem" };
-const heroCardLabel: React.CSSProperties = { fontSize: "0.72rem", color: "#9ca3af", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" };
-const heroCardValue: React.CSSProperties = { fontSize: "2rem", fontWeight: 900, color: "#fff" };
-const heroCardBar: React.CSSProperties = { height: 6, background: "rgba(255,255,255,0.1)", borderRadius: 999, overflow: "hidden" };
-const heroCardFill: React.CSSProperties = { height: "100%", background: "linear-gradient(90deg, #4ade80, #22c55e)", borderRadius: 999 };
-const heroCardSub: React.CSSProperties = { fontSize: "0.72rem", color: "#6b7280", lineHeight: 1.4 };
+const heroImagePlaceholder: React.CSSProperties = { position: "absolute", inset: 0, background: "linear-gradient(135deg, #e8eef7, #dfe7f2)" };
+const heroImageTag: React.CSSProperties = {
+  position: "absolute", top: 16, left: 16, background: "rgba(14,23,38,0.74)", backdropFilter: "blur(6px)",
+  color: "#fff", padding: "0.5rem 0.8rem", borderRadius: 9, fontSize: "0.8rem", fontWeight: 600,
+};
+const heroChipReturn: React.CSSProperties = {
+  position: "absolute", top: -18, right: -10, background: "var(--c-surface)", border: "1px solid var(--c-border)",
+  borderRadius: 14, padding: "0.85rem 1.1rem", boxShadow: "0 18px 38px -14px rgba(14,23,38,0.28)",
+};
+const heroChipLabel: React.CSSProperties = { fontSize: "0.72rem", color: "var(--c-text-tertiary)", fontWeight: 600, marginBottom: "0.1rem" };
+const heroChipValue: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1.6rem", fontWeight: 800, color: "var(--c-positive)", letterSpacing: "-0.02em" };
+const heroChipUnit: React.CSSProperties = { fontSize: "0.85rem", color: "var(--c-text-secondary)", fontWeight: 600, fontFamily: "var(--font-body)" };
+const heroChipMin: React.CSSProperties = {
+  position: "absolute", bottom: -20, left: -10, background: "var(--c-ink)", color: "#fff",
+  borderRadius: 14, padding: "0.85rem 1.1rem", boxShadow: "0 18px 38px -14px rgba(14,23,38,0.4)",
+};
+const heroChipMinLabel: React.CSSProperties = { fontSize: "0.72rem", color: "var(--c-text-on-dark)", fontWeight: 600, marginBottom: "0.1rem" };
+const heroChipMinValue: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1.45rem", fontWeight: 800, letterSpacing: "-0.02em" };
+
+/* Stats strip */
+const statsSection: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "1.5rem 1.5rem 3.5rem" };
+const statsCard: React.CSSProperties = {
+  background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 18,
+  padding: "0.4rem", display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+};
+const statCell: React.CSSProperties = { padding: "1.4rem 1.6rem", borderRight: "1px solid var(--c-border-soft)" };
+const statNum: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "2.1rem", fontWeight: 800, color: "var(--c-ink)", letterSpacing: "-0.03em" };
+const statLabel: React.CSSProperties = { fontSize: "0.85rem", color: "var(--c-text-secondary)", fontWeight: 500, marginTop: "0.1rem" };
+
+/* Trust band */
+const trustSection: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "0.5rem 1.5rem 4rem" };
+const eyebrow: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em", color: "var(--c-accent)", textTransform: "uppercase", marginBottom: "0.7rem" };
+const trustHeader: React.CSSProperties = { textAlign: "center", maxWidth: 620, margin: "0 auto 2.75rem" };
+const trustTitle: React.CSSProperties = { fontSize: "2.1rem", fontWeight: 800, letterSpacing: "-0.025em", margin: 0, color: "var(--c-ink)" };
+const trustGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem" };
+const trustCard: React.CSSProperties = { background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 16, padding: "1.6rem" };
+const trustIconWrap: React.CSSProperties = {
+  width: 42, height: 42, borderRadius: 11, background: "var(--c-accent-light)",
+  display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.1rem",
+};
+const trustCardTitle: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, margin: "0 0 0.5rem", color: "var(--c-ink)" };
+const trustCardDesc: React.CSSProperties = { fontSize: "0.9rem", lineHeight: 1.5, color: "var(--c-text-secondary)", margin: 0 };
 
 /* Featured */
-const featuredSection: React.CSSProperties = { padding: "5rem 0", background: "#fff", overflow: "hidden" };
-const featuredInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "0 1.5rem" };
-const featuredHeader: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "2rem" };
-const featuredTitle: React.CSSProperties = { fontSize: "1.75rem", fontWeight: 800, margin: "0 0 0.25rem", letterSpacing: "-0.03em" };
-const featuredSub: React.CSSProperties = { color: "#6b7280", margin: 0, fontSize: "0.95rem" };
+const featuredSection: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "1.5rem 1.5rem 4rem" };
+const featuredHeader: React.CSSProperties = { display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "1.75rem", gap: "1.5rem", flexWrap: "wrap" };
+const featuredTitle: React.CSSProperties = { fontSize: "2.1rem", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 0.5rem", color: "var(--c-ink)" };
+const featuredSub: React.CSSProperties = { fontSize: "1rem", color: "var(--c-text-secondary)", margin: 0 };
+const featuredAllLink: React.CSSProperties = { textDecoration: "none", color: "var(--c-accent)", fontWeight: 600, fontSize: "0.95rem" };
+const featuredCard: React.CSSProperties = {
+  background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 22, overflow: "hidden",
+  display: "grid", gridTemplateColumns: "1.15fr 1fr", boxShadow: "0 24px 50px -28px rgba(14,23,38,0.22)",
+};
+const featuredImageWrap: React.CSSProperties = { position: "relative", minHeight: 420, background: "linear-gradient(135deg, #e8eef7, #dfe7f2)" };
+const featuredImagePlaceholder: React.CSSProperties = { position: "absolute", inset: 0 };
+const featuredStatusBadge: React.CSSProperties = {
+  position: "absolute", top: 18, left: 18, background: "var(--c-positive)", color: "#fff",
+  fontSize: "0.78rem", fontWeight: 700, padding: "0.4rem 0.75rem", borderRadius: 999,
+};
+const featuredBody: React.CSSProperties = { padding: "2.4rem 2.5rem", display: "flex", flexDirection: "column" };
+const featuredDeveloperLine: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 600, color: "var(--c-text-tertiary)", marginBottom: "0.5rem" };
+const featuredName: React.CSSProperties = { fontSize: "1.7rem", fontWeight: 800, letterSpacing: "-0.02em", margin: "0 0 0.35rem", color: "var(--c-ink)" };
+const featuredAddrCaps: React.CSSProperties = { fontSize: "0.92rem", color: "var(--c-text-secondary)", marginBottom: "1.5rem" };
+const featuredChipsRow: React.CSSProperties = { display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "1.5rem" };
+const featuredChip: React.CSSProperties = {
+  fontSize: "0.82rem", fontWeight: 600, color: "var(--c-ink)", background: "var(--c-chip-bg)",
+  border: "1px solid var(--c-border)", padding: "0.5rem 0.8rem", borderRadius: 9,
+};
+const featuredPriceRow: React.CSSProperties = {
+  display: "flex", gap: "2rem", padding: "1.25rem 0", borderTop: "1px solid var(--c-border-soft)",
+  borderBottom: "1px solid var(--c-border-soft)", marginBottom: "1.5rem",
+};
+const featuredPriceLabel: React.CSSProperties = { fontSize: "0.78rem", color: "var(--c-text-tertiary)", fontWeight: 600, marginBottom: "0.2rem" };
+const featuredPriceValue: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1.4rem", fontWeight: 800, color: "var(--c-ink)" };
+const featuredCta: React.CSSProperties = {
+  marginTop: "auto", textDecoration: "none", background: "var(--c-accent)", color: "#fff",
+  fontSize: "0.95rem", fontWeight: 600, padding: "0.9rem", borderRadius: 11, textAlign: "center",
+  boxShadow: "0 10px 22px rgba(27,77,224,0.22)",
+};
 
 /* How it works */
-const howSection: React.CSSProperties = { padding: "5rem 1.5rem", background: "#0f0f0f", color: "#fff" };
-const howInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto" };
-const howTitle: React.CSSProperties = { fontSize: "1.75rem", fontWeight: 800, marginBottom: "2.5rem", letterSpacing: "-0.03em" };
-const howGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "2rem" };
-const howCard: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.75rem" };
-const howNum: React.CSSProperties = { fontSize: "2.5rem", fontWeight: 900, color: "rgba(255,255,255,0.1)", letterSpacing: "-0.05em" };
-const howCardTitle: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, margin: 0 };
-const howCardDesc: React.CSSProperties = { color: "#9ca3af", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 };
+const howSection: React.CSSProperties = { background: "var(--c-ink)", marginTop: "1.5rem" };
+const howInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "5rem 1.5rem" };
+const howHeader: React.CSSProperties = { maxWidth: 560, marginBottom: "3rem" };
+const howTitle: React.CSSProperties = { fontSize: "2.25rem", fontWeight: 800, letterSpacing: "-0.03em", margin: 0, color: "#fff", lineHeight: 1.1 };
+const howGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.5rem" };
+const howCard: React.CSSProperties = {
+  display: "flex", flexDirection: "column", gap: "0.6rem",
+  padding: "2rem", borderRadius: 18, border: "1px solid var(--c-ink-border)",
+  background: "var(--c-ink-soft)",
+};
+const howNum: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "0.95rem", fontWeight: 800, color: "#7fa0ff", marginBottom: "2.5rem" };
+const howCardTitle: React.CSSProperties = { fontSize: "1.3rem", fontWeight: 700, margin: 0, color: "#fff" };
+const howCardDesc: React.CSSProperties = { color: "var(--c-text-on-dark)", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 };

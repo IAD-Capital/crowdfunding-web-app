@@ -53,9 +53,9 @@ type Props = {
 };
 
 const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
-  available: { bg: "#dcfce7", fg: "#166534", label: "Disponible" },
-  partial:   { bg: "#fef9c3", fg: "#854d0e", label: "Parcial" },
-  sold:      { bg: "#fee2e2", fg: "#991b1b", label: "Vendida" },
+  available: { bg: "var(--c-positive)", fg: "#fff", label: "Disponible" },
+  partial:   { bg: "#d9a531", fg: "#fff", label: "Parcial" },
+  sold:      { bg: "#991b1b", fg: "#fff", label: "Vendida" },
 };
 
 export default function CatalogSection({ developments, units, isInvestor, myInvestedUnitIds = [], lang, tierThresholds }: Props) {
@@ -165,14 +165,15 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
                   style={tierCard(t.key, active)}
                   onClick={() => setTierFilter(active ? "all" : t.key)}
                 >
-                  <span style={tierCardIconWrap(t.key)}>
-                    <TierIcon tierKey={t.key} />
+                  <span style={tierCardTopRow}>
+                    <span style={tierCardDot(t.key)} />
+                    <TierIcon tierKey={t.key} color={TIER_META[t.key].dot} />
+                    <span style={tierCardLabel(t.key)}>{t.label}</span>
                   </span>
-                  <span style={tierCardLabel}>{t.label}</span>
-                  <span style={tierCardRange}>
+                  <span style={tierCardRange(t.key)}>
                     Desde USD {t.from.toLocaleString("es-AR")}
                   </span>
-                  <span style={tierCardCount(active)}>
+                  <span style={tierCardCount(t.key, active)}>
                     {count} unidad{count !== 1 ? "es" : ""} disponible{count !== 1 ? "s" : ""}
                   </span>
                 </button>
@@ -250,10 +251,10 @@ const TIER_ICONS: Record<string, LucideIcon> = {
   platinum: Gem,
 };
 
-function TierIcon({ tierKey }: { tierKey: string }) {
+function TierIcon({ tierKey, color }: { tierKey: string; color?: string }) {
   const Icon = TIER_ICONS[tierKey];
   if (!Icon) return null;
-  return <Icon size={20} strokeWidth={1.8} />;
+  return <Icon size={16} strokeWidth={2} color={color} />;
 }
 
 /* ─── Dev card ─────────────────────────────────── */
@@ -416,7 +417,7 @@ function PriceBlock({ entryPrice, currentPrice }: { entryPrice: number | null; c
         {hasCurrent && (
           <div style={{ textAlign: "right" }}>
             <p style={priceSublabel}>Precio actual</p>
-            <p style={{ ...priceCurrent, color: positive ? "#166534" : "#991b1b" }}>
+            <p style={{ ...priceCurrent, color: positive ? "var(--c-positive)" : "#991b1b" }}>
               {fmtUsd(currentPrice!)}
             </p>
           </div>
@@ -424,7 +425,7 @@ function PriceBlock({ entryPrice, currentPrice }: { entryPrice: number | null; c
       </div>
       <p style={minInvestLabel}>Invertí desde {fmtUsd(minInvest)}</p>
       {hasCurrent && (
-        <div style={{ ...yieldBadge, background: positive ? "#dcfce7" : "#fee2e2", color: positive ? "#166534" : "#991b1b" }}>
+        <div style={{ ...yieldBadge, background: positive ? "var(--c-positive-light)" : "#fee2e2", color: positive ? "var(--c-positive)" : "#991b1b" }}>
           <span>{positive ? "▲" : "▼"} {Math.abs(gain).toFixed(1)}% sobre el valor original</span>
         </div>
       )}
@@ -433,34 +434,34 @@ function PriceBlock({ entryPrice, currentPrice }: { entryPrice: number | null; c
 }
 
 /* ─── Styles ────────────────────────────────────── */
-const section: React.CSSProperties = { background: "#f9fafb", padding: "5rem 1.5rem" };
+const section: React.CSSProperties = { background: "var(--c-bg)", padding: "1.5rem 1.5rem 5rem" };
 const inner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto" };
 
 const blockHeader: React.CSSProperties = { marginBottom: "1.75rem" };
-const blockTitle: React.CSSProperties = { fontSize: "1.75rem", fontWeight: 800, margin: "0 0 0.25rem", letterSpacing: "-0.03em" };
-const blockSub: React.CSSProperties = { fontSize: "0.9rem", color: "#9ca3af", margin: 0 };
+const blockTitle: React.CSSProperties = { fontSize: "1.75rem", fontWeight: 800, margin: "0 0 0.25rem", letterSpacing: "-0.03em", color: "var(--c-ink)" };
+const blockSub: React.CSSProperties = { fontSize: "0.9rem", color: "var(--c-text-tertiary)", margin: 0 };
 
-const emptyMsg: React.CSSProperties = { color: "#9ca3af", fontSize: "0.95rem" };
+const emptyMsg: React.CSSProperties = { color: "var(--c-text-tertiary)", fontSize: "0.95rem" };
 
 const filterRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "1.25rem" };
 const filterChip = (active: boolean): React.CSSProperties => ({
   padding: "0.3rem 0.75rem", borderRadius: 999, fontSize: "0.82rem", fontWeight: 600,
-  cursor: "pointer", border: `1.5px solid ${active ? "#111" : "#d1d5db"}`,
-  background: active ? "#111" : "#fff", color: active ? "#fff" : "#374151",
+  cursor: "pointer", border: `1.5px solid ${active ? "var(--c-accent)" : "var(--c-border-input)"}`,
+  background: active ? "var(--c-accent)" : "#fff", color: active ? "#fff" : "var(--c-text-secondary)",
 });
 const tierFilterBlock: React.CSSProperties = { marginBottom: "2rem" };
 const tierFilterHeader: React.CSSProperties = { display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "0.9rem", flexWrap: "wrap", gap: "0.5rem" };
-const tierFilterTitle: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, color: "#111", margin: 0 };
+const tierFilterTitle: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, color: "var(--c-ink)", margin: 0 };
 const tierClearBtn: React.CSSProperties = {
-  fontSize: "0.8rem", fontWeight: 600, color: "#6b7280", background: "none",
+  fontSize: "0.8rem", fontWeight: 600, color: "var(--c-text-secondary)", background: "none",
   border: "none", cursor: "pointer", textDecoration: "underline",
 };
 
-const TIER_META: Record<string, { bg: string; border: string; activeBg: string }> = {
-  bronze:   { bg: "#fff7ed", border: "#d97706", activeBg: "#fdebd3" },
-  silver:   { bg: "#f8fafc", border: "#94a3b8", activeBg: "#e9edf2" },
-  gold:     { bg: "#fefce8", border: "#ca8a04", activeBg: "#fdf3c7" },
-  platinum: { bg: "#f5f3ff", border: "#7c3aed", activeBg: "#e9e2fc" },
+const TIER_META: Record<string, { dot: string; activeBorder: string; dark?: boolean }> = {
+  bronze:   { dot: "#c08457", activeBorder: "#c08457" },
+  silver:   { dot: "#9aa7b5", activeBorder: "#9aa7b5" },
+  gold:     { dot: "#d9a531", activeBorder: "#d9a531" },
+  platinum: { dot: "#7fa0ff", activeBorder: "#7fa0ff", dark: true },
 };
 
 const tierCardGrid: React.CSSProperties = {
@@ -468,28 +469,38 @@ const tierCardGrid: React.CSSProperties = {
 };
 const tierCard = (key: string, active: boolean): React.CSSProperties => {
   const m = TIER_META[key];
+  if (m.dark) {
+    return {
+      display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.2rem",
+      padding: "1rem 1.1rem", borderRadius: 14, cursor: "pointer", textAlign: "left",
+      border: `2px solid ${active ? m.activeBorder : "var(--c-ink)"}`,
+      background: "var(--c-ink)",
+      boxShadow: active ? `0 2px 10px ${m.activeBorder}55` : "none",
+      transition: "all 0.15s",
+    };
+  }
   return {
     display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.2rem",
     padding: "1rem 1.1rem", borderRadius: 14, cursor: "pointer", textAlign: "left",
-    border: `2px solid ${active ? m.border : "#e5e7eb"}`,
-    background: active ? m.activeBg : "#fff",
-    boxShadow: active ? `0 2px 10px ${m.border}33` : "0 1px 3px rgba(0,0,0,0.04)",
+    border: `2px solid ${active ? m.activeBorder : "var(--c-border)"}`,
+    background: "#fff",
+    boxShadow: active ? `0 2px 10px ${m.activeBorder}33` : "0 1px 3px rgba(14,23,38,0.04)",
     transition: "all 0.15s",
   };
 };
-const tierCardIconWrap = (key: string): React.CSSProperties => {
-  const m = TIER_META[key];
-  return {
-    display: "flex", alignItems: "center", justifyContent: "center",
-    width: 36, height: 36, borderRadius: 10, marginBottom: "0.3rem",
-    background: m.bg, color: "#111",
-  };
-};
-const tierCardLabel: React.CSSProperties = { fontSize: "0.95rem", fontWeight: 800, color: "#111" };
-const tierCardRange: React.CSSProperties = { fontSize: "0.78rem", color: "#6b7280", fontWeight: 600 };
-const tierCardCount = (active: boolean): React.CSSProperties => ({
+const tierCardTopRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.85rem" };
+const tierCardDot = (key: string): React.CSSProperties => ({
+  width: 9, height: 9, borderRadius: "50%", background: TIER_META[key].dot, flexShrink: 0,
+});
+const tierCardLabel = (key: string): React.CSSProperties => ({
+  fontSize: "0.95rem", fontWeight: 700, color: TIER_META[key].dark ? "#fff" : "var(--c-ink)",
+});
+const tierCardRange = (key: string): React.CSSProperties => ({
+  fontSize: "0.78rem", color: TIER_META[key].dark ? "var(--c-text-on-dark)" : "var(--c-text-tertiary)", fontWeight: 600,
+});
+const tierCardCount = (key: string, active: boolean): React.CSSProperties => ({
   fontSize: "0.72rem", fontWeight: 700, marginTop: "0.3rem",
-  color: active ? "#111" : "#9ca3af",
+  color: TIER_META[key].dark ? "var(--c-text-on-dark)" : (active ? "var(--c-ink)" : "var(--c-text-tertiary)"),
 });
 const investorHint: React.CSSProperties = {
   background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10,
@@ -500,42 +511,43 @@ const investorHint: React.CSSProperties = {
 /* Dev card */
 const devGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", gap: "1.5rem" };
 const devCard: React.CSSProperties = {
-  background: "#fff", borderRadius: 14, overflow: "hidden",
-  border: "1px solid #e5e7eb", textDecoration: "none", color: "inherit",
+  background: "var(--c-surface)", borderRadius: 14, overflow: "hidden",
+  border: "1px solid var(--c-border)", textDecoration: "none", color: "inherit",
   display: "flex", flexDirection: "column",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)", transition: "transform 0.2s, box-shadow 0.2s",
+  boxShadow: "0 2px 8px rgba(14,23,38,0.06)", transition: "transform 0.2s, box-shadow 0.2s",
 };
-const devCover: React.CSSProperties = { position: "relative", height: 200, background: "#f3f4f6" };
-const devPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#f9fafb,#e5e7eb)" };
-const photoBadge: React.CSSProperties = { position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: "0.72rem", padding: "0.15rem 0.45rem", borderRadius: 999 };
+const devCover: React.CSSProperties = { position: "relative", height: 200, background: "#eef1f6" };
+const devPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#e8eef7,#dfe7f2)" };
+const photoBadge: React.CSSProperties = { position: "absolute", bottom: 8, right: 8, background: "rgba(14,23,38,0.6)", color: "#fff", fontSize: "0.72rem", padding: "0.15rem 0.45rem", borderRadius: 999 };
 const devBody: React.CSSProperties = { padding: "1.25rem", flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" };
-const devName: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, margin: 0 };
-const devAddr: React.CSSProperties = { fontSize: "0.82rem", color: "#6b7280", margin: 0 };
-const devDeveloper: React.CSSProperties = { fontSize: "0.76rem", color: "#9ca3af", margin: 0, fontWeight: 600 };
+const devName: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, margin: 0, color: "var(--c-ink)" };
+const devAddr: React.CSSProperties = { fontSize: "0.82rem", color: "var(--c-text-secondary)", margin: 0 };
+const devDeveloper: React.CSSProperties = { fontSize: "0.76rem", color: "var(--c-text-tertiary)", margin: 0, fontWeight: 600 };
 const devStats: React.CSSProperties = { display: "flex", gap: "0.5rem", flexWrap: "wrap" };
 const amenRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.25rem" };
-const amenChip: React.CSSProperties = { fontSize: "0.72rem", padding: "0.15rem 0.5rem", background: "#f3f4f6", color: "#374151", borderRadius: 999 };
-const devCta: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, color: "#111", marginTop: "auto", paddingTop: "0.5rem" };
+const amenChip: React.CSSProperties = { fontSize: "0.72rem", padding: "0.15rem 0.5rem", background: "var(--c-chip-bg)", color: "var(--c-ink)", borderRadius: 999, border: "1px solid var(--c-border)" };
+const devCta: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, color: "var(--c-accent)", marginTop: "auto", paddingTop: "0.5rem" };
 
 const unitLink: React.CSSProperties = { textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column" };
 
 /* Unit card */
 const unitGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", gap: "1.5rem" };
 const unitCard: React.CSSProperties = {
-  background: "#fff", borderRadius: 14, overflow: "hidden",
-  border: "1.5px solid #e5e7eb", display: "flex", flexDirection: "column",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)", transition: "border-color 0.15s, box-shadow 0.15s",
+  background: "var(--c-surface)", borderRadius: 14, overflow: "hidden",
+  border: "1px solid var(--c-border)", display: "flex", flexDirection: "column",
+  boxShadow: "0 2px 8px rgba(14,23,38,0.06)", transition: "border-color 0.15s, box-shadow 0.15s",
 };
-const unitCover: React.CSSProperties = { position: "relative", height: 160, background: "#f3f4f6" };
-const unitPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#f9fafb,#e5e7eb)" };
+const unitCover: React.CSSProperties = { position: "relative", height: 160, background: "#eef1f6" };
+const unitPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#e8eef7,#dfe7f2)" };
 const badge: React.CSSProperties = { position: "absolute", top: 10, left: 10, padding: "0.15rem 0.55rem", borderRadius: 999, fontSize: "0.72rem", fontWeight: 700 };
 const unitBody: React.CSSProperties = { padding: "1rem", display: "flex", flexDirection: "column", gap: "0.35rem" };
-const devNameLabel: React.CSSProperties = { fontSize: "0.72rem", color: "#9ca3af", margin: 0, fontWeight: 600 };
-const unitId: React.CSSProperties = { fontSize: "1rem", fontWeight: 700, margin: 0 };
+const devNameLabel: React.CSSProperties = { fontSize: "0.72rem", color: "var(--c-text-tertiary)", margin: 0, fontWeight: 600 };
+const unitId: React.CSSProperties = { fontSize: "1rem", fontWeight: 700, margin: 0, color: "var(--c-ink)" };
 const unitStats: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.1rem" };
 const statChip: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: "0.3rem",
-  fontSize: "0.75rem", padding: "0.15rem 0.55rem", background: "#f3f4f6", color: "#374151", borderRadius: 999,
+  fontSize: "0.75rem", padding: "0.15rem 0.55rem", background: "var(--c-chip-bg)", color: "var(--c-ink)", borderRadius: 999,
+  border: "1px solid var(--c-border)",
 };
 const sliderArrow: React.CSSProperties = {
   position: "absolute", top: "50%", transform: "translateY(-50%)",
@@ -551,28 +563,27 @@ const sliderDot = (active: boolean): React.CSSProperties => ({
   width: 5, height: 5, borderRadius: "50%",
   background: active ? "#fff" : "rgba(255,255,255,0.5)",
 });
-const priceLabel: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 800, color: "#111", margin: "0.25rem 0 0" };
+const priceLabel: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 800, color: "var(--c-ink)", margin: "0.25rem 0 0" };
 
 /* PriceBlock */
 const priceBlock: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.35rem", marginTop: "0.35rem" };
 const priceRow: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "flex-end" };
-const priceSublabel: React.CSSProperties = { fontSize: "0.62rem", color: "#9ca3af", margin: "0 0 0.1rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" };
-const priceEntry: React.CSSProperties = { fontSize: "0.92rem", fontWeight: 700, color: "#6b7280", margin: 0 };
+const priceSublabel: React.CSSProperties = { fontSize: "0.62rem", color: "var(--c-text-tertiary)", margin: "0 0 0.1rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" };
+const priceEntry: React.CSSProperties = { fontSize: "0.92rem", fontWeight: 700, color: "var(--c-text-secondary)", margin: 0 };
 const priceCurrent: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 900, margin: 0 };
 const minInvestLabel: React.CSSProperties = {
-  fontSize: "0.78rem", fontWeight: 700, color: "#166534",
-  background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 6,
-  padding: "0.3rem 0.55rem", margin: 0, display: "inline-block",
+  fontSize: "0.78rem", fontWeight: 700, color: "var(--c-accent)",
+  margin: "0.1rem 0 0", display: "inline-block",
 };
 const yieldBadge: React.CSSProperties = { display: "flex", alignItems: "center", borderRadius: 8, padding: "0.35rem 0.6rem", fontSize: "0.75rem", fontWeight: 700 };
 const btnInvest: React.CSSProperties = {
-  display: "block", width: "100%", padding: "0.5rem", background: "#fff",
-  border: "1.5px solid #111", borderRadius: 8, fontWeight: 700,
-  fontSize: "0.85rem", cursor: "pointer", color: "#111", transition: "all 0.15s",
+  display: "block", width: "100%", padding: "0.6rem", background: "var(--c-accent-light)",
+  border: "none", borderRadius: 8, fontWeight: 700,
+  fontSize: "0.85rem", cursor: "pointer", color: "var(--c-accent)", transition: "all 0.15s",
   textAlign: "center",
 };
 const btnAlready: React.CSSProperties = {
-  display: "block", width: "100%", padding: "0.5rem", textAlign: "center",
-  background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8,
-  fontWeight: 700, fontSize: "0.82rem", color: "#166534", textDecoration: "none",
+  display: "block", width: "100%", padding: "0.6rem", textAlign: "center",
+  background: "var(--c-positive-light)", border: "none", borderRadius: 8,
+  fontWeight: 700, fontSize: "0.82rem", color: "var(--c-positive)", textDecoration: "none",
 };

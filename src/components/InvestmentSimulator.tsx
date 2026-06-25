@@ -23,6 +23,7 @@ type Props = {
 };
 
 const MIN_PCT = MIN_ENTRY_PCT * 100;
+const PROJECTED_ANNUAL_RETURN_PCT = 18;
 
 export default function InvestmentSimulator({ developments, units, lang }: Props) {
   const investable = useMemo(
@@ -63,22 +64,34 @@ export default function InvestmentSimulator({ developments, units, lang }: Props
   }
 
   const pctNum = Number(pctStr);
+  const amountNum = Number(amountStr);
   const outOfRange = selectedUnit != null && Number.isFinite(pctNum) && (pctNum < MIN_PCT || pctNum > maxPct);
+  const returnAmount = Number.isFinite(amountNum) ? amountNum * (PROJECTED_ANNUAL_RETURN_PCT / 100) : 0;
 
   if (investable.length === 0) return null;
 
   return (
     <section style={section}>
-      <div style={inner}>
-        <div style={header}>
-          <span style={eyebrow}>SIMULÁ TU INVERSIÓN</span>
-          <h2 style={title}>Poné un porcentaje o un monto y calculá la inversión</h2>
-          <p style={subtitle}>Elegí una unidad del catálogo y mirá cuánto representa cada opción.</p>
+      <style>{`
+        @media (max-width: 860px) {
+          .sim-inner { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <div style={inner} className="sim-inner">
+        <div style={copy}>
+          <span style={eyebrow}>Simulá tu inversión</span>
+          <h2 style={title}>Poné un porcentaje y calculá tu entrada</h2>
+          <p style={subtitle}>Elegí una unidad del catálogo y mirá al instante cuánto representa cada opción de inversión.</p>
+          <ul style={perks}>
+            <li style={perk}><span style={checkIcon}>✓</span>Sin mínimo de capital elevado</li>
+            <li style={perk}><span style={checkIcon}>✓</span>Resultados claros antes de invertir</li>
+            <li style={perk}><span style={checkIcon}>✓</span>Seguimiento en tiempo real de tu cartera</li>
+          </ul>
         </div>
 
         <div style={card}>
-          <div style={field}>
-            <label style={label}>Unidad funcional</label>
+          <label style={label}>Unidad funcional</label>
+          <div style={selectWrap}>
             <select
               style={select}
               value={selectedId}
@@ -139,6 +152,17 @@ export default function InvestmentSimulator({ developments, units, lang }: Props
             </p>
           )}
 
+          <div style={resultBox}>
+            <div>
+              <div style={resultLabel}>Tu inversión</div>
+              <div style={resultValue}>{amountStr ? fmtUsd(Number(amountStr)) : "—"}</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={resultLabel}>Retorno proyec.</div>
+              <div style={resultReturn}>{amountStr ? `+${fmtUsd(returnAmount)}` : "—"}</div>
+            </div>
+          </div>
+
           {selectedUnit && (
             <Link
               href={`/${lang}/emprendimientos/${selectedUnit.development_id}/unidades/${selectedUnit.id}`}
@@ -154,37 +178,62 @@ export default function InvestmentSimulator({ developments, units, lang }: Props
 }
 
 /* ─── Styles ────────────────────────────────────── */
-const section: React.CSSProperties = { background: "#fff", padding: "4rem 1.5rem" };
-const inner: React.CSSProperties = { maxWidth: 720, margin: "0 auto" };
-const header: React.CSSProperties = { textAlign: "center", marginBottom: "2rem" };
-const eyebrow: React.CSSProperties = { fontSize: "0.78rem", fontWeight: 800, color: "#6b7280", letterSpacing: "0.08em" };
-const title: React.CSSProperties = { fontSize: "1.6rem", fontWeight: 800, margin: "0.5rem 0", letterSpacing: "-0.02em" };
-const subtitle: React.CSSProperties = { fontSize: "0.9rem", color: "#6b7280", margin: 0 };
+const section: React.CSSProperties = { background: "var(--c-bg)", padding: "5rem 1.5rem" };
+const inner: React.CSSProperties = {
+  maxWidth: 1200, margin: "0 auto",
+  display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "3.5rem", alignItems: "center",
+};
+const copy: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.4rem" };
+const eyebrow: React.CSSProperties = {
+  fontSize: "0.8rem", fontWeight: 700, color: "var(--c-accent)",
+  letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.4rem",
+};
+const title: React.CSSProperties = { fontSize: "2rem", fontWeight: 800, margin: "0 0 0.85rem", letterSpacing: "-0.025em", lineHeight: 1.15, color: "var(--c-ink)" };
+const subtitle: React.CSSProperties = { fontSize: "1.02rem", color: "var(--c-text-secondary)", margin: "0 0 1.5rem", lineHeight: 1.55 };
+const perks: React.CSSProperties = { listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.75rem" };
+const perk: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.65rem", fontSize: "0.95rem", color: "var(--c-ink)", fontWeight: 500 };
+const checkIcon: React.CSSProperties = {
+  width: 22, height: 22, borderRadius: "50%", background: "var(--c-positive-light)", color: "var(--c-positive)",
+  display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 800, flexShrink: 0,
+};
 
 const card: React.CSSProperties = {
-  background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 16,
-  padding: "1.75rem", display: "flex", flexDirection: "column", gap: "1.1rem",
+  background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 22,
+  padding: "2.1rem", display: "flex", flexDirection: "column", gap: "0.5rem",
+  boxShadow: "0 30px 60px -30px rgba(14,23,38,0.28)",
 };
-const field: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.35rem", flex: 1, minWidth: 130 };
-const label: React.CSSProperties = { fontSize: "0.78rem", fontWeight: 700, color: "#374151" };
+const field: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1, minWidth: 130 };
+const label: React.CSSProperties = { fontSize: "0.78rem", fontWeight: 700, color: "var(--c-text-secondary)", marginBottom: "0.5rem" };
+const selectWrap: React.CSSProperties = { marginBottom: "1.4rem" };
 const select: React.CSSProperties = {
-  padding: "0.6rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 10,
-  fontSize: "0.9rem", background: "#fff", outline: "none",
+  width: "100%", padding: "0.85rem 0.9rem", border: "1px solid var(--c-border-input)", borderRadius: 11,
+  fontSize: "0.92rem", fontWeight: 600, color: "var(--c-ink)", background: "var(--c-field-bg)", outline: "none",
 };
-const inputsRow: React.CSSProperties = { display: "flex", alignItems: "flex-end", gap: "0.75rem", flexWrap: "wrap" };
+const inputsRow: React.CSSProperties = { display: "flex", alignItems: "flex-end", gap: "0.85rem", flexWrap: "wrap", marginBottom: "0.5rem" };
 const numInput: React.CSSProperties = {
-  padding: "0.6rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 10,
-  fontSize: "1rem", fontWeight: 700, outline: "none", width: "100%",
+  padding: "0.8rem 0.9rem", border: "1px solid var(--c-border-input)", borderRadius: 11,
+  fontSize: "0.95rem", fontWeight: 600, outline: "none", width: "100%",
+  color: "var(--c-ink)", background: "var(--c-field-bg)",
 };
 const swapIcon: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "center",
-  width: 32, height: 32, borderRadius: "50%", background: "#fff",
-  border: "1px solid #e5e7eb", color: "#6b7280", marginBottom: "0.45rem", flexShrink: 0,
+  width: 34, height: 34, borderRadius: "50%", background: "var(--c-surface)",
+  border: "1px solid var(--c-border)", color: "var(--c-text-secondary)", marginBottom: "0.85rem", flexShrink: 0,
 };
-const hint: React.CSSProperties = { fontSize: "0.78rem", color: "#6b7280", margin: 0, lineHeight: 1.5 };
-const errorMsg: React.CSSProperties = { fontSize: "0.8rem", color: "#dc2626", margin: 0, fontWeight: 600 };
+const hint: React.CSSProperties = { fontSize: "0.78rem", color: "var(--c-text-tertiary)", margin: "0 0 0.75rem", lineHeight: 1.5 };
+const errorMsg: React.CSSProperties = { fontSize: "0.8rem", color: "#dc2626", margin: "0 0 0.75rem", fontWeight: 600 };
+
+const resultBox: React.CSSProperties = {
+  background: "var(--c-ink)", borderRadius: 16, padding: "1.5rem",
+  display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "0.75rem",
+};
+const resultLabel: React.CSSProperties = { fontSize: "0.78rem", color: "var(--c-text-on-dark)", fontWeight: 600, marginBottom: "0.4rem" };
+const resultValue: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1.9rem", fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1 };
+const resultReturn: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1.25rem", fontWeight: 800, color: "var(--c-positive-bright)", letterSpacing: "-0.01em" };
+
 const ctaBtn: React.CSSProperties = {
-  display: "block", textAlign: "center", padding: "0.7rem", background: "#111", color: "#fff",
-  borderRadius: 10, fontWeight: 700, fontSize: "0.9rem", textDecoration: "none",
+  display: "block", textAlign: "center", padding: "0.9rem", background: "var(--c-accent)", color: "#fff",
+  borderRadius: 12, fontWeight: 600, fontSize: "0.95rem", textDecoration: "none",
+  boxShadow: "0 12px 26px rgba(27,77,224,0.24)",
 };
-const ctaBtnDisabled: React.CSSProperties = { background: "#9ca3af", pointerEvents: "none" };
+const ctaBtnDisabled: React.CSSProperties = { background: "var(--c-text-tertiary)", boxShadow: "none", pointerEvents: "none" };

@@ -160,55 +160,62 @@ export default function AuthCTASection({ lang }: { lang: string }) {
 
 /* Styles */
 const section: React.CSSProperties = {
-  background: "linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%)",
-  padding: "6rem 1.5rem",
+  background: "var(--c-bg)",
+  padding: "4rem 1.5rem 5rem",
   color: "#fff",
 };
 const inner: React.CSSProperties = {
   maxWidth: 1100,
   margin: "0 auto",
+  background: "linear-gradient(135deg, var(--c-accent), var(--c-accent-dark))",
+  borderRadius: 26,
+  padding: "3.5rem",
   display: "grid",
-  gridTemplateColumns: "1fr 420px",
-  gap: "5rem",
+  gridTemplateColumns: "1.1fr .9fr",
+  gap: "3.5rem",
   alignItems: "center",
+  boxShadow: "0 40px 80px -40px rgba(27,77,224,0.6)",
 };
-const copy: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1.25rem" };
+const copy: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1.1rem" };
 const eyebrow: React.CSSProperties = {
-  fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.12em",
-  textTransform: "uppercase", color: "#4ade80",
+  fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.1em",
+  textTransform: "uppercase", color: "#bcd0ff",
 };
 const headline: React.CSSProperties = {
-  fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", fontWeight: 900,
-  lineHeight: 1.1, letterSpacing: "-0.04em", margin: 0,
+  fontSize: "clamp(1.75rem, 3.5vw, 2.4rem)", fontWeight: 800,
+  lineHeight: 1.1, letterSpacing: "-0.03em", margin: 0,
 };
-const sub: React.CSSProperties = { color: "#9ca3af", lineHeight: 1.7, fontSize: "1rem", margin: 0 };
+const sub: React.CSSProperties = { color: "#d6e0ff", lineHeight: 1.6, fontSize: "1rem", margin: 0, maxWidth: 440 };
 const perks: React.CSSProperties = { listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.6rem" };
-const perk: React.CSSProperties = { display: "flex", alignItems: "flex-start", gap: "0.6rem", fontSize: "0.92rem", color: "#d1d5db" };
-const checkmark: React.CSSProperties = { color: "#4ade80", fontWeight: 900, flexShrink: 0, marginTop: "0.05rem" };
+const perk: React.CSSProperties = { display: "flex", alignItems: "flex-start", gap: "0.6rem", fontSize: "0.92rem", color: "#fff" };
+const checkmark: React.CSSProperties = {
+  width: 20, height: 20, borderRadius: "50%", background: "rgba(255,255,255,0.18)",
+  display: "inline-flex", alignItems: "center", justifyContent: "center",
+  color: "#fff", fontWeight: 800, fontSize: "0.7rem", flexShrink: 0,
+};
 
 const formCard: React.CSSProperties = {
-  background: "#fff", borderRadius: 20, padding: "2rem",
-  boxShadow: "0 24px 60px rgba(0,0,0,0.4)",
+  background: "var(--c-surface)", borderRadius: 18, padding: "2rem",
   display: "flex", flexDirection: "column", gap: "1.25rem",
 };
 const toggle: React.CSSProperties = {
   display: "grid", gridTemplateColumns: "1fr 1fr",
-  background: "#f3f4f6", borderRadius: 10, padding: "0.2rem", gap: "0.2rem",
+  background: "var(--c-field-bg)", borderRadius: 10, padding: "0.2rem", gap: "0.2rem",
 };
 const toggleBtn = (active: boolean): React.CSSProperties => ({
   padding: "0.5rem", border: "none", borderRadius: 8,
   background: active ? "#fff" : "transparent",
-  color: active ? "#111" : "#6b7280",
+  color: active ? "var(--c-ink)" : "var(--c-text-secondary)",
   fontWeight: active ? 700 : 500, fontSize: "0.875rem",
   cursor: "pointer", transition: "all 0.15s",
-  boxShadow: active ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+  boxShadow: active ? "0 1px 4px rgba(14,23,38,0.08)" : "none",
 });
 const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.75rem" };
 const field: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.3rem" };
-const label: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 600, color: "#374151" };
+const label: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 700, color: "var(--c-text-secondary)" };
 const input: React.CSSProperties = {
-  padding: "0.65rem 0.875rem", border: "1.5px solid #e5e7eb", borderRadius: 9,
-  fontSize: "0.95rem", color: "#111", outline: "none",
+  padding: "0.7rem 0.9rem", border: "1px solid var(--c-border-input)", borderRadius: 11,
+  fontSize: "0.95rem", color: "var(--c-ink)", outline: "none", background: "var(--c-field-bg)",
   transition: "border-color 0.15s",
 };
 const errorMsg: React.CSSProperties = {
@@ -216,13 +223,13 @@ const errorMsg: React.CSSProperties = {
   padding: "0.5rem 0.75rem", fontSize: "0.82rem", margin: 0,
 };
 const submit: React.CSSProperties = {
-  padding: "0.8rem", background: "#111", color: "#fff",
-  border: "none", borderRadius: 10, fontSize: "0.95rem",
-  fontWeight: 700, cursor: "pointer", marginTop: "0.25rem",
-  transition: "opacity 0.15s",
+  padding: "0.85rem", background: "var(--c-accent)", color: "#fff",
+  border: "none", borderRadius: 11, fontSize: "0.95rem",
+  fontWeight: 600, cursor: "pointer", marginTop: "0.25rem",
+  transition: "opacity 0.15s", boxShadow: "0 10px 22px rgba(27,77,224,0.22)",
 };
-const switchHint: React.CSSProperties = { fontSize: "0.82rem", color: "#6b7280", textAlign: "center", margin: 0 };
+const switchHint: React.CSSProperties = { fontSize: "0.85rem", color: "var(--c-text-secondary)", textAlign: "center", margin: 0 };
 const switchLink: React.CSSProperties = {
-  background: "none", border: "none", color: "#111",
-  fontWeight: 700, cursor: "pointer", fontSize: "0.82rem", padding: 0,
+  background: "none", border: "none", color: "var(--c-accent)",
+  fontWeight: 700, cursor: "pointer", fontSize: "0.85rem", padding: 0,
 };
