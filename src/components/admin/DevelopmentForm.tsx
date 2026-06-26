@@ -12,6 +12,8 @@ export type Initial = {
   id: number;
   name: string;
   address: string;
+  neighborhood?: string | null;
+  city?: string | null;
   description?: string;
   completion_date?: string;
   status: string;
@@ -28,6 +30,8 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
 
   const [name, setName] = useState(initial?.name ?? "");
   const [address, setAddress] = useState(initial?.address ?? "");
+  const [neighborhood, setNeighborhood] = useState(initial?.neighborhood ?? "");
+  const [city, setCity] = useState(initial?.city ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [completionDate, setCompletionDate] = useState(
     initial?.completion_date ? new Date(initial.completion_date).toISOString().slice(0, 10) : ""
@@ -79,6 +83,8 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
     const body = {
       name: name.trim(),
       address: address.trim(),
+      neighborhood: neighborhood.trim() || null,
+      city: city.trim() || null,
       description: description.trim() || null,
       completion_date: completionDate || null,
       status,
@@ -122,6 +128,15 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
           </Field>
           <Field label={t.form.address}>
             <input style={input} value={address} onChange={(e) => setAddress(e.target.value)} required />
+          </Field>
+        </Row>
+
+        <Row>
+          <Field label="Barrio">
+            <input style={input} value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Palermo" />
+          </Field>
+          <Field label="Ciudad">
+            <input style={input} value={city} onChange={(e) => setCity(e.target.value)} placeholder="Buenos Aires" />
           </Field>
         </Row>
 

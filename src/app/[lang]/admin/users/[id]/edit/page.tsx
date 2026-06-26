@@ -16,7 +16,7 @@ export default async function EditUserPage({
   if (!session || session.role !== "superadmin") redirect(`/${lang}/admin/users`);
 
   const [user] = await db`
-    SELECT id, full_name, email, role, avatar FROM users WHERE id = ${params.id}
+    SELECT id, full_name, email, role, avatar, phone, alternate_email FROM users WHERE id = ${params.id}
   `;
   if (!user) notFound();
 
@@ -39,6 +39,8 @@ export default async function EditUserPage({
           email: user.email,
           role: user.role,
           avatar: user.avatar,
+          phone: user.phone,
+          alternate_email: user.alternate_email,
         }}
       />
     </div>

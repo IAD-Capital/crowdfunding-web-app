@@ -1,11 +1,13 @@
 CREATE TABLE IF NOT EXISTS users (
-  id            SERIAL PRIMARY KEY,
-  full_name     TEXT        NOT NULL,
-  email         TEXT        NOT NULL UNIQUE,
-  password_hash TEXT        NOT NULL,
-  role          TEXT        NOT NULL DEFAULT 'admin',
-  avatar        TEXT,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id               SERIAL PRIMARY KEY,
+  full_name        TEXT        NOT NULL,
+  email            TEXT        NOT NULL UNIQUE,
+  password_hash    TEXT        NOT NULL,
+  role             TEXT        NOT NULL DEFAULT 'admin',
+  avatar           TEXT,
+  phone            TEXT,
+  alternate_email  TEXT,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS developers (
@@ -21,6 +23,8 @@ CREATE TABLE IF NOT EXISTS developments (
   id                  SERIAL PRIMARY KEY,
   name                TEXT        NOT NULL,
   address             TEXT        NOT NULL,
+  neighborhood        TEXT,
+  city                TEXT,
   description         TEXT,
   completion_date     DATE,
   status              TEXT        NOT NULL DEFAULT 'active',

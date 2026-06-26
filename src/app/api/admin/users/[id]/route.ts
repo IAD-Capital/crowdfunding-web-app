@@ -8,7 +8,7 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
   if (error) return error;
 
   const [user] = await db`
-    SELECT id, full_name, email, role, avatar, created_at
+    SELECT id, full_name, email, role, avatar, phone, alternate_email, created_at
     FROM users WHERE id = ${params.id}
   `;
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -19,7 +19,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const { error } = await requireSuperAdmin();
   if (error) return error;
 
-  const { full_name, email, password, role, avatar } = await req.json();
+  const { full_name, email, password, role, avatar, phone, alternate_email } = await req.json();
 
   if (!full_name?.trim() || !email?.trim() || !role) {
     return NextResponse.json({ error: "Name, email and role are required." }, { status: 400 });
@@ -38,9 +38,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
           email = ${email.toLowerCase().trim()},
           password_hash = ${password_hash},
           role = ${role},
-          avatar = ${avatar ?? null}
+          avatar = ${avatar ?? null},
+          phone = ${phone?.trim() || null},
+          alternate_email = ${alternate_email?.toLowerCase().trim() || null}
         WHERE id = ${params.id}
-        RETURNING id, full_name, email, role, avatar, created_at
+        RETURNING id, full_name, email, role, avatar, phone, alternate_email, created_at
       `;
     } else {
       [user] = await db`
@@ -48,9 +50,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
           full_name = ${full_name.trim()},
           email = ${email.toLowerCase().trim()},
           role = ${role},
-          avatar = ${avatar ?? null}
+          avatar = ${avatar ?? null},
+          phone = ${phone?.trim() || null},
+          alternate_email = ${alternate_email?.toLowerCase().trim() || null}
         WHERE id = ${params.id}
-        RETURNING id, full_name, email, role, avatar, created_at
+        RETURNING id, full_name, email, role, avatar, phone, alternate_email, created_at
       `;
     }
     if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });

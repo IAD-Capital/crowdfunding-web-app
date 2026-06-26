@@ -8,7 +8,7 @@ export async function GET() {
   if (error) return error;
 
   const users = await db`
-    SELECT id, full_name, email, role, avatar, created_at
+    SELECT id, full_name, email, role, avatar, phone, alternate_email, created_at
     FROM users
     ORDER BY created_at DESC
   `;
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   const { error } = await requireSuperAdmin();
   if (error) return error;
 
-  const { full_name, email, password, role, avatar } = await req.json();
+  const { full_name, email, password, role, avatar, phone, alternate_email } = await req.json();
 
   if (!full_name?.trim() || !email?.trim() || !password || !role) {
     return NextResponse.json({ error: "All fields required." }, { status: 400 });
@@ -32,9 +32,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const [user] = await db`
-      INSERT INTO users (full_name, email, password_hash, role, avatar)
-      VALUES (${full_name.trim()}, ${email.toLowerCase().trim()}, ${password_hash}, ${role}, ${avatar ?? null})
-      RETURNING id, full_name, email, role, avatar, created_at
+      INSERT INTO users (full_name, email, password_hash, role, avatar, phone, alternate_email)
+      VALUES (
+        ${full_name.trim()}, ${email.toLowerCase().trim()}, ${password_hash}, ${role}, ${avatar ?? null},
+        ${phone?.trim() || null}, ${alternate_email?.toLowerCase().trim() || null}
+      )
+      RETURNING id, full_name, email, role, avatar, phone, alternate_email, created_at
     `;
     return NextResponse.json(user, { status: 201 });
   } catch (err: unknown) {

@@ -16,6 +16,8 @@ type Props = {
     email: string;
     role: string;
     avatar?: string | null;
+    phone?: string | null;
+    alternate_email?: string | null;
   };
 };
 
@@ -38,6 +40,8 @@ export default function UserForm({ lang, mode, userId, initial }: Props) {
 
   const [fullName, setFullName] = useState(initial?.full_name ?? "");
   const [email, setEmail] = useState(initial?.email ?? "");
+  const [phone, setPhone] = useState(initial?.phone ?? "");
+  const [alternateEmail, setAlternateEmail] = useState(initial?.alternate_email ?? "");
   const [role, setRole] = useState(initial?.role ?? "investor");
   const [password, setPassword] = useState("");
   const [avatar, setAvatar] = useState<string | null>(initial?.avatar ?? null);
@@ -77,7 +81,11 @@ export default function UserForm({ lang, mode, userId, initial }: Props) {
     const url = mode === "create" ? "/api/admin/users" : `/api/admin/users/${userId}`;
     const method = mode === "create" ? "POST" : "PUT";
 
-    const body: Record<string, unknown> = { full_name: fullName, email, role, avatar };
+    const body: Record<string, unknown> = {
+      full_name: fullName, email, role, avatar,
+      phone: phone.trim() || null,
+      alternate_email: alternateEmail.trim() || null,
+    };
     if (mode === "create" || password) body.password = password;
 
     const res = await fetch(url, {
@@ -150,6 +158,30 @@ export default function UserForm({ lang, mode, userId, initial }: Props) {
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder="juan@ejemplo.com"
+        />
+      </label>
+
+      {/* Phone */}
+      <label style={label}>
+        Teléfono celular
+        <input
+          style={input}
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="+54 9 11 1234-5678"
+        />
+      </label>
+
+      {/* Alternate email */}
+      <label style={label}>
+        Email alternativo
+        <input
+          style={input}
+          type="email"
+          value={alternateEmail}
+          onChange={(e) => setAlternateEmail(e.target.value)}
+          placeholder="juan.alt@ejemplo.com"
         />
       </label>
 
