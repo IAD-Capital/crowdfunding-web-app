@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import BuyDrawer from "./BuyDrawer";
 import {
-  Shield, Layers, Star, Gem, Building2, Maximize2, Sofa, BedDouble,
-  ChevronLeft, ChevronRight, type LucideIcon,
+  Building2,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { getTierDefs, unitQualifiesForTier, MIN_ENTRY_PCT, type TierThresholds, type TierKey } from "@/lib/investmentTiers";
 
@@ -172,6 +172,9 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
         <div style={tierFilterBlock}>
           <div style={tierFilterHeader}>
             <h3 style={tierFilterTitle}>¿Cuánto querés invertir?</h3>
+            <p style={tierFilterSub}>
+              Elegí el nivel que se ajusta a tu capital. {availableUnits.length} unidad{availableUnits.length !== 1 ? "es" : ""} disponible{availableUnits.length !== 1 ? "s" : ""} en total.
+            </p>
             {tierFilter !== "all" && (
               <button style={tierClearBtn} onClick={() => setTierFilter("all")}>
                 Ver todos
@@ -190,7 +193,6 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
                 >
                   <span style={tierCardTopRow}>
                     <span style={tierCardDot(t.key)} />
-                    <TierIcon tierKey={t.key} color={TIER_META[t.key].dot} />
                     <span style={tierCardLabel(t.key)}>{t.label}</span>
                   </span>
                   <span style={tierCardRange(t.key)}>
@@ -239,6 +241,7 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
                 <UnitCard
                   u={u}
                   devName={developments.find((d) => d.id === u.development_id)?.name ?? ""}
+                  devAddress={developments.find((d) => d.id === u.development_id)?.address ?? ""}
                   isInvestor={isInvestor}
                   alreadyInvested={myInvestedUnitIds.includes(u.id)}
                   onInvest={() => setDrawerUnit(u)}
@@ -265,20 +268,6 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
       )}
     </section>
   );
-}
-
-/* ─── Tier icon ────────────────────────────────── */
-const TIER_ICONS: Record<string, LucideIcon> = {
-  bronze: Shield,
-  silver: Layers,
-  gold: Star,
-  platinum: Gem,
-};
-
-function TierIcon({ tierKey, color }: { tierKey: string; color?: string }) {
-  const Icon = TIER_ICONS[tierKey];
-  if (!Icon) return null;
-  return <Icon size={16} strokeWidth={2} color={color} />;
 }
 
 /* ─── Dev card ─────────────────────────────────── */
@@ -327,47 +316,64 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
 
 /* ─── Unit card ─────────────────────────────────── */
 function UnitCard({
-  u, devName, isInvestor, alreadyInvested, onInvest, lang,
+  u, devName, devAddress, isInvestor, alreadyInvested, onInvest, lang,
 }: {
-  u: Unit; devName: string; isInvestor: boolean;
+  u: Unit; devName: string; devAddress: string; isInvestor: boolean;
   alreadyInvested: boolean; onInvest: () => void; lang: string;
 }) {
   const sc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
   const canBuy = isInvestor && u.status !== "sold" && !alreadyInvested;
+  const floorLabel = u.floor == null ? null : u.floor === 0 ? "Planta baja" : `Piso ${u.floor}`;
+
+  const fmtUsd = (n: number) => `USD ${Math.round(n).toLocaleString("es-AR")}`;
+  const entryPrice = u.price_usd;
+  const currentPrice = u.current_price_usd ?? null;
+  const hasCurrent = currentPrice != null && currentPrice !== entryPrice;
+  const gain = hasCurrent ? ((currentPrice! - entryPrice) / entryPrice) * 100 : 0;
+  const positive = gain >= 0;
+  const minInvest = entryPrice != null ? Math.round((currentPrice ?? entryPrice) * MIN_ENTRY_PCT) : null;
 
   return (
     <div style={unitCard}>
       <Link href={`/${lang}/emprendimientos/${u.development_id}/unidades/${u.id}`} style={unitLink}>
         <UnitCoverSlider images={u.images} identifier={u.identifier} statusBadge={{ background: sc.bg, color: sc.fg, label: sc.label }} />
         <div style={unitBody}>
-          <p style={devNameLabel}>{devName}</p>
-          <h3 style={unitId}>{u.identifier}</h3>
-          <div style={unitStats}>
-            {u.floor != null && (
-              <span style={statChip}><Building2 size={13} /> Piso {u.floor}</span>
-            )}
-            {u.total_m2 != null && (
-              <span style={statChip}><Maximize2 size={13} /> {u.total_m2} m²</span>
-            )}
-            {u.rooms != null && (
-              <span style={statChip}><Sofa size={13} /> {u.rooms} amb.</span>
-            )}
-            {u.bedrooms != null && (
-              <span style={statChip}><BedDouble size={13} /> {u.bedrooms} dorm.</span>
-            )}
+          <div style={unitTopRow}>
+            <h3 style={unitId}>{u.identifier}</h3>
+            {floorLabel && <span style={unitFloorLabel}>{floorLabel}</span>}
           </div>
-          <PriceBlock entryPrice={u.price_usd} currentPrice={u.current_price_usd ?? null} />
+          <div style={unitAddrLine}>{devName} — {devAddress.toUpperCase()}</div>
+
+          <div style={unitStats}>
+            {u.total_m2 != null && <span style={statChip}>{u.total_m2.toLocaleString("es-AR", { minimumFractionDigits: 2 })} m²</span>}
+            {u.rooms != null && <span style={statChip}>{u.rooms} amb.</span>}
+            {u.bedrooms != null && <span style={statChip}>{u.bedrooms} dorm.</span>}
+          </div>
+
+          {hasCurrent && (
+            <div style={{ ...yieldBadge, background: positive ? "var(--c-positive-light)" : "#fee2e2", color: positive ? "var(--c-positive)" : "#991b1b" }}>
+              <span>{positive ? "▲" : "▼"} {Math.abs(gain).toFixed(1)}% sobre el valor original</span>
+            </div>
+          )}
         </div>
       </Link>
-      <div style={{ padding: "0 0.875rem 0.875rem" }}>
-        {canBuy ? (
-          <button style={btnInvest} onClick={(e) => { e.preventDefault(); onInvest(); }}>
-            Invertir →
-          </button>
-        ) : alreadyInvested ? (
-          <a href={`/${lang}/wallet`} style={btnAlready}>Ya invertido · Ver cartera →</a>
-        ) : null}
-      </div>
+
+      {entryPrice != null && (
+        <div style={unitPriceRow}>
+          <Link href={`/${lang}/emprendimientos/${u.development_id}/unidades/${u.id}`} style={{ textDecoration: "none" }}>
+            <div style={priceSublabel}>Precio de entrada</div>
+            <div style={priceEntry}>{fmtUsd(entryPrice)}</div>
+            {minInvest != null && <div style={minInvestLabel}>Invertí desde {fmtUsd(minInvest)}</div>}
+          </Link>
+          {canBuy ? (
+            <button style={btnInvest} onClick={onInvest}>
+              Invertir →
+            </button>
+          ) : alreadyInvested ? (
+            <a href={`/${lang}/wallet`} style={btnAlready}>Ya invertido →</a>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
@@ -420,43 +426,6 @@ function UnitCoverSlider({
   );
 }
 
-/* ─── Price block ───────────────────────────────── */
-function PriceBlock({ entryPrice, currentPrice }: { entryPrice: number | null; currentPrice: number | null }) {
-  const fmtUsd = (n: number) => `USD ${n.toLocaleString("es-AR")}`;
-
-  if (entryPrice == null) return <p style={priceLabel}>Consultar</p>;
-
-  const hasCurrent = currentPrice != null && currentPrice !== entryPrice;
-  const gain = hasCurrent ? ((currentPrice - entryPrice) / entryPrice) * 100 : 0;
-  const positive = gain >= 0;
-  const minInvest = Math.round((currentPrice ?? entryPrice) * MIN_ENTRY_PCT);
-
-  return (
-    <div style={priceBlock}>
-      <div style={priceRow}>
-        <div>
-          <p style={priceSublabel}>Precio de entrada</p>
-          <p style={priceEntry}>{fmtUsd(entryPrice)}</p>
-        </div>
-        {hasCurrent && (
-          <div style={{ textAlign: "right" }}>
-            <p style={priceSublabel}>Precio actual</p>
-            <p style={{ ...priceCurrent, color: positive ? "var(--c-positive)" : "#991b1b" }}>
-              {fmtUsd(currentPrice!)}
-            </p>
-          </div>
-        )}
-      </div>
-      <p style={minInvestLabel}>Invertí desde {fmtUsd(minInvest)}</p>
-      {hasCurrent && (
-        <div style={{ ...yieldBadge, background: positive ? "var(--c-positive-light)" : "#fee2e2", color: positive ? "var(--c-positive)" : "#991b1b" }}>
-          <span>{positive ? "▲" : "▼"} {Math.abs(gain).toFixed(1)}% sobre el valor original</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ─── Styles ────────────────────────────────────── */
 const section: React.CSSProperties = { background: "var(--c-bg)", padding: "1.5rem 1.5rem 5rem" };
 const inner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto" };
@@ -474,11 +443,12 @@ const filterChip = (active: boolean): React.CSSProperties => ({
   background: active ? "var(--c-accent)" : "#fff", color: active ? "#fff" : "var(--c-text-secondary)",
 });
 const tierFilterBlock: React.CSSProperties = { marginBottom: "2rem" };
-const tierFilterHeader: React.CSSProperties = { display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "0.9rem", flexWrap: "wrap", gap: "0.5rem" };
-const tierFilterTitle: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, color: "var(--c-ink)", margin: 0 };
+const tierFilterHeader: React.CSSProperties = { textAlign: "center", marginBottom: "1.75rem" };
+const tierFilterTitle: React.CSSProperties = { fontSize: "2.1rem", fontWeight: 800, color: "var(--c-ink)", margin: "0 0 0.5rem", letterSpacing: "-0.02em" };
+const tierFilterSub: React.CSSProperties = { fontSize: "1rem", color: "var(--c-text-secondary)", margin: 0 };
 const tierClearBtn: React.CSSProperties = {
   fontSize: "0.8rem", fontWeight: 600, color: "var(--c-text-secondary)", background: "none",
-  border: "none", cursor: "pointer", textDecoration: "underline",
+  border: "none", cursor: "pointer", textDecoration: "underline", marginTop: "0.5rem",
 };
 
 const TIER_META: Record<string, { dot: string; activeBorder: string; dark?: boolean }> = {
@@ -489,7 +459,7 @@ const TIER_META: Record<string, { dot: string; activeBorder: string; dark?: bool
 };
 
 const tierCardGrid: React.CSSProperties = {
-  display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "0.75rem",
+  display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "2.5rem",
 };
 const tierCard = (key: string, active: boolean): React.CSSProperties => {
   const m = TIER_META[key];
@@ -564,10 +534,16 @@ const unitCard: React.CSSProperties = {
 const unitCover: React.CSSProperties = { position: "relative", height: 160, background: "#eef1f6" };
 const unitPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#e8eef7,#dfe7f2)" };
 const badge: React.CSSProperties = { position: "absolute", top: 10, left: 10, padding: "0.15rem 0.55rem", borderRadius: 999, fontSize: "0.72rem", fontWeight: 700 };
-const unitBody: React.CSSProperties = { padding: "1rem", display: "flex", flexDirection: "column", gap: "0.35rem" };
-const devNameLabel: React.CSSProperties = { fontSize: "0.72rem", color: "var(--c-text-tertiary)", margin: 0, fontWeight: 600 };
-const unitId: React.CSSProperties = { fontSize: "1rem", fontWeight: 700, margin: 0, color: "var(--c-ink)" };
-const unitStats: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.1rem" };
+const unitBody: React.CSSProperties = { padding: "1.1rem 1.2rem 0.9rem", display: "flex", flexDirection: "column", gap: "0.4rem" };
+const unitTopRow: React.CSSProperties = { display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "0.5rem" };
+const unitFloorLabel: React.CSSProperties = { fontSize: "0.78rem", color: "var(--c-text-tertiary)", fontWeight: 600, whiteSpace: "nowrap" };
+const unitAddrLine: React.CSSProperties = { fontSize: "0.75rem", color: "var(--c-text-secondary)", margin: "0 0 0.3rem" };
+const unitId: React.CSSProperties = { fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "var(--c-ink)" };
+const unitStats: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem" };
+const unitPriceRow: React.CSSProperties = {
+  display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "0.75rem",
+  padding: "0.9rem 1.2rem 1.1rem", borderTop: "1px solid var(--c-border-soft)", marginTop: "0.4rem",
+};
 const statChip: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: "0.3rem",
   fontSize: "0.75rem", padding: "0.15rem 0.55rem", background: "var(--c-chip-bg)", color: "var(--c-ink)", borderRadius: 999,
@@ -587,27 +563,22 @@ const sliderDot = (active: boolean): React.CSSProperties => ({
   width: 5, height: 5, borderRadius: "50%",
   background: active ? "#fff" : "rgba(255,255,255,0.5)",
 });
-const priceLabel: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 800, color: "var(--c-ink)", margin: "0.25rem 0 0" };
-
-/* PriceBlock */
-const priceBlock: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.35rem", marginTop: "0.35rem" };
-const priceRow: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "flex-end" };
-const priceSublabel: React.CSSProperties = { fontSize: "0.62rem", color: "var(--c-text-tertiary)", margin: "0 0 0.1rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" };
-const priceEntry: React.CSSProperties = { fontSize: "0.92rem", fontWeight: 700, color: "var(--c-text-secondary)", margin: 0 };
-const priceCurrent: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 900, margin: 0 };
+const priceSublabel: React.CSSProperties = { fontSize: "0.72rem", color: "var(--c-text-tertiary)", margin: "0 0 0.2rem", fontWeight: 600 };
+const priceEntry: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1.25rem", fontWeight: 800, color: "var(--c-ink)", margin: 0 };
 const minInvestLabel: React.CSSProperties = {
   fontSize: "0.78rem", fontWeight: 700, color: "var(--c-accent)",
-  margin: "0.1rem 0 0", display: "inline-block",
+  margin: "0.15rem 0 0", display: "inline-block",
 };
-const yieldBadge: React.CSSProperties = { display: "flex", alignItems: "center", borderRadius: 8, padding: "0.35rem 0.6rem", fontSize: "0.75rem", fontWeight: 700 };
+const yieldBadge: React.CSSProperties = { display: "flex", alignItems: "center", borderRadius: 8, padding: "0.35rem 0.6rem", fontSize: "0.75rem", fontWeight: 700, marginTop: "0.5rem" };
 const btnInvest: React.CSSProperties = {
-  display: "block", width: "100%", padding: "0.6rem", background: "var(--c-accent-light)",
-  border: "none", borderRadius: 8, fontWeight: 700,
+  padding: "0.7rem 1rem", background: "var(--c-accent-light)",
+  border: "none", borderRadius: 10, fontWeight: 700,
   fontSize: "0.85rem", cursor: "pointer", color: "var(--c-accent)", transition: "all 0.15s",
-  textAlign: "center",
+  textAlign: "center", whiteSpace: "nowrap", flexShrink: 0,
 };
 const btnAlready: React.CSSProperties = {
-  display: "block", width: "100%", padding: "0.6rem", textAlign: "center",
-  background: "var(--c-positive-light)", border: "none", borderRadius: 8,
+  padding: "0.7rem 1rem", textAlign: "center",
+  background: "var(--c-positive-light)", border: "none", borderRadius: 10,
   fontWeight: 700, fontSize: "0.82rem", color: "var(--c-positive)", textDecoration: "none",
+  whiteSpace: "nowrap", flexShrink: 0,
 };

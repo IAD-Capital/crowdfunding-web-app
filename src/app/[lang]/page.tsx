@@ -123,7 +123,9 @@ export default async function Home({ params }: { params: { lang: string } }) {
   return (
     <PublicShell lang={lang}>
       {/* ─── Hero ──────────────────────────────────── */}
-      <style>{`
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @media (max-width: 860px) {
           .hero-inner { grid-template-columns: 1fr !important; gap: 2.5rem !important; }
           .hero-visual { justify-self: stretch !important; }
@@ -137,7 +139,9 @@ export default async function Home({ params }: { params: { lang: string } }) {
           .hero-chip-return { top: -12px !important; right: 8px !important; }
           .hero-chip-min { bottom: -12px !important; left: 8px !important; }
         }
-      `}</style>
+      `,
+        }}
+      />
       <section style={hero}>
         <div style={heroInner} className="hero-inner">
           <div style={heroText}>
