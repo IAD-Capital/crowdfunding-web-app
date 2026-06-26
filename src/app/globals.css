@@ -4,6 +4,11 @@
   padding: 0;
 }
 
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 :root {
   --c-bg: #f4f6fb;
   --c-surface: #fff;

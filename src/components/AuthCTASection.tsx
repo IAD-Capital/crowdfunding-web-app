@@ -54,7 +54,12 @@ export default function AuthCTASection({ lang }: { lang: string }) {
 
   return (
     <section style={section} id="invertir">
-      <div style={inner}>
+      <style>{`
+        @media (max-width: 760px) {
+          .auth-cta-inner { grid-template-columns: 1fr !important; padding: 2rem !important; gap: 2rem !important; }
+        }
+      `}</style>
+      <div style={inner} className="auth-cta-inner">
         {/* Left — copy */}
         <div style={copy}>
           <span style={eyebrow}>Empezá hoy</span>

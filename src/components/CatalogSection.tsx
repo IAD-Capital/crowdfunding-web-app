@@ -99,6 +99,27 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
 
   return (
     <section style={section}>
+      <style>{`
+        @media (max-width: 760px) {
+          .dev-grid, .unit-grid {
+            display: flex !important;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            gap: 1rem;
+            padding-bottom: 0.25rem;
+            margin: 0 -1.5rem;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+          }
+          .dev-grid::-webkit-scrollbar, .unit-grid::-webkit-scrollbar { display: none; }
+          .dev-card-item, .unit-card-item {
+            flex: 0 0 84%;
+            scroll-snap-align: start;
+          }
+        }
+      `}</style>
       <div style={inner}>
 
         {/* ── Emprendimientos ─────────────────────── */}
@@ -130,9 +151,11 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
         {developerFilteredDevs.length === 0 ? (
           <p style={emptyMsg}>No hay emprendimientos activos en este momento.</p>
         ) : (
-          <div style={devGrid}>
+          <div style={devGrid} className="dev-grid">
             {developerFilteredDevs.map((d) => (
-              <DevCard key={d.id} d={d} lang={lang} />
+              <div key={d.id} className="dev-card-item">
+                <DevCard d={d} lang={lang} />
+              </div>
             ))}
           </div>
         )}
@@ -210,17 +233,18 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
         {visibleUnits.length === 0 ? (
           <p style={emptyMsg}>No hay unidades disponibles para este emprendimiento.</p>
         ) : (
-          <div style={unitGrid}>
+          <div style={unitGrid} className="unit-grid">
             {visibleUnits.map((u) => (
-              <UnitCard
-                key={u.id}
-                u={u}
-                devName={developments.find((d) => d.id === u.development_id)?.name ?? ""}
-                isInvestor={isInvestor}
-                alreadyInvested={myInvestedUnitIds.includes(u.id)}
-                onInvest={() => setDrawerUnit(u)}
-                lang={lang}
-              />
+              <div key={u.id} className="unit-card-item">
+                <UnitCard
+                  u={u}
+                  devName={developments.find((d) => d.id === u.development_id)?.name ?? ""}
+                  isInvestor={isInvestor}
+                  alreadyInvested={myInvestedUnitIds.includes(u.id)}
+                  onInvest={() => setDrawerUnit(u)}
+                  lang={lang}
+                />
+              </div>
             ))}
           </div>
         )}

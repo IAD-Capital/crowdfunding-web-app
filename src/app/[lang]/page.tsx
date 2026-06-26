@@ -134,6 +134,8 @@ export default async function Home({ params }: { params: { lang: string } }) {
           .trust-grid { grid-template-columns: 1fr 1fr !important; }
           .featured-card { grid-template-columns: 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
+          .hero-chip-return { top: -12px !important; right: 8px !important; }
+          .hero-chip-min { bottom: -12px !important; left: 8px !important; }
         }
       `}</style>
       <section style={hero}>
@@ -188,11 +190,11 @@ export default async function Home({ params }: { params: { lang: string } }) {
                 <span style={heroImageTag}>{featuredDev.name} · {featuredDev.address}</span>
               )}
             </div>
-            <div style={heroChipReturn}>
+            <div style={heroChipReturn} className="hero-chip-return">
               <div style={heroChipLabel}>Rendimiento proyectado</div>
               <div style={heroChipValue}>+18% <span style={heroChipUnit}>anual</span></div>
             </div>
-            <div style={heroChipMin}>
+            <div style={heroChipMin} className="hero-chip-min">
               <div style={heroChipMinLabel}>Entrada mínima</div>
               <div style={heroChipMinValue}>
                 {featuredMinPrice != null ? fmtUsd(featuredMinPrice * 0.05) : "USD 5.000"}
@@ -353,7 +355,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
 /* Hero */
 const hero: React.CSSProperties = {
-  background: "var(--c-bg)",
+  background: "var(--c-bg)", overflowX: "hidden",
   marginTop: -92, paddingTop: "calc(72px + 92px)", paddingBottom: "2.5rem",
   paddingLeft: "1.5rem", paddingRight: "1.5rem",
 };
