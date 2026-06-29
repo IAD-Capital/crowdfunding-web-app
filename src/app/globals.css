@@ -41,3 +41,15 @@ body {
 h1, h2, h3, h4 {
   font-family: var(--font-display), system-ui, sans-serif;
 }
+
+@keyframes skeleton-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #d7deea 25%, #c4ccdb 37%, #d7deea 63%);
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
