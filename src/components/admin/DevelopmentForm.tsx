@@ -25,6 +25,7 @@ export type Initial = {
   amenities?: string[];
   images?: string[];
   featured?: boolean;
+  visible?: boolean;
 };
 
 type Props = { t: T; lang: string; initial?: Initial; existingImages?: string[] };
@@ -46,6 +47,7 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
   const [amenityInput, setAmenityInput] = useState("");
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
   const [featured, setFeatured] = useState(initial?.featured ?? false);
+  const [visible, setVisible] = useState(initial?.visible ?? true);
   const amenityRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -102,6 +104,7 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
       amenities,
       images,
       featured,
+      visible,
     };
 
     const url = isEdit ? `/api/admin/developments/${initial!.id}` : "/api/admin/developments";
@@ -179,6 +182,19 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
             <strong>Destacado en la home</strong>
             <span style={{ color: "#9ca3af", marginLeft: "0.5rem", fontSize: "0.82rem" }}>
               Aparece en la sección "Emprendimientos destacados"
+            </span>
+          </span>
+        </label>
+
+        {/* Visible toggle */}
+        <label style={featuredLabel}>
+          <div style={toggle(visible)} onClick={() => setVisible(!visible)}>
+            <div style={toggleThumb(visible)} />
+          </div>
+          <span>
+            <strong>{visible ? "Habilitado" : "Deshabilitado"}</strong>
+            <span style={{ color: "#9ca3af", marginLeft: "0.5rem", fontSize: "0.82rem" }}>
+              {visible ? "Se muestra en el sitio público" : "Oculto del sitio público (no aparece en la home, catálogo ni menú)"}
             </span>
           </span>
         </label>

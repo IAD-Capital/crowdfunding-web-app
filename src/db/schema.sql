@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS developments (
   amenities           TEXT[]      NOT NULL DEFAULT '{}',
   images              TEXT[]      NOT NULL DEFAULT '{}',
   featured            BOOLEAN     NOT NULL DEFAULT FALSE,
+  visible             BOOLEAN     NOT NULL DEFAULT TRUE,
   developer_id        INTEGER     REFERENCES developers(id) ON DELETE SET NULL,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()

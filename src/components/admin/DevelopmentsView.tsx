@@ -16,6 +16,7 @@ export type Development = {
   amenities: string[];
   images: string[];
   unit_count: number;
+  visible?: boolean;
 };
 
 type T = {
@@ -82,6 +83,9 @@ function GridView({ developments, t, lang }: Props) {
               <span style={statusChip(d.status)}>
                 {t.status[d.status] ?? d.status}
               </span>
+              {d.visible === false && (
+                <span style={hiddenChip}>🚫 Oculto</span>
+              )}
               {d.images?.length > 0 && (
                 <span style={photoCount}>📷 {d.images.length}</span>
               )}
@@ -159,6 +163,9 @@ function ListView({ developments, t, lang }: Props) {
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.2rem" }}>
                 <h2 style={{ fontSize: "1rem", fontWeight: 700, margin: 0 }}>{d.name}</h2>
                 <span style={statusChip(d.status)}>{t.status[d.status] ?? d.status}</span>
+                {d.visible === false && (
+                  <span style={hiddenChip}>🚫 Oculto</span>
+                )}
               </div>
               <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0 0 0.5rem" }}>{d.address}</p>
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
@@ -268,6 +275,11 @@ const coverWrap: React.CSSProperties = {
 const coverPlaceholder: React.CSSProperties = {
   width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center",
   background: "linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%)",
+};
+const hiddenChip: React.CSSProperties = {
+  display: "inline-block", padding: "0.15rem 0.55rem", borderRadius: 999,
+  fontSize: "0.72rem", fontWeight: 700, background: "#f3f4f6", color: "#6b7280",
+  flexShrink: 0,
 };
 const photoCount: React.CSSProperties = {
   position: "absolute", bottom: 8, right: 8,

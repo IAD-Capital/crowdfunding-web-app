@@ -17,6 +17,7 @@ export default async function PublicDevelopmentPage({
 
   const [dev] = await db`SELECT * FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
+  if (!dev.visible && session?.role !== "superadmin") notFound();
 
   const units = await db`SELECT * FROM units WHERE development_id = ${params.id} ORDER BY floor, identifier`;
 

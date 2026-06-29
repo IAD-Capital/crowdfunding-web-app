@@ -34,8 +34,9 @@ export default async function PublicUnitPage({
   `;
   if (!unit) notFound();
 
-  const [dev] = await db`SELECT id, name, address, images FROM developments WHERE id = ${params.id}`;
+  const [dev] = await db`SELECT id, name, address, images, visible FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
+  if (!dev.visible && session?.role !== "superadmin") notFound();
 
   // Check if this investor already has a pending request or approved position in this unit
   const [myInvestment] = canInvest

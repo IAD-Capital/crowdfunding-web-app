@@ -53,7 +53,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
     FROM developments d
     LEFT JOIN units u ON u.development_id = d.id
     LEFT JOIN developers dv ON dv.id = d.developer_id
-    WHERE d.status = 'active'
+    WHERE d.status = 'active' AND d.visible = true
     GROUP BY d.id, dv.name
     ORDER BY d.created_at DESC
   `;
@@ -72,7 +72,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
            ELSE NULL END AS group_expires_at
     FROM units u
     JOIN developments d ON d.id = u.development_id
-    WHERE d.status = 'active'
+    WHERE d.status = 'active' AND d.visible = true
     ORDER BY u.price_usd ASC
   `;
 
@@ -84,7 +84,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
     FROM developments d
     LEFT JOIN units u ON u.development_id = d.id
     LEFT JOIN developers dv ON dv.id = d.developer_id
-    WHERE d.featured = true AND d.status = 'active'
+    WHERE d.featured = true AND d.status = 'active' AND d.visible = true
     GROUP BY d.id, dv.name
     ORDER BY d.created_at DESC
   `;

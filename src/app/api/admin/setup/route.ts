@@ -59,6 +59,7 @@ export async function GET() {
     `;
     await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS images TEXT[] NOT NULL DEFAULT '{}'`;
     await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT false`;
+    await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS visible BOOLEAN NOT NULL DEFAULT true`;
     await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS developer_id INTEGER REFERENCES developers(id) ON DELETE SET NULL`;
     await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS neighborhood TEXT`;
     await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS city TEXT`;

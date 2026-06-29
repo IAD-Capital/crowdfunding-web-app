@@ -20,7 +20,7 @@ export default async function Header({ lang }: Props) {
     getDictionary(lang),
     db<{ id: number; name: string; address: string; images: string[] }[]>`
       SELECT id, name, address, images FROM developments
-      WHERE status = 'active'
+      WHERE status = 'active' AND visible = true
       ORDER BY created_at DESC
       LIMIT 8
     `,
