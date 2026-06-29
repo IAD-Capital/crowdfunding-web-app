@@ -8,6 +8,11 @@ import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
 
 type T = Dictionary["admin"]["developments"];
 
+const COMMON_AMENITIES = [
+  "Piscina", "Gimnasio", "SUM", "Seguridad 24hs", "Cochera", "Laundry",
+  "Parrilla", "Coworking", "Solarium", "Pet friendly", "Ascensor", "Terraza",
+];
+
 export type Initial = {
   id: number;
   name: string;
@@ -55,6 +60,10 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
 
   function removeAmenity(item: string) {
     setAmenities((prev) => prev.filter((a) => a !== item));
+  }
+
+  function toggleAmenity(item: string) {
+    setAmenities((prev) => (prev.includes(item) ? prev.filter((a) => a !== item) : [...prev, item]));
   }
 
   function handleAmenityKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -174,13 +183,27 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
           </span>
         </label>
 
-        {/* Amenities chip input */}
+        {/* Amenities checkboxes */}
         <Field label={t.form.amenities}>
+          <div style={checkboxGrid}>
+            {COMMON_AMENITIES.map((a) => (
+              <label key={a} style={checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={amenities.includes(a)}
+                  onChange={() => toggleAmenity(a)}
+                />
+                {a}
+              </label>
+            ))}
+          </div>
+
+          {/* Custom extra amenities not in the common list */}
           <div
-            style={chipBox}
+            style={{ ...chipBox, marginTop: "0.6rem" }}
             onClick={() => amenityRef.current?.focus()}
           >
-            {amenities.map((a) => (
+            {amenities.filter((a) => !COMMON_AMENITIES.includes(a)).map((a) => (
               <span key={a} style={chip}>
                 {a}
                 <button
@@ -200,10 +223,10 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
               onChange={(e) => setAmenityInput(e.target.value)}
               onKeyDown={handleAmenityKeyDown}
               onBlur={() => addAmenity(amenityInput)}
-              placeholder={amenities.length === 0 ? "Piscina, Gimnasio, SUM…" : ""}
+              placeholder="Otro amenity…"
             />
           </div>
-          <p style={hint}>Presioná Enter o coma para agregar</p>
+          <p style={hint}>Marcá las opciones que apliquen o agregá otras personalizadas (Enter o coma)</p>
         </Field>
 
         <Field label="Fotos">
@@ -262,6 +285,13 @@ const form: React.CSSProperties = { display: "flex", flexDirection: "column", ga
 const input: React.CSSProperties = {
   padding: "0.55rem 0.75rem", border: "1px solid #d1d5db",
   borderRadius: 8, fontSize: "0.9rem", width: "100%", outline: "none",
+};
+const checkboxGrid: React.CSSProperties = {
+  display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "0.5rem",
+};
+const checkboxLabel: React.CSSProperties = {
+  display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem",
+  color: "#374151", cursor: "pointer", userSelect: "none",
 };
 const chipBox: React.CSSProperties = {
   display: "flex", flexWrap: "wrap", gap: "0.35rem", alignItems: "center",
