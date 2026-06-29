@@ -333,7 +333,7 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
                       const isPendingApproval = inv.status === "pending";
 
                       return (
-                        <tr key={inv.id} style={isEditing ? trEditing : isPendingApproval ? trPendingApproval : hasPendingRemoval ? trPendingRemoval : tr}>
+                        <tr id={`investment-${inv.id}`} key={inv.id} style={isEditing ? trEditing : isPendingApproval ? trPendingApproval : hasPendingRemoval ? trPendingRemoval : tr}>
                           {/* Investor */}
                           <td style={td}>
                             <div style={userCell}>

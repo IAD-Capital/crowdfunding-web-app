@@ -8,9 +8,16 @@ export default async function UnitsPage({ params }: { params: { lang: string } }
   const tu = t.admin.units;
 
   const rows = await db<UnitRow[]>`
-    SELECT u.*, d.name AS development_name, d.id AS development_id
+    SELECT u.*, d.name AS development_name, d.id AS development_id,
+           COALESCE(inv.investment_ids, '{}') AS investment_ids
     FROM units u
     JOIN developments d ON d.id = u.development_id
+    LEFT JOIN (
+      SELECT unit_id, array_agg(id ORDER BY id) AS investment_ids
+      FROM investments
+      WHERE status IN ('pending', 'approved')
+      GROUP BY unit_id
+    ) inv ON inv.unit_id = u.id
     ORDER BY d.name, u.floor, u.identifier
   `;
 

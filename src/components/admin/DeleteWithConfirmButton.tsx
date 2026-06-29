@@ -31,7 +31,8 @@ export default function DeleteWithConfirmButton({ deleteUrl, confirmText, redire
     const res = await fetch(deleteUrl, { method: "DELETE" });
     setLoading(false);
     if (!res.ok) {
-      setError("No se pudo eliminar.");
+      const body = await res.json().catch(() => ({}));
+      setError(body.error ?? "No se pudo eliminar.");
       return;
     }
     setOpen(false);

@@ -19,7 +19,16 @@ export default async function DevelopmentDetailPage({
   if (!dev) notFound();
 
   const units = await db<UnitRow[]>`
-    SELECT * FROM units WHERE development_id = ${params.id} ORDER BY floor, identifier
+    SELECT u.*, COALESCE(inv.investment_ids, '{}') AS investment_ids
+    FROM units u
+    LEFT JOIN (
+      SELECT unit_id, array_agg(id ORDER BY id) AS investment_ids
+      FROM investments
+      WHERE status IN ('pending', 'approved')
+      GROUP BY unit_id
+    ) inv ON inv.unit_id = u.id
+    WHERE u.development_id = ${params.id}
+    ORDER BY u.floor, u.identifier
   `;
 
   const fmtDate = (d: string | null) =>

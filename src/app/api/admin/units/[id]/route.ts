@@ -44,6 +44,17 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
   const { error } = await requireAdmin();
   if (error) return error;
 
+  const [{ count }] = await db`
+    SELECT COUNT(*)::int AS count FROM investments
+    WHERE unit_id = ${params.id} AND status IN ('pending', 'approved')
+  `;
+  if (count > 0) {
+    return NextResponse.json(
+      { error: `No se puede eliminar: tiene ${count} inversión${count !== 1 ? "es" : ""} activa${count !== 1 ? "s" : ""}.` },
+      { status: 409 }
+    );
+  }
+
   await db`DELETE FROM units WHERE id = ${params.id}`;
   return NextResponse.json({ ok: true });
 }
