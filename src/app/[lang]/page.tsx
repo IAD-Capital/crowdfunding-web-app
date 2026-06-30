@@ -12,7 +12,7 @@ import type { Development, Unit } from "@/components/CatalogSection";
 import type { TierThresholds } from "@/lib/investmentTiers";
 
 type DevRow = Omit<Development, "unit_count"> & { unit_count: number; completion_date: Date | string | null };
-type FeaturedRow = Omit<DevRow, "description">;
+type FeaturedRow = Omit<DevRow, "description"> & { zone_price_per_m2: number | string | null };
 type UnitRow = Omit<Unit, "price_usd" | "current_price_usd" | "available_pct" | "group_expires_at"> & {
   price_usd: number | string;
   current_price_usd: number | string | null;
@@ -78,7 +78,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
   const featuredRows = await db<(FeaturedRow & { developer_name: string | null })[]>`
     SELECT d.id, d.name, d.address, d.status,
-           d.completion_date, d.amenities, d.images,
+           d.completion_date, d.amenities, d.images, d.zone_price_per_m2,
            dv.name AS developer_name,
            COUNT(u.id)::int AS unit_count
     FROM developments d
@@ -93,6 +93,18 @@ export default async function Home({ params }: { params: { lang: string } }) {
   const featuredMinPrice = featuredUnits.length > 0
     ? Math.min(...featuredUnits.map((u) => Number(u.price_usd)))
     : null;
+
+  // Price per m² (own), averaged over units that have m² recorded — never a return promise, just sqm pricing
+  const avgPricePerM2 = (list: { price_usd: number | string; total_m2?: number | string | null }[]): number | null => {
+    const valid = list.filter((u) => u.total_m2 != null && Number(u.total_m2) > 0);
+    if (valid.length === 0) return null;
+    const total = valid.reduce((sum, u) => sum + Number(u.price_usd) / Number(u.total_m2), 0);
+    return total / valid.length;
+  };
+  const overallPricePerM2 = avgPricePerM2(units);
+  const featuredPricePerM2 = avgPricePerM2(featuredUnits);
+  const featuredZonePricePerM2 = featuredDev?.zone_price_per_m2 != null ? Number(featuredDev.zone_price_per_m2) : null;
+  const fmtPerM2 = (n: number) => `USD ${Math.round(n).toLocaleString("es-AR")}/m²`;
 
   const serialized = {
     developments: developments.map((d) => ({
@@ -195,8 +207,10 @@ export default async function Home({ params }: { params: { lang: string } }) {
               )}
             </div>
             <div style={heroChipReturn} className="hero-chip-return">
-              <div style={heroChipLabel}>Rendimiento proyectado</div>
-              <div style={heroChipValue}>+18% <span style={heroChipUnit}>anual</span></div>
+              <div style={heroChipLabel}>Valor m²</div>
+              <div style={heroChipValue}>
+                {featuredPricePerM2 != null ? fmtPerM2(featuredPricePerM2) : "—"}
+              </div>
             </div>
             <div style={heroChipMin} className="hero-chip-min">
               <div style={heroChipMinLabel}>Entrada mínima</div>
@@ -224,8 +238,10 @@ export default async function Home({ params }: { params: { lang: string } }) {
             <div style={statLabel}>Mínimo de inversión</div>
           </div>
           <div style={{ ...statCell, borderRight: "none" }}>
-            <div style={{ ...statNum, color: "var(--c-positive)" }}>+18%</div>
-            <div style={statLabel}>Rendimiento promedio anual <span style={{ color: "var(--c-text-faint)" }}>· proyectado</span></div>
+            <div style={{ ...statNum, color: "var(--c-positive)" }}>
+              {overallPricePerM2 != null ? fmtPerM2(overallPricePerM2) : "—"}
+            </div>
+            <div style={statLabel}>Valor m² promedio <span style={{ color: "var(--c-text-faint)" }}>· en cartera</span></div>
           </div>
         </div>
       </section>
@@ -292,9 +308,17 @@ export default async function Home({ params }: { params: { lang: string } }) {
                   <div style={featuredPriceValue}>{featuredMinPrice != null ? fmtUsd(featuredMinPrice) : "Consultar"}</div>
                 </div>
                 <div>
-                  <div style={featuredPriceLabel}>Proyectado</div>
-                  <div style={{ ...featuredPriceValue, color: "var(--c-positive)" }}>+18% anual</div>
+                  <div style={featuredPriceLabel}>Valor m²</div>
+                  <div style={{ ...featuredPriceValue, color: "var(--c-positive)" }}>
+                    {featuredPricePerM2 != null ? fmtPerM2(featuredPricePerM2) : "—"}
+                  </div>
                 </div>
+                {featuredZonePricePerM2 != null && (
+                  <div>
+                    <div style={featuredPriceLabel}>Valor m² zona</div>
+                    <div style={featuredPriceValue}>{fmtPerM2(featuredZonePricePerM2)}</div>
+                  </div>
+                )}
               </div>
 
               <Link href={`/${lang}/emprendimientos/${featuredDev.id}`} style={featuredCta}>

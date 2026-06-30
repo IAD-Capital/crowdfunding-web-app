@@ -26,6 +26,7 @@ export type Initial = {
   images?: string[];
   featured?: boolean;
   visible?: boolean;
+  zone_price_per_m2?: number | string | null;
 };
 
 type Props = { t: T; lang: string; initial?: Initial; existingImages?: string[] };
@@ -48,6 +49,9 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
   const [featured, setFeatured] = useState(initial?.featured ?? false);
   const [visible, setVisible] = useState(initial?.visible ?? true);
+  const [zonePricePerM2, setZonePricePerM2] = useState(
+    initial?.zone_price_per_m2 != null ? String(initial.zone_price_per_m2) : ""
+  );
   const amenityRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -105,6 +109,7 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
       images,
       featured,
       visible,
+      zone_price_per_m2: zonePricePerM2.trim() ? Number(zonePricePerM2) : null,
     };
 
     const url = isEdit ? `/api/admin/developments/${initial!.id}` : "/api/admin/developments";
@@ -171,6 +176,21 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
               <option value="cancelled">{t.status.cancelled}</option>
             </select>
           </Field>
+        </Row>
+
+        <Row>
+          <Field label="Valor m² en la zona (USD)">
+            <input
+              style={input}
+              type="number"
+              min={0}
+              step="0.01"
+              value={zonePricePerM2}
+              onChange={(e) => setZonePricePerM2(e.target.value)}
+              placeholder="Ej: 2500"
+            />
+          </Field>
+          <div style={{ flex: 1 }} />
         </Row>
 
         {/* Featured toggle */}

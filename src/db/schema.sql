@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS developments (
   images              TEXT[]      NOT NULL DEFAULT '{}',
   featured            BOOLEAN     NOT NULL DEFAULT FALSE,
   visible             BOOLEAN     NOT NULL DEFAULT TRUE,
+  zone_price_per_m2   NUMERIC(10,2),
   developer_id        INTEGER     REFERENCES developers(id) ON DELETE SET NULL,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()

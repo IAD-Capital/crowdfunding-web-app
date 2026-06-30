@@ -20,22 +20,23 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   if (error) return error;
 
   const body = await req.json();
-  const { name, address, neighborhood, city, description, completion_date, status, amenities, images, featured, visible } = body;
+  const { name, address, neighborhood, city, description, completion_date, status, amenities, images, featured, visible, zone_price_per_m2 } = body;
 
   const [row] = await db`
     UPDATE developments SET
-      name            = ${name},
-      address         = ${address},
-      neighborhood    = ${neighborhood?.trim() || null},
-      city            = ${city?.trim() || null},
-      description     = ${description ?? null},
-      completion_date = ${completion_date ?? null},
-      status          = ${status ?? "active"},
-      amenities       = ${amenities ?? []},
-      images          = ${images ?? []},
-      featured        = ${featured ?? false},
-      visible         = ${visible ?? true},
-      updated_at      = NOW()
+      name              = ${name},
+      address           = ${address},
+      neighborhood      = ${neighborhood?.trim() || null},
+      city              = ${city?.trim() || null},
+      description       = ${description ?? null},
+      completion_date   = ${completion_date ?? null},
+      status            = ${status ?? "active"},
+      amenities         = ${amenities ?? []},
+      images            = ${images ?? []},
+      featured          = ${featured ?? false},
+      visible           = ${visible ?? true},
+      zone_price_per_m2 = ${zone_price_per_m2 ?? null},
+      updated_at        = NOW()
     WHERE id = ${params.id}
     RETURNING *
   `;
