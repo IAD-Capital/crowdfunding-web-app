@@ -11,7 +11,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   const [dev] = await db`SELECT * FROM developments WHERE id = ${params.id}`;
   if (!dev) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const units = await db`SELECT * FROM units WHERE development_id = ${params.id} ORDER BY floor, identifier`;
+  const units = await db`SELECT * FROM units WHERE development_id = ${params.id} ORDER BY updated_at DESC`;
   return NextResponse.json({ ...dev, units });
 }
 

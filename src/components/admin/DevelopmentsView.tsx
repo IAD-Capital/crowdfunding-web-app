@@ -17,7 +17,14 @@ export type Development = {
   images: string[];
   unit_count: number;
   visible?: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
+
+function fmtDate(d?: string) {
+  if (!d) return null;
+  return new Date(d).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
+}
 
 type T = {
   title: string;
@@ -119,6 +126,15 @@ function GridView({ developments, t, lang }: Props) {
                   )}
                 </div>
               )}
+
+              {/* Dates */}
+              {(d.created_at || d.updated_at) && (
+                <p style={datesLine}>
+                  {fmtDate(d.created_at) && <>Creado {fmtDate(d.created_at)}</>}
+                  {fmtDate(d.created_at) && fmtDate(d.updated_at) && " · "}
+                  {fmtDate(d.updated_at) && <>Actualizado {fmtDate(d.updated_at)}</>}
+                </p>
+              )}
             </div>
           </Link>
 
@@ -186,6 +202,13 @@ function ListView({ developments, t, lang }: Props) {
                     <span style={{ ...amenityChip, color: "#9ca3af" }}>+{d.amenities.length - 4}</span>
                   )}
                 </div>
+              )}
+              {(d.created_at || d.updated_at) && (
+                <p style={datesLine}>
+                  {fmtDate(d.created_at) && <>Creado {fmtDate(d.created_at)}</>}
+                  {fmtDate(d.created_at) && fmtDate(d.updated_at) && " · "}
+                  {fmtDate(d.updated_at) && <>Actualizado {fmtDate(d.updated_at)}</>}
+                </p>
               )}
             </div>
           </Link>
@@ -275,6 +298,9 @@ const coverWrap: React.CSSProperties = {
 const coverPlaceholder: React.CSSProperties = {
   width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center",
   background: "linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%)",
+};
+const datesLine: React.CSSProperties = {
+  fontSize: "0.72rem", color: "#9ca3af", margin: "0.4rem 0 0",
 };
 const hiddenChip: React.CSSProperties = {
   display: "inline-block", padding: "0.15rem 0.55rem", borderRadius: 999,

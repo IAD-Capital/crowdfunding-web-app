@@ -21,6 +21,7 @@ export default async function UnitDetailPage({
 
   const fmt = (v: number | null, suffix = "") => v != null ? `${v}${suffix}` : "—";
   const fmtUsd = (v: number | null) => v != null ? `USD ${Number(v).toLocaleString()}` : "—";
+  const fmtDate = (v: unknown) => v ? new Date(v as string).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
   const fields = [
     { label: tu.form.floor,       value: fmt(unit.floor) },
@@ -32,6 +33,8 @@ export default async function UnitDetailPage({
     { label: tu.form.bathrooms,   value: fmt(unit.bathrooms) },
     { label: tu.form.orientation, value: unit.orientation ? tu.form.orientations[unit.orientation as keyof typeof tu.form.orientations] ?? unit.orientation : "—" },
     { label: tu.form.priceUsd,    value: fmtUsd(unit.price_usd) },
+    { label: "Creado",            value: fmtDate(unit.created_at) },
+    { label: "Última actualización", value: fmtDate(unit.updated_at) },
   ];
 
   return (

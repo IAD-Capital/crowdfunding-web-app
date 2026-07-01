@@ -9,7 +9,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   if (error) return error;
 
   const units = await db`
-    SELECT * FROM units WHERE development_id = ${params.id} ORDER BY floor, identifier
+    SELECT * FROM units WHERE development_id = ${params.id} ORDER BY updated_at DESC
   `;
   return NextResponse.json(units);
 }

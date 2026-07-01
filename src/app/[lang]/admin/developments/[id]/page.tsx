@@ -28,8 +28,13 @@ export default async function DevelopmentDetailPage({
       GROUP BY unit_id
     ) inv ON inv.unit_id = u.id
     WHERE u.development_id = ${params.id}
-    ORDER BY u.floor, u.identifier
+    ORDER BY u.updated_at DESC
   `;
+  const serializedUnits = units.map((u) => ({
+    ...u,
+    created_at: u.created_at ? new Date(u.created_at as unknown as string).toISOString() : undefined,
+    updated_at: u.updated_at ? new Date(u.updated_at as unknown as string).toISOString() : undefined,
+  }));
 
   const fmtDate = (d: string | null) =>
     d ? new Date(d).toLocaleDateString(lang === "es" ? "es-AR" : "en-US", { timeZone: "UTC" }) : "—";
@@ -58,6 +63,8 @@ export default async function DevelopmentDetailPage({
       <div style={infoGrid}>
         <InfoCard label={td.form.completionDate} value={fmtDate(dev.completion_date)} />
         <InfoCard label={td.form.status} value={td.status[dev.status as keyof typeof td.status] ?? dev.status} />
+        <InfoCard label="Creado" value={fmtDate(dev.created_at)} />
+        <InfoCard label="Última actualización" value={fmtDate(dev.updated_at)} />
       </div>
 
       {dev.description && (
@@ -96,7 +103,7 @@ export default async function DevelopmentDetailPage({
         <p style={{ color: "#6b7280" }}>{tu.empty}</p>
       ) : (
         <UnitsView
-          units={units}
+          units={serializedUnits}
           lang={lang}
           statusT={tu.status as { available: string; partial: string; sold: string }}
           priceLabel={tu.form.priceUsd}

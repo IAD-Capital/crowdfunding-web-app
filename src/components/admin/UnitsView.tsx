@@ -22,7 +22,14 @@ export type UnitRow = {
   development_id: number;
   development_name?: string;
   investment_ids?: number[];
+  created_at?: string;
+  updated_at?: string;
 };
+
+function fmtUnitDate(d?: string) {
+  if (!d) return null;
+  return new Date(d).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
+}
 
 type StatusT = { available: string; partial: string; sold: string };
 
@@ -142,7 +149,7 @@ export default function UnitsView({
                 </th>
                 {[
                   ...(showDevelopment ? [developmentLabel ?? ""] : []),
-                  "ID", floorLabel, "m² tot", roomsLabel, priceLabel, "Estado", "Fotos", "Inversiones", "",
+                  "ID", floorLabel, "m² tot", roomsLabel, priceLabel, "Estado", "Fotos", "Inversiones", "Actualizado", "",
                 ].map((h) => <th key={h} style={th}>{h}</th>)}
               </tr>
             </thead>
@@ -171,6 +178,9 @@ export default function UnitsView({
                   </td>
                   <td style={td}>{u.images?.length ?? 0}</td>
                   <td style={td}><InvestmentLinks ids={u.investment_ids} lang={lang} /></td>
+                  <td style={{ ...td, fontSize: "0.78rem", color: "#9ca3af", whiteSpace: "nowrap" }}>
+                    {fmtUnitDate(u.updated_at) ?? "—"}
+                  </td>
                   <td style={td}>
                     <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
                       <Link href={`/${lang}/admin/developments/${u.development_id}/units/${u.id}`} style={linkPrimary}>Ver</Link>
@@ -245,6 +255,14 @@ export default function UnitsView({
                 <div style={{ marginTop: "0.4rem" }}>
                   <InvestmentLinks ids={u.investment_ids} lang={lang} />
                 </div>
+
+                {(u.created_at || u.updated_at) && (
+                  <p style={{ fontSize: "0.7rem", color: "#9ca3af", margin: "0.4rem 0 0" }}>
+                    {fmtUnitDate(u.created_at) && <>Creado {fmtUnitDate(u.created_at)}</>}
+                    {fmtUnitDate(u.created_at) && fmtUnitDate(u.updated_at) && " · "}
+                    {fmtUnitDate(u.updated_at) && <>Actualizado {fmtUnitDate(u.updated_at)}</>}
+                  </p>
+                )}
 
                 <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
                   <Link href={`/${lang}/admin/developments/${u.development_id}/units/${u.id}`} style={btnPrimary}>

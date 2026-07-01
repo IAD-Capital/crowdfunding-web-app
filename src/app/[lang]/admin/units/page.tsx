@@ -18,8 +18,14 @@ export default async function UnitsPage({ params }: { params: { lang: string } }
       WHERE status IN ('pending', 'approved')
       GROUP BY unit_id
     ) inv ON inv.unit_id = u.id
-    ORDER BY d.name, u.floor, u.identifier
+    ORDER BY u.updated_at DESC
   `;
+
+  const units = rows.map((u) => ({
+    ...u,
+    created_at: u.created_at ? new Date(u.created_at as unknown as string).toISOString() : undefined,
+    updated_at: u.updated_at ? new Date(u.updated_at as unknown as string).toISOString() : undefined,
+  }));
 
   return (
     <div>
@@ -29,7 +35,7 @@ export default async function UnitsPage({ params }: { params: { lang: string } }
         <p style={{ color: "#6b7280" }}>{tu.empty}</p>
       ) : (
         <UnitsView
-          units={rows}
+          units={units}
           lang={lang}
           statusT={tu.status as { available: string; partial: string; sold: string }}
           priceLabel={tu.form.priceUsd}

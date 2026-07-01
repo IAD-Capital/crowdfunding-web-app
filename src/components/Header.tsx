@@ -21,7 +21,7 @@ export default async function Header({ lang }: Props) {
     db<{ id: number; name: string; address: string; images: string[] }[]>`
       SELECT id, name, address, images FROM developments
       WHERE status = 'active' AND visible = true
-      ORDER BY created_at DESC
+      ORDER BY updated_at DESC
       LIMIT 8
     `,
   ]);

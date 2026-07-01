@@ -2,7 +2,11 @@ import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18
 import db from "@/lib/db";
 import DevelopmentsView, { type Development } from "@/components/admin/DevelopmentsView";
 
-type Row = Omit<Development, "completion_date"> & { completion_date: Date | string | null };
+type Row = Omit<Development, "completion_date" | "created_at" | "updated_at"> & {
+  completion_date: Date | string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+};
 
 export default async function DevelopmentsPage({ params }: { params: { lang: string } }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
@@ -14,13 +18,15 @@ export default async function DevelopmentsPage({ params }: { params: { lang: str
     FROM developments d
     LEFT JOIN units u ON u.development_id = d.id
     GROUP BY d.id
-    ORDER BY d.created_at DESC
+    ORDER BY d.updated_at DESC
   `;
 
   // Serialize dates for client component
   const developments: Development[] = rows.map((d) => ({
     ...d,
     completion_date: d.completion_date ? new Date(d.completion_date).toISOString() : undefined,
+    created_at: new Date(d.created_at).toISOString(),
+    updated_at: new Date(d.updated_at).toISOString(),
   }));
 
   return (

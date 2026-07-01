@@ -19,7 +19,7 @@ export default async function PublicDevelopmentPage({
   if (!dev) notFound();
   if (!dev.visible && session?.role !== "superadmin") notFound();
 
-  const units = await db`SELECT * FROM units WHERE development_id = ${params.id} ORDER BY floor, identifier`;
+  const units = await db`SELECT * FROM units WHERE development_id = ${params.id} ORDER BY updated_at DESC`;
 
   const fmtDate = (d: unknown) =>
     d ? new Date(d as string).toLocaleDateString(lang === "es" ? "es-AR" : "en-US", { month: "long", year: "numeric", day: "numeric", timeZone: "UTC" }) : null;

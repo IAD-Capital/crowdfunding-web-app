@@ -5,7 +5,7 @@ export default async function AdminGalleryPage({ params }: { params: { lang: str
   const lang = params.lang;
 
   const developments = await db<{ id: number; name: string; images: string[] }[]>`
-    SELECT id, name, images FROM developments ORDER BY created_at DESC
+    SELECT id, name, images FROM developments ORDER BY updated_at DESC
   `;
 
   const unitRows = await db<{ development_id: number; images: string[] }[]>`

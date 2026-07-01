@@ -13,7 +13,7 @@ export async function GET() {
     LEFT JOIN units u ON u.development_id = d.id
     WHERE d.status = 'active' AND d.visible = true
     GROUP BY d.id
-    ORDER BY d.created_at DESC
+    ORDER BY d.updated_at DESC
   `;
 
   const units = await db`
@@ -24,7 +24,7 @@ export async function GET() {
     FROM units u
     JOIN developments d ON d.id = u.development_id
     WHERE d.status = 'active' AND d.visible = true
-    ORDER BY u.price_usd ASC
+    ORDER BY u.updated_at DESC
   `;
 
   return NextResponse.json({ developments, units });

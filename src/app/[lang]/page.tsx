@@ -55,7 +55,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
     LEFT JOIN developers dv ON dv.id = d.developer_id
     WHERE d.status = 'active' AND d.visible = true
     GROUP BY d.id, dv.name
-    ORDER BY d.created_at DESC
+    ORDER BY d.updated_at DESC
   `;
 
   const units = await db<UnitRow[]>`
@@ -73,7 +73,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
     FROM units u
     JOIN developments d ON d.id = u.development_id
     WHERE d.status = 'active' AND d.visible = true
-    ORDER BY u.price_usd ASC
+    ORDER BY u.updated_at DESC
   `;
 
   const featuredRows = await db<(FeaturedRow & { developer_name: string | null })[]>`
@@ -86,7 +86,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
     LEFT JOIN developers dv ON dv.id = d.developer_id
     WHERE d.featured = true AND d.status = 'active' AND d.visible = true
     GROUP BY d.id, dv.name
-    ORDER BY d.created_at DESC
+    ORDER BY d.updated_at DESC
   `;
   const featuredDev = featuredRows[0] ?? null;
   const featuredUnits = featuredDev ? units.filter((u) => u.development_id === featuredDev.id) : [];

@@ -11,7 +11,7 @@ export async function GET() {
     FROM developments d
     LEFT JOIN units u ON u.development_id = d.id
     GROUP BY d.id
-    ORDER BY d.created_at DESC
+    ORDER BY d.updated_at DESC
   `;
   return NextResponse.json(rows);
 }
