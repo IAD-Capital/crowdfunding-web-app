@@ -127,6 +127,27 @@ export async function GET() {
     await db`ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS bronze_from NUMERIC(14,2) NOT NULL DEFAULT 5000`;
     await db`INSERT INTO app_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING`;
 
+    // Media table (image metadata)
+    await db`
+      CREATE TABLE IF NOT EXISTS media (
+        id             SERIAL PRIMARY KEY,
+        url            TEXT        NOT NULL UNIQUE,
+        alt_text       TEXT,
+        credit         TEXT,
+        uploaded_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        development_id INTEGER REFERENCES developments(id) ON DELETE CASCADE,
+        unit_id        INTEGER REFERENCES units(id) ON DELETE CASCADE
+      )
+    `;
+    // Migrate existing development images into media table
+    await db`
+      INSERT INTO media (url, development_id, uploaded_at)
+      SELECT unnest(images), id, NOW()
+      FROM developments
+      WHERE array_length(images, 1) > 0
+      ON CONFLICT (url) DO NOTHING
+    `;
+
     const hash = await hashPassword("Test123@");
     await db`
       INSERT INTO users (full_name, email, password_hash, role)

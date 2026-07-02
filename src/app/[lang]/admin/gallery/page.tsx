@@ -4,30 +4,41 @@ import GalleryView, { type GalleryDevelopment } from "@/components/admin/Gallery
 export default async function AdminGalleryPage({ params }: { params: { lang: string } }) {
   const lang = params.lang;
 
-  const developments = await db<{ id: number; name: string; images: string[] }[]>`
-    SELECT id, name, images FROM developments ORDER BY updated_at DESC
+  const mediaRows = await db<{
+    id: number;
+    url: string;
+    alt_text: string | null;
+    credit: string | null;
+    uploaded_at: string;
+    development_id: number;
+    development_name: string;
+  }[]>`
+    SELECT m.id, m.url, m.alt_text, m.credit, m.uploaded_at,
+           d.id AS development_id, d.name AS development_name
+    FROM media m
+    JOIN developments d ON d.id = m.development_id
+    ORDER BY d.name ASC, m.uploaded_at DESC
   `;
 
-  const unitRows = await db<{ development_id: number; images: string[] }[]>`
-    SELECT development_id, images FROM units
-  `;
-
-  const unitImagesByDev = new Map<number, string[]>();
-  for (const u of unitRows) {
-    const list = unitImagesByDev.get(u.development_id) ?? [];
-    unitImagesByDev.set(u.development_id, [...list, ...(u.images ?? [])]);
+  // Group by development
+  const devMap = new Map<number, GalleryDevelopment>();
+  for (const r of mediaRows) {
+    if (!devMap.has(r.development_id)) {
+      devMap.set(r.development_id, { id: r.development_id, name: r.development_name, images: [] });
+    }
+    devMap.get(r.development_id)!.images.push({
+      id: r.id,
+      url: r.url,
+      alt_text: r.alt_text,
+      credit: r.credit,
+      uploaded_at: r.uploaded_at,
+    });
   }
-
-  const galleryDevelopments: GalleryDevelopment[] = developments.map((d) => ({
-    id: d.id,
-    name: d.name,
-    images: Array.from(new Set([...(d.images ?? []), ...(unitImagesByDev.get(d.id) ?? [])])),
-  }));
 
   return (
     <div>
       <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem" }}>Galería de fotos</h1>
-      <GalleryView developments={galleryDevelopments} lang={lang} />
+      <GalleryView developments={Array.from(devMap.values())} lang={lang} />
     </div>
   );
 }

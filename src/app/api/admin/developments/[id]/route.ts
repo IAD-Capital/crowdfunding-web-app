@@ -42,6 +42,21 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     RETURNING *
   `;
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Sync images into media table
+  const imgList: string[] = images ?? [];
+  if (imgList.length > 0) {
+    await db`
+      INSERT INTO media (url, development_id)
+      SELECT unnest(${imgList}::text[]), ${row.id}
+      ON CONFLICT (url) DO UPDATE SET development_id = EXCLUDED.development_id
+    `;
+  }
+  // Remove media rows whose URLs were deleted from the array
+  await db`
+    DELETE FROM media WHERE development_id = ${row.id} AND NOT (url = ANY(${imgList}))
+  `;
+
   return NextResponse.json(row);
 }
 

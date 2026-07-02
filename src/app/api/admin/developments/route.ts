@@ -37,5 +37,16 @@ export async function POST(req: NextRequest) {
     )
     RETURNING *
   `;
+
+  // Sync images into media table
+  const imgList: string[] = images ?? [];
+  if (imgList.length > 0) {
+    await db`
+      INSERT INTO media (url, development_id)
+      SELECT unnest(${imgList}::text[]), ${row.id}
+      ON CONFLICT (url) DO UPDATE SET development_id = EXCLUDED.development_id
+    `;
+  }
+
   return NextResponse.json(row, { status: 201 });
 }
