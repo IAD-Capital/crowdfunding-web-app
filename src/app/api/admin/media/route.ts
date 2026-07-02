@@ -37,14 +37,16 @@ export async function DELETE(req: NextRequest) {
     }
   }
 
-  for (const [devId, urls] of devGroups) {
+  for (const devId of Array.from(devGroups.keys())) {
+    const urls = devGroups.get(devId)!;
     await db`
       UPDATE developments
       SET images = array(SELECT unnest(images) EXCEPT SELECT unnest(${urls}::text[]))
       WHERE id = ${devId}
     `;
   }
-  for (const [unitId, urls] of unitGroups) {
+  for (const unitId of Array.from(unitGroups.keys())) {
+    const urls = unitGroups.get(unitId)!;
     await db`
       UPDATE units
       SET images = array(SELECT unnest(images) EXCEPT SELECT unnest(${urls}::text[]))
