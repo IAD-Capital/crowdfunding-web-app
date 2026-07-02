@@ -24,9 +24,10 @@ export type Notification = {
 type Props = {
   notifications: Notification[];
   dark?: boolean;
+  sidebarExpanded?: boolean;
 };
 
-export default function NotificationBell({ notifications: initial, dark = false }: Props) {
+export default function NotificationBell({ notifications: initial, dark = false, sidebarExpanded }: Props) {
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -84,6 +85,8 @@ export default function NotificationBell({ notifications: initial, dark = false 
     ghost:   { background: "#fff", color: "#374151", border: "1px solid #d1d5db" },
   };
 
+  const inSidebar = sidebarExpanded !== undefined;
+
   return (
     <div ref={ref} style={{ position: "relative" }}>
       {/* Bell */}
@@ -91,31 +94,46 @@ export default function NotificationBell({ notifications: initial, dark = false 
         onClick={() => setOpen((v) => !v)}
         style={{
           position: "relative", background: "none", border: "none",
-          cursor: "pointer", padding: 6, borderRadius: 8,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: dark ? "#d1d5db" : "#374151", fontSize: "1.15rem",
+          cursor: "pointer", padding: "0.55rem 0.75rem", borderRadius: 8,
+          display: "flex", alignItems: "center",
+          gap: inSidebar ? "0.7rem" : 0,
+          justifyContent: sidebarExpanded ? "flex-start" : "center",
+          width: inSidebar ? "100%" : "auto",
+          color: dark ? "#d1d5db" : "#6b7280",
+          transition: "background 0.12s, color 0.12s",
         }}
+        className="sidebar-section-btn"
         aria-label="Notificaciones"
       >
-        🔔
-        {count > 0 && (
-          <span style={{
-            position: "absolute", top: 2, right: 2,
-            minWidth: 16, height: 16, borderRadius: 999,
-            background: "#ef4444", color: "#fff",
-            fontSize: "0.6rem", fontWeight: 800,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "0 4px", lineHeight: 1,
-            border: `2px solid ${dark ? "#111" : "#fff"}`,
-          }}>
-            {count > 99 ? "99+" : count}
+        <span style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          {count > 0 && (
+            <span style={{
+              position: "absolute", top: -3, right: -5,
+              minWidth: 15, height: 15, borderRadius: 999,
+              background: "#ef4444", color: "#fff",
+              fontSize: "0.58rem", fontWeight: 800,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "0 3px", lineHeight: 1,
+              border: "2px solid #fff",
+            }}>
+              {count > 99 ? "99+" : count}
+            </span>
+          )}
+        </span>
+        {sidebarExpanded && (
+          <span style={{ fontSize: "0.875rem", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden" }}>
+            Notificaciones
           </span>
         )}
       </button>
 
       {/* Dropdown */}
       {open && (
-        <div style={dropdown}>
+        <div style={{ ...dropdown, ...(inSidebar ? dropdownSidebar : {}) }}>
           <div style={dropHeader}>
             <span style={dropTitle}>Notificaciones</span>
             {count > 0 && (
@@ -125,7 +143,10 @@ export default function NotificationBell({ notifications: initial, dark = false 
 
           {notifications.length === 0 ? (
             <div style={emptyState}>
-              <span style={{ fontSize: "1.75rem", opacity: 0.2 }}>🔔</span>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.2 }}>
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
               <p style={{ margin: 0, fontSize: "0.82rem", color: "#9ca3af" }}>Sin notificaciones</p>
             </div>
           ) : (
@@ -196,6 +217,9 @@ const dropdown: React.CSSProperties = {
   width: 320, background: "#fff",
   border: "1px solid #e5e7eb", borderRadius: 12,
   boxShadow: "0 8px 30px rgba(0,0,0,0.12)", zIndex: 200, overflow: "hidden",
+};
+const dropdownSidebar: React.CSSProperties = {
+  top: "auto", bottom: "calc(100% + 8px)", right: "auto", left: 0,
 };
 const dropHeader: React.CSSProperties = {
   display: "flex", justifyContent: "space-between", alignItems: "center",

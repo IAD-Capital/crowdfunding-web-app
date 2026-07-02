@@ -87,6 +87,7 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
   // Filters
   const [filterDevelopment, setFilterDevelopment] = useState<string>("");
   const [filterInvestor, setFilterInvestor] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
 
   const developments = Array.from(
     new Map(investments.map((i) => [i.development_id, i.development_name])).entries()
@@ -99,6 +100,7 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
   const filtered = investments.filter((inv) => {
     if (filterDevelopment && String(inv.development_id) !== filterDevelopment) return false;
     if (filterInvestor && String(inv.user_id) !== filterInvestor) return false;
+    if (filterStatus && inv.status !== filterStatus) return false;
     return true;
   });
 
@@ -203,7 +205,7 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
     );
   }
 
-  const hasFilters = filterDevelopment || filterInvestor;
+  const hasFilters = filterDevelopment || filterInvestor || filterStatus;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -227,8 +229,17 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
             ))}
           </select>
         </div>
+        <div style={filterGroup}>
+          <label style={filterLabel}>Estado</label>
+          <select style={filterSelect} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+            <option value="">Todos</option>
+            {STATUS_OPTS.map((s) => (
+              <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+            ))}
+          </select>
+        </div>
         {hasFilters && (
-          <button style={clearBtn} onClick={() => { setFilterDevelopment(""); setFilterInvestor(""); }}>
+          <button style={clearBtn} onClick={() => { setFilterDevelopment(""); setFilterInvestor(""); setFilterStatus(""); }}>
             Limpiar filtros
           </button>
         )}

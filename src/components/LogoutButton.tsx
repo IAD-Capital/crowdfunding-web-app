@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-export default function LogoutButton({ label }: { label: string }) {
+export default function LogoutButton({ label }: { label?: string }) {
   const router = useRouter();
 
   async function logout() {
@@ -13,12 +13,22 @@ export default function LogoutButton({ label }: { label: string }) {
   return (
     <button
       onClick={logout}
+      title="Cerrar sesión"
       style={{
-        padding: "0.5rem 1rem", background: "#111", color: "#fff",
-        border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600,
+        background: "none", border: "none", cursor: "pointer",
+        display: "flex", alignItems: "center", gap: "0.4rem",
+        color: "#6b7280", padding: "6px", borderRadius: 8,
+        transition: "color 0.12s",
       }}
+      onMouseEnter={(e) => (e.currentTarget.style.color = "#111")}
+      onMouseLeave={(e) => (e.currentTarget.style.color = "#6b7280")}
     >
-      {label}
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <polyline points="16 17 21 12 16 7" />
+        <line x1="21" y1="12" x2="9" y2="12" />
+      </svg>
+      {label && <span style={{ fontSize: "0.82rem", fontWeight: 600 }}>{label}</span>}
     </button>
   );
 }
