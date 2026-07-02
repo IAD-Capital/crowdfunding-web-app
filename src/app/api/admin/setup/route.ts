@@ -64,6 +64,7 @@ export async function GET() {
     await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS developer_id INTEGER REFERENCES developers(id) ON DELETE SET NULL`;
     await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS neighborhood TEXT`;
     await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS city TEXT`;
+    await db`ALTER TABLE developments ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE`;
 
     // Units (UF - Unidades Funcionales)
     await db`
@@ -88,6 +89,11 @@ export async function GET() {
       )
     `;
     await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS images TEXT[] NOT NULL DEFAULT '{}'`;
+    await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS outdoor_m2 NUMERIC(8,2)`;
+    await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS semi_covered_m2 NUMERIC(8,2)`;
+    await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS total_homogeneous_m2 NUMERIC(8,2)`;
+    await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS price_m2 NUMERIC(14,2)`;
+    await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS currency_price TEXT`;
     await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS group_expires_at TIMESTAMPTZ`;
     await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS current_price_usd NUMERIC(14,2)`;
     await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS group_duration_months INTEGER`;

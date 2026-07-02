@@ -12,14 +12,14 @@ import s from "./Header.module.scss";
 
 type Props = { lang: Locale };
 
-type NavDevelopment = { id: number; name: string; address: string; image: string | null };
+type NavDevelopment = { id: number; name: string; address: string; image: string | null; slug?: string | null };
 
 export default async function Header({ lang }: Props) {
   const [session, t, devRows] = await Promise.all([
     getSession(),
     getDictionary(lang),
-    db<{ id: number; name: string; address: string; images: string[] }[]>`
-      SELECT id, name, address, images FROM developments
+    db<{ id: number; name: string; address: string; images: string[]; slug?: string | null }[]>`
+      SELECT id, name, address, images, slug FROM developments
       WHERE status = 'active' AND visible = true
       ORDER BY updated_at DESC
       LIMIT 8
@@ -31,6 +31,7 @@ export default async function Header({ lang }: Props) {
     name: d.name,
     address: d.address,
     image: d.images?.[0] ?? null,
+    slug: d.slug ?? null,
   }));
 
   let notifications: Notification[] = [];

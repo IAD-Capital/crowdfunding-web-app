@@ -14,7 +14,7 @@ type SimUnit = {
   available_pct?: number;
 };
 
-type SimDevelopment = { id: number; name: string };
+type SimDevelopment = { id: number; name: string; slug?: string | null };
 
 type Props = {
   developments: SimDevelopment[];
@@ -165,7 +165,7 @@ export default function InvestmentSimulator({ developments, units, lang }: Props
 
           {selectedUnit && (
             <Link
-              href={`/${lang}/emprendimientos/${selectedUnit.development_id}/unidades/${selectedUnit.id}`}
+              href={`/${lang}/emprendimientos/${developments.find(d => d.id === selectedUnit.development_id)?.slug ?? selectedUnit.development_id}/unidades/${selectedUnit.id}`}
               style={{ ...ctaBtn, ...(outOfRange ? ctaBtnDisabled : {}) }}
             >
               Ver unidad e invertir →

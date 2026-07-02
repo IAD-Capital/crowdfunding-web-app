@@ -40,7 +40,8 @@ export function unitQualifiesForTier(
   const maxInvest = unit.price_usd * (availablePct / 100);
 
   if (tier.key === "platinum") {
-    return availablePct >= 100 && unit.price_usd >= tier.from;
+    // Platinum can always be proposed — it supersedes existing investors upon approval
+    return unit.price_usd >= tier.from;
   }
 
   const to = tier.to ?? Infinity;

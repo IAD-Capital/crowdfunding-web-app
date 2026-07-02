@@ -9,7 +9,6 @@ export default function InvestmentTiersForm({ initial }: Props) {
   const [bronzeFrom, setBronzeFrom] = useState(String(initial.bronze_from));
   const [silverFrom, setSilverFrom] = useState(String(initial.silver_from));
   const [goldFrom, setGoldFrom] = useState(String(initial.gold_from));
-  const [platinumFrom, setPlatinumFrom] = useState(String(initial.platinum_from));
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,7 +26,6 @@ export default function InvestmentTiersForm({ initial }: Props) {
         bronze_from: Number(bronzeFrom),
         silver_from: Number(silverFrom),
         gold_from: Number(goldFrom),
-        platinum_from: Number(platinumFrom),
       }),
     });
     const data = await res.json();
@@ -45,7 +43,7 @@ export default function InvestmentTiersForm({ initial }: Props) {
       <h2 style={title}>Tipos de inversión</h2>
       <p style={hint}>
         Definí desde qué monto comienza cada tipo de inversión.
-        Platino representa la compra de la unidad funcional completa (100%).
+        Platino aplica automáticamente a partir de Oro.
       </p>
 
       <form onSubmit={handleSubmit} style={form}>
@@ -84,22 +82,6 @@ export default function InvestmentTiersForm({ initial }: Props) {
             required
           />
         </Field>
-
-        <Field label="Platino — desde (USD)">
-          <input
-            style={input}
-            type="number"
-            min={0}
-            step={100}
-            value={platinumFrom}
-            onChange={(e) => setPlatinumFrom(e.target.value)}
-            required
-          />
-        </Field>
-        <p style={hint}>
-          Platino solo aplica a unidades 100% disponibles (nadie invirtió aún), ya que representa
-          adquirir la totalidad de la unidad.
-        </p>
 
         {error && <p style={errorStyle}>{error}</p>}
         {success && <p style={successStyle}>Guardado correctamente.</p>}

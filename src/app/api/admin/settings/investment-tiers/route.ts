@@ -23,26 +23,24 @@ export async function PUT(req: NextRequest) {
   const bronzeFrom = Number(body.bronze_from);
   const silverFrom = Number(body.silver_from);
   const goldFrom = Number(body.gold_from);
-  const platinumFrom = Number(body.platinum_from);
 
   if (
-    [bronzeFrom, silverFrom, goldFrom, platinumFrom].some((n) => !Number.isFinite(n) || n < 0)
+    [bronzeFrom, silverFrom, goldFrom].some((n) => !Number.isFinite(n) || n < 0)
   ) {
     return NextResponse.json({ error: "Los montos deben ser números válidos." }, { status: 400 });
   }
-  if (!(bronzeFrom < silverFrom && silverFrom < goldFrom && goldFrom < platinumFrom)) {
+  if (!(bronzeFrom < silverFrom && silverFrom < goldFrom)) {
     return NextResponse.json(
-      { error: "Los montos deben ser crecientes: Bronce < Plata < Oro < Platino." },
+      { error: "Los montos deben ser crecientes: Bronce < Plata < Oro." },
       { status: 400 }
     );
   }
 
   const [row] = await db<TierThresholds[]>`
     UPDATE app_settings SET
-      bronze_from   = ${bronzeFrom},
-      silver_from   = ${silverFrom},
-      gold_from     = ${goldFrom},
-      platinum_from = ${platinumFrom}
+      bronze_from = ${bronzeFrom},
+      silver_from = ${silverFrom},
+      gold_from   = ${goldFrom}
     WHERE id = 1
     RETURNING bronze_from, silver_from, gold_from, platinum_from
   `;

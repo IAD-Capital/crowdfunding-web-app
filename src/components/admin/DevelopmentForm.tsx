@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Dictionary } from "@/i18n";
 import ImageUploader from "./ImageUploader";
 import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
+import { slugify } from "@/lib/slugify";
 
 type T = Dictionary["admin"]["developments"];
 
@@ -27,6 +28,7 @@ export type Initial = {
   featured?: boolean;
   visible?: boolean;
   zone_price_per_m2?: number | string | null;
+  slug?: string | null;
 };
 
 type Props = { t: T; lang: string; initial?: Initial; existingImages?: string[] };
@@ -36,6 +38,8 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
   const isEdit = !!initial;
 
   const [name, setName] = useState(initial?.name ?? "");
+  const [slug, setSlug] = useState(initial?.slug ?? "");
+  const [slugEdited, setSlugEdited] = useState(!!initial?.slug);
   const [address, setAddress] = useState(initial?.address ?? "");
   const [neighborhood, setNeighborhood] = useState(initial?.neighborhood ?? "");
   const [city, setCity] = useState(initial?.city ?? "");
@@ -110,6 +114,7 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
       featured,
       visible,
       zone_price_per_m2: zonePricePerM2.trim() ? Number(zonePricePerM2) : null,
+      slug: slug.trim() || null,
     };
 
     const url = isEdit ? `/api/admin/developments/${initial!.id}` : "/api/admin/developments";
@@ -141,12 +146,33 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
       <form onSubmit={handleSubmit} style={form}>
         <Row>
           <Field label={t.form.name}>
-            <input style={input} value={name} onChange={(e) => setName(e.target.value)} required />
+            <input
+              style={input}
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (!slugEdited) setSlug(slugify(e.target.value));
+              }}
+              required
+            />
           </Field>
           <Field label={t.form.address}>
             <input style={input} value={address} onChange={(e) => setAddress(e.target.value)} required />
           </Field>
         </Row>
+
+        <Field label="Slug (URL amigable)">
+          <div style={slugWrap}>
+            <span style={slugPrefix}>/emprendimientos/</span>
+            <input
+              style={{ ...input, borderLeft: "none", borderRadius: "0 8px 8px 0" }}
+              value={slug}
+              onChange={(e) => { setSlug(slugify(e.target.value)); setSlugEdited(true); }}
+              placeholder="ej: iad-incas-blvd"
+            />
+          </div>
+          <p style={hint}>Identificador único en la URL. Se genera automáticamente desde el nombre.</p>
+        </Field>
 
         <Row>
           <Field label="Barrio">
@@ -346,6 +372,11 @@ const chipRemove: React.CSSProperties = {
 const chipInput: React.CSSProperties = {
   border: "none", outline: "none", fontSize: "0.9rem",
   flex: 1, minWidth: 120, background: "transparent",
+};
+const slugWrap: React.CSSProperties = { display: "flex", alignItems: "stretch" };
+const slugPrefix: React.CSSProperties = {
+  padding: "0.55rem 0.75rem", background: "#f3f4f6", border: "1px solid #d1d5db",
+  borderRadius: "8px 0 0 8px", fontSize: "0.85rem", color: "#6b7280", whiteSpace: "nowrap",
 };
 const hint: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.2rem" };
 const errorStyle: React.CSSProperties = { color: "#dc2626", fontSize: "0.875rem" };

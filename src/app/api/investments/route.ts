@@ -12,9 +12,10 @@ export async function POST(req: NextRequest) {
 
   const { unit_id, percentage } = await req.json();
 
-  const validPct = (percentage >= 5 && percentage <= 50 && percentage % 5 === 0) || percentage === 100;
+  // Slider: 5–50 step 5. Fixed amount: any value >= 5. Platinum: exactly 100.
+  const validPct = (percentage >= 5 && percentage <= 100);
   if (!unit_id || !percentage || !validPct) {
-    return NextResponse.json({ error: "Porcentaje inválido. Debe ser entre 5% y 50% (múltiplos de 5) o el 100%." }, { status: 400 });
+    return NextResponse.json({ error: "Porcentaje inválido. Debe ser entre 5% y 100%." }, { status: 400 });
   }
 
   // An investor can't have a pending request or an already-approved investment in the same unit
@@ -33,19 +34,21 @@ export async function POST(req: NextRequest) {
   if (!unit) return NextResponse.json({ error: "Unidad no encontrada." }, { status: 404 });
   if (unit.status === "sold") return NextResponse.json({ error: "Unidad ya vendida." }, { status: 409 });
 
-  // Only approved investments count against the unit's availability —
-  // pending requests don't reserve any percentage until approved.
-  const [agg] = await db`
-    SELECT COALESCE(SUM(percentage), 0)::numeric AS sold_pct
-    FROM investments
-    WHERE unit_id = ${unit_id} AND status = 'approved'
-  `;
-  const soldPct = Number(agg.sold_pct);
-  if (soldPct + Number(percentage) > 100) {
-    return NextResponse.json(
-      { error: `Solo queda ${100 - soldPct}% disponible en esta unidad.` },
-      { status: 409 }
-    );
+  // Only approved investments count against the unit's availability.
+  // Platinum (100%) proposals are always allowed — they supersede existing investors upon approval.
+  if (Number(percentage) < 100) {
+    const [agg] = await db`
+      SELECT COALESCE(SUM(percentage), 0)::numeric AS sold_pct
+      FROM investments
+      WHERE unit_id = ${unit_id} AND status = 'approved'
+    `;
+    const soldPct = Number(agg.sold_pct);
+    if (soldPct + Number(percentage) > 100) {
+      return NextResponse.json(
+        { error: `Solo queda ${100 - soldPct}% disponible en esta unidad.` },
+        { status: 409 }
+      );
+    }
   }
 
   const amount_usd = (Number(unit.price_usd) * Number(percentage)) / 100;

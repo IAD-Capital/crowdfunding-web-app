@@ -15,11 +15,14 @@ export default async function PublicDevelopmentPage({
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const session = await getSession();
 
-  const [dev] = await db`SELECT * FROM developments WHERE id = ${params.id}`;
+  const isNumeric = /^\d+$/.test(params.id);
+  const [dev] = isNumeric
+    ? await db`SELECT * FROM developments WHERE id = ${params.id}`
+    : await db`SELECT * FROM developments WHERE slug = ${params.id}`;
   if (!dev) notFound();
   if (!dev.visible && session?.role !== "superadmin") notFound();
 
-  const units = await db`SELECT * FROM units WHERE development_id = ${params.id} ORDER BY updated_at DESC`;
+  const units = await db`SELECT * FROM units WHERE development_id = ${dev.id} ORDER BY updated_at DESC`;
 
   const fmtDate = (d: unknown) =>
     d ? new Date(d as string).toLocaleDateString(lang === "es" ? "es-AR" : "en-US", { month: "long", year: "numeric", day: "numeric", timeZone: "UTC" }) : null;
@@ -101,7 +104,7 @@ export default async function PublicDevelopmentPage({
                   {units.map((u) => {
                     const sc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
                     return (
-                      <Link key={u.id} href={`/${lang}/emprendimientos/${dev.id}/unidades/${u.id}`} style={{ ...unitCard, textDecoration: "none", color: "inherit" }}>
+                      <Link key={u.id} href={`/${lang}/emprendimientos/${dev.slug ?? dev.id}/unidades/${u.id}`} style={{ ...unitCard, textDecoration: "none", color: "inherit" }}>
                         <div style={unitCover}>
                           {u.images?.[0] ? (
                             <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} />

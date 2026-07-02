@@ -1,6 +1,7 @@
 import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import db from "@/lib/db";
 import UnitsView, { type UnitRow } from "@/components/admin/UnitsView";
+import Link from "next/link";
 
 export default async function UnitsPage({ params }: { params: { lang: string } }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
@@ -29,7 +30,15 @@ export default async function UnitsPage({ params }: { params: { lang: string } }
 
   return (
     <div>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem" }}>{tu.title}</h1>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0 }}>{tu.title}</h1>
+        <Link
+          href={`/${lang}/admin/units/import`}
+          style={{ padding: "0.5rem 1rem", background: "#111", color: "#fff", borderRadius: 8, textDecoration: "none", fontWeight: 600, fontSize: "0.85rem" }}
+        >
+          ⬆ Importar CSV
+        </Link>
+      </div>
 
       {rows.length === 0 ? (
         <p style={{ color: "#6b7280" }}>{tu.empty}</p>

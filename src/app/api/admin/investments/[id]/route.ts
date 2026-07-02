@@ -10,8 +10,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
 
   const { status, percentage, amount_usd, clear_removal_request } = await req.json();
 
-  // Approving an investment: no other approved investment for the same user+unit,
-  // and the unit must still have enough availability for this percentage.
+  // Approving an investment: check availability, then handle platinum (100%) takeover.
   if (status === "approved") {
     const [current] = await db`SELECT unit_id, user_id, percentage FROM investments WHERE id = ${params.id}`;
     if (current) {
@@ -29,17 +28,28 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
         );
       }
 
-      const [agg] = await db`
-        SELECT COALESCE(SUM(percentage), 0)::numeric AS sold_pct
-        FROM investments WHERE unit_id = ${current.unit_id} AND status = 'approved' AND id != ${params.id}
-      `;
-      const soldPct = Number(agg.sold_pct);
       const pct = percentage != null ? Number(percentage) : Number(current.percentage);
-      if (soldPct + pct > 100) {
-        return NextResponse.json(
-          { error: `Solo queda ${100 - soldPct}% disponible en esta unidad.` },
-          { status: 409 }
-        );
+
+      if (pct >= 100) {
+        // Platinum takeover: cancel all other investments in this unit before approving
+        await db`
+          UPDATE investments SET status = 'cancelled'
+          WHERE unit_id = ${current.unit_id}
+            AND id != ${params.id}
+            AND status IN ('pending', 'approved')
+        `;
+      } else {
+        const [agg] = await db`
+          SELECT COALESCE(SUM(percentage), 0)::numeric AS sold_pct
+          FROM investments WHERE unit_id = ${current.unit_id} AND status = 'approved' AND id != ${params.id}
+        `;
+        const soldPct = Number(agg.sold_pct);
+        if (soldPct + pct > 100) {
+          return NextResponse.json(
+            { error: `Solo queda ${100 - soldPct}% disponible en esta unidad.` },
+            { status: 409 }
+          );
+        }
       }
     }
   }

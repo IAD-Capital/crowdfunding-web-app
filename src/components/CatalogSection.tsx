@@ -22,6 +22,7 @@ export type Development = {
   unit_count: number;
   developer_id?: number | null;
   developer_name?: string | null;
+  slug?: string | null;
 };
 
 export type Unit = {
@@ -196,7 +197,7 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
                     <span style={tierCardLabel(t.key)}>{t.label}</span>
                   </span>
                   <span style={tierCardRange(t.key)}>
-                    Desde USD {t.from.toLocaleString("es-AR")}
+                    {t.key === "platinum" ? "100% de la unidad" : `Desde USD ${t.from.toLocaleString("es-AR")}`}
                   </span>
                   <span style={tierCardCount(t.key, active)}>
                     {count} unidad{count !== 1 ? "es" : ""} disponible{count !== 1 ? "s" : ""}
@@ -242,6 +243,7 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
                   u={u}
                   devName={developments.find((d) => d.id === u.development_id)?.name ?? ""}
                   devAddress={developments.find((d) => d.id === u.development_id)?.address ?? ""}
+                  devSlug={developments.find((d) => d.id === u.development_id)?.slug ?? u.development_id}
                   isInvestor={isInvestor}
                   alreadyInvested={myInvestedUnitIds.includes(u.id)}
                   onInvest={() => setDrawerUnit(u)}
@@ -277,7 +279,7 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
     : null;
 
   return (
-    <Link href={`/${lang}/emprendimientos/${d.id}`} style={devCard}>
+    <Link href={`/${lang}/emprendimientos/${d.slug ?? d.id}`} style={devCard}>
       <div style={devCover}>
         {d.images?.[0] ? (
           <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover" }} />
@@ -316,9 +318,9 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
 
 /* ─── Unit card ─────────────────────────────────── */
 function UnitCard({
-  u, devName, devAddress, isInvestor, alreadyInvested, onInvest, lang,
+  u, devName, devAddress, devSlug, isInvestor, alreadyInvested, onInvest, lang,
 }: {
-  u: Unit; devName: string; devAddress: string; isInvestor: boolean;
+  u: Unit; devName: string; devAddress: string; devSlug: string | number; isInvestor: boolean;
   alreadyInvested: boolean; onInvest: () => void; lang: string;
 }) {
   const sc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
@@ -335,7 +337,7 @@ function UnitCard({
 
   return (
     <div style={unitCard}>
-      <Link href={`/${lang}/emprendimientos/${u.development_id}/unidades/${u.id}`} style={unitLink}>
+      <Link href={`/${lang}/emprendimientos/${devSlug}/unidades/${u.id}`} style={unitLink}>
         <UnitCoverSlider images={u.images} identifier={u.identifier} statusBadge={{ background: sc.bg, color: sc.fg, label: sc.label }} />
         <div style={unitBody}>
           <div style={unitTopRow}>
@@ -360,7 +362,7 @@ function UnitCard({
 
       {entryPrice != null && (
         <div style={unitPriceRow}>
-          <Link href={`/${lang}/emprendimientos/${u.development_id}/unidades/${u.id}`} style={{ textDecoration: "none" }}>
+          <Link href={`/${lang}/emprendimientos/${devSlug}/unidades/${u.id}`} style={{ textDecoration: "none" }}>
             <div style={priceSublabel}>Precio de entrada</div>
             <div style={priceEntry}>{fmtUsd(entryPrice)}</div>
             {minInvest != null && <div style={minInvestLabel}>Invertí desde {fmtUsd(minInvest)}</div>}

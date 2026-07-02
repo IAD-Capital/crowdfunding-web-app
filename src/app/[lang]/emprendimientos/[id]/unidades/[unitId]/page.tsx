@@ -34,7 +34,10 @@ export default async function PublicUnitPage({
   `;
   if (!unit) notFound();
 
-  const [dev] = await db`SELECT id, name, address, images, visible FROM developments WHERE id = ${params.id}`;
+  const isNumeric = /^\d+$/.test(params.id);
+  const [dev] = isNumeric
+    ? await db`SELECT id, name, address, images, visible, slug FROM developments WHERE id = ${params.id}`
+    : await db`SELECT id, name, address, images, visible, slug FROM developments WHERE slug = ${params.id}`;
   if (!dev) notFound();
   if (!dev.visible && session?.role !== "superadmin") notFound();
 
@@ -86,7 +89,7 @@ export default async function PublicUnitPage({
         <div style={heroGradient} />
         <div style={heroContent}>
           <div style={heroInner}>
-            <Link href={`/${lang}/emprendimientos/${dev.id}`} style={backLink}>
+            <Link href={`/${lang}/emprendimientos/${dev.slug ?? dev.id}`} style={backLink}>
               ← {dev.name}
             </Link>
             <span style={{ ...statusPill, background: sc.bg, color: sc.fg }}>{sc.label}</span>

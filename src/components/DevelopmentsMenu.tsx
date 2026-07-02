@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import s from "./Header.module.scss";
 
-type NavDevelopment = { id: number; name: string; address: string; image: string | null };
+type NavDevelopment = { id: number; name: string; address: string; image: string | null; slug?: string | null };
 
 export default function DevelopmentsMenu({
   developments, lang,
@@ -60,7 +60,7 @@ export default function DevelopmentsMenu({
             <div className={s.megaMenuInner}>
               <div className={s.megaMenuGrid}>
                 {developments.map((d) => (
-                  <Link key={d.id} href={`/${lang}/emprendimientos/${d.id}`} className={s.megaItem}>
+                  <Link key={d.id} href={`/${lang}/emprendimientos/${d.slug ?? d.id}`} className={s.megaItem}>
                     <div className={s.megaItemImage}>
                       {d.image ? (
                         <Image src={d.image} alt={d.name} fill style={{ objectFit: "cover" }} className={s.megaItemImg} />

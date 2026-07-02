@@ -7,7 +7,7 @@ export async function GET() {
   const developments = await db`
     SELECT
       d.id, d.name, d.address, d.description, d.status,
-      d.completion_date, d.amenities, d.images,
+      d.completion_date, d.amenities, d.images, d.slug,
       COUNT(u.id)::int AS unit_count
     FROM developments d
     LEFT JOIN units u ON u.development_id = d.id

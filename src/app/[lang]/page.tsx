@@ -12,7 +12,7 @@ import type { Development, Unit } from "@/components/CatalogSection";
 import type { TierThresholds } from "@/lib/investmentTiers";
 
 type DevRow = Omit<Development, "unit_count"> & { unit_count: number; completion_date: Date | string | null };
-type FeaturedRow = Omit<DevRow, "description"> & { zone_price_per_m2: number | string | null };
+type FeaturedRow = Omit<DevRow, "description"> & { zone_price_per_m2: number | string | null; slug?: string | null };
 type UnitRow = Omit<Unit, "price_usd" | "current_price_usd" | "available_pct" | "group_expires_at"> & {
   price_usd: number | string;
   current_price_usd: number | string | null;
@@ -47,7 +47,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
   const developments = await db<DevRow[]>`
     SELECT d.id, d.name, d.address, d.description, d.status,
-           d.completion_date, d.amenities, d.images,
+           d.completion_date, d.amenities, d.images, d.slug,
            d.developer_id, dv.name AS developer_name,
            COUNT(u.id)::int AS unit_count
     FROM developments d
@@ -78,7 +78,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
   const featuredRows = await db<(FeaturedRow & { developer_name: string | null })[]>`
     SELECT d.id, d.name, d.address, d.status,
-           d.completion_date, d.amenities, d.images, d.zone_price_per_m2,
+           d.completion_date, d.amenities, d.images, d.zone_price_per_m2, d.slug,
            dv.name AS developer_name,
            COUNT(u.id)::int AS unit_count
     FROM developments d
@@ -321,7 +321,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
                 )}
               </div>
 
-              <Link href={`/${lang}/emprendimientos/${featuredDev.id}`} style={featuredCta}>
+              <Link href={`/${lang}/emprendimientos/${featuredDev.slug ?? featuredDev.id}`} style={featuredCta}>
                 Ver emprendimiento →
               </Link>
             </div>

@@ -24,6 +24,7 @@ type InvestmentRow = {
   group_expires_at: Date | string | null;
   development_id: number;
   development_name: string;
+  development_slug?: string | null;
   development_address: string;
   development_images: string[] | null;
 };
@@ -52,7 +53,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
         (SELECT MIN(i2.created_at) + (u.group_duration_months || ' months')::interval
          FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'approved')
       ELSE NULL END AS group_expires_at,
-      d.id AS development_id, d.name AS development_name, d.address AS development_address,
+      d.id AS development_id, d.name AS development_name, d.address AS development_address, d.slug AS development_slug,
       d.images AS development_images
     FROM investments i
     JOIN units u ON u.id = i.unit_id
@@ -210,7 +211,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
                     <div style={cardFooter}>
                       <span style={dateLabel}>{fmtDate(inv.created_at)}</span>
                       <Link
-                        href={`/${lang}/emprendimientos/${inv.development_id}`}
+                        href={`/${lang}/emprendimientos/${inv.development_slug ?? inv.development_id}`}
                         style={viewLink}
                       >
                         Ver emprendimiento →
