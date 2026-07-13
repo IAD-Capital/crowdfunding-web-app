@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import LanguageSwitcher from "./LanguageSwitcher";
 import LogoutButton from "./LogoutButton";
 import NotificationBell, { type Notification } from "./NotificationBell";
 import type { Locale } from "@/i18n";
@@ -59,10 +58,6 @@ export default function MobileMenu({ lang, session, notifications, labels }: Pro
           <>
             {open && <div className={s.mobileMenuBackdrop} onClick={close} />}
             <div className={`${s.mobileMenuPanel} ${open ? s.mobileMenuPanelOpen : ""}`}>
-              <div className={s.mobileMenuSection}>
-                <LanguageSwitcher currentLang={lang} />
-              </div>
-
               {session ? (
                 <div className={s.mobileMenuSection}>
                   <span className={s.userLabel}>{session.fullName}</span>

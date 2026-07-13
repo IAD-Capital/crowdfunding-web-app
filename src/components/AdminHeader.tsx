@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getSession } from "@/lib/session";
 import { getDictionary, type Locale } from "@/i18n";
-import LanguageSwitcher from "./LanguageSwitcher";
 import LogoutButton from "./LogoutButton";
 import NotificationBell, { type Notification } from "./NotificationBell";
 import db from "@/lib/db";
@@ -133,7 +132,6 @@ export default async function AdminHeader({ lang }: Props) {
         </nav>
 
         <div className={s.right}>
-          <LanguageSwitcher currentLang={lang} />
           {session?.role === "superadmin" && (
             <NotificationBell notifications={notifications} dark />
           )}
