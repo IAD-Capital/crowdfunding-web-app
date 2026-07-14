@@ -20,6 +20,7 @@
     "postgres": "^3.4.4",
     "react": "^18",
     "react-dom": "^18",
+    "resend": "^6.17.2",
     "sass": "^1.101.0"
   },
   "devDependencies": {

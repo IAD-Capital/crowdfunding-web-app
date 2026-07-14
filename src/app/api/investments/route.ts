@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { sendMail, getAppUrl } from "@/lib/mail";
+import { DEFAULT_LOCALE } from "@/i18n";
+
+const NOTIFY_EMAIL = "iadcapital.app@gmail.com";
 
 export async function POST(req: NextRequest) {
   const { session, error } = await requireAdmin();
@@ -30,7 +34,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const [unit] = await db`SELECT price_usd, status FROM units WHERE id = ${unit_id}`;
+  const [unit] = await db`
+    SELECT u.price_usd, u.status, u.identifier, d.name AS development_name
+    FROM units u
+    JOIN developments d ON d.id = u.development_id
+    WHERE u.id = ${unit_id}
+  `;
   if (!unit) return NextResponse.json({ error: "Unidad no encontrada." }, { status: 404 });
   if (unit.status === "sold") return NextResponse.json({ error: "Unidad ya vendida." }, { status: 409 });
 
@@ -58,6 +67,17 @@ export async function POST(req: NextRequest) {
     VALUES (${session!.sub}, ${unit_id}, ${percentage}, ${amount_usd}, 'pending')
     RETURNING *
   `;
+
+  const dashboardUrl = `${getAppUrl()}/${DEFAULT_LOCALE}/admin/investments#investment-${inv.id}`;
+  await sendMail({
+    to: NOTIFY_EMAIL,
+    subject: `Nueva inversión: ${session!.fullName} — ${unit.development_name} (${unit.identifier})`,
+    html: `
+      <p><strong>${session!.fullName}</strong> (${session!.email}) invirtió <strong>${percentage}%</strong> en <strong>${unit.identifier}</strong>, ${unit.development_name}.</p>
+      <p>Monto: USD ${amount_usd.toLocaleString("en-US", { maximumFractionDigits: 2 })}</p>
+      <p><a href="${dashboardUrl}">Ver inversión en el dashboard</a></p>
+    `,
+  });
 
   return NextResponse.json(inv, { status: 201 });
 }
