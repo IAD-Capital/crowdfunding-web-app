@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { cleanupImages } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +19,6 @@ export async function DELETE(req: NextRequest) {
   const rows = await db<{ id: number; url: string; development_id: number | null; unit_id: number | null }[]>`
     SELECT id, url, development_id, unit_id FROM media WHERE id = ANY(${ids})
   `;
-
-  await db`DELETE FROM media WHERE id = ANY(${ids})`;
 
   // Remove URLs from developments.images[]
   const devGroups = new Map<number, string[]>();
@@ -53,6 +52,10 @@ export async function DELETE(req: NextRequest) {
       WHERE id = ${unitId}
     `;
   }
+
+  // Delete the media row + storage object for any URL no longer referenced
+  // by the arrays we just cleaned up (or anywhere else, e.g. a shared image).
+  await cleanupImages(rows.map((r) => r.url));
 
   return NextResponse.json({ deleted: rows.length });
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/requireAdmin";
 import { hashPassword } from "@/lib/password";
+import { cleanupImages } from "@/lib/storage";
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   const { error } = await requireSuperAdmin();
@@ -27,6 +28,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (!["superadmin", "investor"].includes(role)) {
     return NextResponse.json({ error: "Invalid role." }, { status: 400 });
   }
+
+  const [existing] = await db`SELECT avatar FROM users WHERE id = ${params.id}`;
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const oldAvatar: string | null = existing.avatar;
 
   try {
     let user;
@@ -58,6 +63,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       `;
     }
     if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    if (oldAvatar && oldAvatar !== user.avatar) {
+      await cleanupImages([oldAvatar]);
+    }
+
     return NextResponse.json(user);
   } catch (err: unknown) {
     const msg = String(err);
@@ -76,6 +86,11 @@ export async function DELETE(_: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "Cannot delete your own account." }, { status: 400 });
   }
 
+  const [user] = await db`SELECT avatar FROM users WHERE id = ${params.id}`;
+  if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   await db`DELETE FROM users WHERE id = ${params.id}`;
+  await cleanupImages([user.avatar]);
+
   return NextResponse.json({ ok: true });
 }

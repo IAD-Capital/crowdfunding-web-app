@@ -5,6 +5,7 @@ import { hashPassword } from "@/lib/password";
 import { signToken } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { COOKIE_NAME } from "@/lib/auth";
+import { cleanupImages } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,9 @@ export async function PUT(req: NextRequest) {
   if (!full_name?.trim() || !email?.trim()) {
     return NextResponse.json({ error: "Nombre y email son obligatorios." }, { status: 400 });
   }
+
+  const [existing] = await db`SELECT avatar FROM users WHERE id = ${session!.sub}`;
+  const oldAvatar: string | null = existing?.avatar ?? null;
 
   try {
     let user;
@@ -58,6 +62,10 @@ export async function PUT(req: NextRequest) {
       `;
     }
     if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    if (oldAvatar && oldAvatar !== user.avatar) {
+      await cleanupImages([oldAvatar]);
+    }
 
     // Re-issue JWT so topbar avatar/name update immediately
     const newToken = await signToken({

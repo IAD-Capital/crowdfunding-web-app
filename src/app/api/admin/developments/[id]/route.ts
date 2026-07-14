@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { cleanupImages } from "@/lib/storage";
 
 type Ctx = { params: { id: string } };
 
@@ -21,6 +22,10 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
 
   const body = await req.json();
   const { name, address, neighborhood, city, description, completion_date, status, amenities, images, featured, visible, zone_price_per_m2, slug } = body;
+
+  const [existing] = await db`SELECT images FROM developments WHERE id = ${params.id}`;
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const oldImages: string[] = existing.images ?? [];
 
   const [row] = await db`
     UPDATE developments SET
@@ -52,10 +57,9 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
       ON CONFLICT (url) DO UPDATE SET development_id = EXCLUDED.development_id
     `;
   }
-  // Remove media rows whose URLs were deleted from the array
-  await db`
-    DELETE FROM media WHERE development_id = ${row.id} AND NOT (url = ANY(${imgList}))
-  `;
+  // Clean up storage + media rows for images removed from the array
+  const removedImages = oldImages.filter((u) => !imgList.includes(u));
+  await cleanupImages(removedImages);
 
   return NextResponse.json(row);
 }
@@ -64,6 +68,14 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
   const { error } = await requireAdmin();
   if (error) return error;
 
+  const [dev] = await db`SELECT images FROM developments WHERE id = ${params.id}`;
+  if (!dev) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const units = await db<{ images: string[] }[]>`SELECT images FROM units WHERE development_id = ${params.id}`;
+
   await db`DELETE FROM developments WHERE id = ${params.id}`;
+
+  const allImages = [...(dev.images ?? []), ...units.flatMap((u) => u.images ?? [])];
+  await cleanupImages(allImages);
+
   return NextResponse.json({ ok: true });
 }

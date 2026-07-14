@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { requireAdmin } from "@/lib/requireAdmin";
+import { cleanupImages } from "@/lib/storage";
 
 type Ctx = { params: { id: string } };
 
@@ -14,6 +15,10 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     rooms, bedrooms, bathrooms, orientation, price_usd, current_price_usd, status, description, images,
     group_duration_months,
   } = body;
+
+  const [existing] = await db`SELECT images, development_id FROM units WHERE id = ${params.id}`;
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const oldImages: string[] = existing.images ?? [];
 
   const [row] = await db`
     UPDATE units SET
@@ -37,6 +42,21 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     RETURNING *
   `;
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Sync images into the media table (grouped by development for the Gallery view)
+  const imgList: string[] = images ?? [];
+  if (imgList.length > 0) {
+    await db`
+      INSERT INTO media (url, unit_id, development_id)
+      SELECT unnest(${imgList}::text[]), ${row.id}, ${existing.development_id}
+      ON CONFLICT (url) DO UPDATE SET unit_id = EXCLUDED.unit_id, development_id = EXCLUDED.development_id
+    `;
+  }
+
+  // Clean up storage + media rows for images removed from the array
+  const removedImages = oldImages.filter((u) => !imgList.includes(u));
+  await cleanupImages(removedImages);
+
   return NextResponse.json(row);
 }
 
@@ -55,6 +75,11 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     );
   }
 
+  const [unit] = await db`SELECT images FROM units WHERE id = ${params.id}`;
+  if (!unit) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   await db`DELETE FROM units WHERE id = ${params.id}`;
+  await cleanupImages(unit.images ?? []);
+
   return NextResponse.json({ ok: true });
 }

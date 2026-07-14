@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/requireAdmin";
+import { cleanupImages } from "@/lib/storage";
 
 type Ctx = { params: { id: string } };
 
@@ -28,6 +29,10 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: "El nombre es obligatorio." }, { status: 400 });
   }
 
+  const [existing] = await db`SELECT logo FROM developers WHERE id = ${params.id}`;
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const oldLogo: string | null = existing.logo;
+
   const [row] = await db`
     UPDATE developers SET
       name       = ${name.trim()},
@@ -38,6 +43,10 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     RETURNING *
   `;
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  if (oldLogo && oldLogo !== row.logo) {
+    await cleanupImages([oldLogo]);
+  }
 
   if (Array.isArray(development_ids)) {
     // Detach developments no longer selected, attach the ones now selected.
@@ -59,7 +68,12 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
   const { error } = await requireSuperAdmin();
   if (error) return error;
 
+  const [developer] = await db`SELECT logo FROM developers WHERE id = ${params.id}`;
+  if (!developer) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   await db`UPDATE developments SET developer_id = NULL WHERE developer_id = ${params.id}`;
   await db`DELETE FROM developers WHERE id = ${params.id}`;
+  await cleanupImages([developer.logo]);
+
   return NextResponse.json({ ok: true });
 }
