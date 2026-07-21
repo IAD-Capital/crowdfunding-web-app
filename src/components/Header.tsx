@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getSession } from "@/lib/session";
 import { getDictionary, type Locale } from "@/i18n";
 import LogoutButton from "./LogoutButton";
@@ -67,7 +68,9 @@ export default async function Header({ lang }: Props) {
   return (
     <ScrollHeader>
       <div className={s.inner}>
-        <Link href={`/${lang}`} className={s.brand}>IAD Capital</Link>
+        <Link href={`/${lang}`} className={s.brand}>
+          <Image src="/iad-logo.svg" alt="IAD Capital" width={434} height={275} className={s.logo} priority />
+        </Link>
 
         <nav className={s.centerNav}>
           <DevelopmentsMenu developments={navDevelopments} lang={lang} />

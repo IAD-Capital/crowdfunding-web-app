@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getDictionary, type Locale } from "@/i18n";
 import s from "./Footer.module.scss";
 
@@ -13,7 +14,7 @@ export default async function Footer({ lang }: Props) {
       <div className={s.inner}>
         <div className={s.left}>
           <Link href={`/${lang}`} className={s.brand}>
-            IAD Capital
+            <Image src="/iad-logo.svg" alt="IAD Capital" width={434} height={275} className={s.logo} />
           </Link>
           <p className={s.tagline}>{t.footer.tagline}</p>
         </div>

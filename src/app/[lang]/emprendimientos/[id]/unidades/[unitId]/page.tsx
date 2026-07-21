@@ -19,6 +19,13 @@ export default async function PublicUnitPage({
   const canInvest = session?.role === "investor";
   const isAuthenticated = !!session;
 
+  const isNumeric = /^\d+$/.test(params.id);
+  const [dev] = isNumeric
+    ? await db`SELECT id, name, address, images, visible, slug FROM developments WHERE id = ${params.id}`
+    : await db`SELECT id, name, address, images, visible, slug FROM developments WHERE slug = ${params.id}`;
+  if (!dev) notFound();
+  if (!dev.visible && session?.role !== "superadmin") notFound();
+
   const [unit] = await db`
     SELECT u.*,
       100 - COALESCE((
@@ -30,16 +37,9 @@ export default async function PublicUnitPage({
          FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'approved')
       ELSE NULL END AS group_expires_at
     FROM units u
-    WHERE u.id = ${params.unitId} AND u.development_id = ${params.id}
+    WHERE u.id = ${params.unitId} AND u.development_id = ${dev.id}
   `;
   if (!unit) notFound();
-
-  const isNumeric = /^\d+$/.test(params.id);
-  const [dev] = isNumeric
-    ? await db`SELECT id, name, address, images, visible, slug FROM developments WHERE id = ${params.id}`
-    : await db`SELECT id, name, address, images, visible, slug FROM developments WHERE slug = ${params.id}`;
-  if (!dev) notFound();
-  if (!dev.visible && session?.role !== "superadmin") notFound();
 
   // Check if this investor already has a pending request or approved position in this unit
   const [myInvestment] = canInvest
