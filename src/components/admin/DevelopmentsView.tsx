@@ -54,6 +54,9 @@ export default function DevelopmentsView({ developments, t, lang }: Props) {
         <h1 style={pageTitle}>{t.title}</h1>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           <ViewToggle view={view} onChange={setView} />
+          <Link href={`/${lang}/admin/developments/import`} style={btnSecondary}>
+            ⬆ Importar CSV
+          </Link>
           <Link href={`/${lang}/admin/developments/new`} style={btnPrimary}>
             + {t.newDev}
           </Link>
@@ -260,6 +263,10 @@ const pageTitle: React.CSSProperties = { fontSize: "1.5rem", fontWeight: 700 };
 const btnPrimary: React.CSSProperties = {
   padding: "0.5rem 1rem", background: "#111", color: "#fff",
   borderRadius: 8, textDecoration: "none", fontWeight: 600, fontSize: "0.875rem",
+};
+const btnSecondary: React.CSSProperties = {
+  padding: "0.5rem 1rem", background: "#fff", color: "#374151",
+  border: "1px solid #d1d5db", borderRadius: 8, textDecoration: "none", fontWeight: 600, fontSize: "0.875rem",
 };
 const toggleWrap: React.CSSProperties = {
   display: "flex", border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden",
