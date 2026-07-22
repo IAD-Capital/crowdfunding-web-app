@@ -69,7 +69,7 @@ export default async function Header({ lang }: Props) {
     <ScrollHeader>
       <div className={s.inner}>
         <Link href={`/${lang}`} className={s.brand}>
-          <Image src="/iad-logo.svg" alt="IAD Capital" width={434} height={275} className={s.logo} priority />
+          <Image src="/iad-logo.svg" alt="IAD Capital" width={434} height={208} className={s.logo} priority />
         </Link>
 
         <nav className={s.centerNav}>
