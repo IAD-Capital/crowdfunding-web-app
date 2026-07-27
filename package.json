@@ -13,6 +13,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@next/third-parties": "^16.2.12",
     "bcryptjs": "^2.4.3",
     "jose": "^5.9.3",
     "lucide-react": "^1.21.0",
