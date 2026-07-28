@@ -1,4 +1,5 @@
 import { GoogleAnalytics } from '@next/third-parties/google';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import { Schibsted_Grotesk, Hanken_Grotesk } from "next/font/google";
 import { isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 
@@ -26,6 +27,7 @@ export default function LangLayout({
       <body>{children}</body>
       {/* https://nextjs.org/docs/messages/next-script-for-ga */}
       <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
+      <VercelAnalytics />
     </html>
   );
 }
