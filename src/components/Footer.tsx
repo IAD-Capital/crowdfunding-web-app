@@ -14,7 +14,7 @@ export default async function Footer({ lang }: Props) {
       <div className={s.inner}>
         <div className={s.left}>
           <Link href={`/${lang}`} className={s.brand}>
-            <Image src="/iad-capital-logo.svg" alt="IAD Capital" width={434} height={275} className={s.logo} />
+            <Image src="/iad-capital-logo.svg" alt="IAD Capital" width={415} height={297} className={s.logo} />
           </Link>
           <p className={s.tagline}>{t.footer.tagline}</p>
         </div>
