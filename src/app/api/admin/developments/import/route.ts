@@ -11,6 +11,8 @@ export const dynamic = "force-dynamic";
 //
 // Required: name, address
 // amenities: semicolon-separated list, e.g. "Piscina;Gimnasio;SUM"
+// completion_date: AAAA-MM-DD, AAAA-MM, or M/AAAA — MM/AAAA (e.g. "7/2027", "06/2028")
+//   is stored as day 1 of that month
 // status: active / completed / cancelled (default: active)
 // featured: true/false (default: false) — visible: true/false (default: true)
 // No images or units are imported through this endpoint.
@@ -58,6 +60,48 @@ function num(v: string | undefined): number | null {
 function bool(v: string | undefined, def: boolean): boolean {
   if (!v?.trim()) return def;
   return ["true", "1", "si", "sí", "yes"].includes(v.trim().toLowerCase());
+}
+
+// Accepts:
+//   - "M/AAAA" or "MM/AAAA"  (e.g. "7/2027", "06/2028") → stored as day 1 of that month
+//   - "AAAA-MM"              (e.g. "2027-07")            → stored as day 1 of that month
+//   - "AAAA-MM-DD"           (e.g. "2028-03-15")         → stored as-is
+// Anything else (including unparseable/ambiguous strings previously accepted by
+// Date.parse, which is locale/engine-dependent) is rejected explicitly.
+function parseCompletionDate(raw: string | undefined): { value: string | null; error: boolean } {
+  const v = raw?.trim();
+  if (!v) return { value: null, error: false };
+
+  // M/YYYY or MM/YYYY
+  let m = v.match(/^(\d{1,2})\/(\d{4})$/);
+  if (m) {
+    const month = Number(m[1]);
+    const year = Number(m[2]);
+    if (month < 1 || month > 12) return { value: null, error: true };
+    return { value: `${year}-${String(month).padStart(2, "0")}-01`, error: false };
+  }
+
+  // YYYY-M or YYYY-MM
+  m = v.match(/^(\d{4})-(\d{1,2})$/);
+  if (m) {
+    const year = Number(m[1]);
+    const month = Number(m[2]);
+    if (month < 1 || month > 12) return { value: null, error: true };
+    return { value: `${year}-${String(month).padStart(2, "0")}-01`, error: false };
+  }
+
+  // YYYY-MM-DD — validated against real calendar rollover (e.g. rejects 2027-02-30)
+  m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    const year = Number(m[1]);
+    const month = Number(m[2]);
+    const day = Number(m[3]);
+    const d = new Date(Date.UTC(year, month - 1, day));
+    const valid = d.getUTCFullYear() === year && d.getUTCMonth() === month - 1 && d.getUTCDate() === day;
+    return valid ? { value: v, error: false } : { value: null, error: true };
+  }
+
+  return { value: null, error: true };
 }
 
 export async function POST(req: NextRequest) {
@@ -152,9 +196,11 @@ export async function POST(req: NextRequest) {
       seenSlugs.add(slug);
     }
 
-    const completion_date = r.completion_date?.trim() || null;
-    if (completion_date && Number.isNaN(Date.parse(completion_date))) {
-      rowErrors.push(`Fila ${lineNum}: completion_date inválida "${r.completion_date}"`);
+    const { value: completion_date, error: completionDateError } = parseCompletionDate(r.completion_date);
+    if (completionDateError) {
+      rowErrors.push(
+        `Fila ${lineNum}: completion_date inválida "${r.completion_date}" (usar AAAA-MM-DD o MM/AAAA, ej: 07/2027)`
+      );
       return;
     }
 

@@ -77,7 +77,7 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
         <div style={codeBlock}>
           <p style={codeLine}><strong>Obligatorias:</strong> name, address</p>
           <p style={codeLine}>
-            <strong>Opcionales:</strong> slug, neighborhood, city, description, completion_date (AAAA-MM-DD),
+            <strong>Opcionales:</strong> slug, neighborhood, city, description, completion_date (AAAA-MM-DD o MM/AAAA, ej: 07/2027 — se guarda como el día 1 de ese mes),
             status (active / completed / cancelled), developer_name, amenities (separadas por “;”),
             projected_value_usd, projected_gain_pct, zone_price_per_m2, featured (true/false), visible (true/false)
           </p>
