@@ -28,7 +28,7 @@ export type UnitRow = {
 
 function fmtUnitDate(d?: string) {
   if (!d) return null;
-  return new Date(d).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
+  return new Date(d).toLocaleString("es-AR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 type StatusT = { available: string; partial: string; sold: string };

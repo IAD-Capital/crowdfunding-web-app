@@ -39,6 +39,17 @@ export default async function DevelopmentDetailPage({
   const fmtDate = (d: string | null) =>
     d ? new Date(d).toLocaleDateString(lang === "es" ? "es-AR" : "en-US", { timeZone: "UTC" }) : "—";
 
+  const fmtDateTime = (d: string | null) =>
+    d
+      ? new Date(d).toLocaleString(lang === "es" ? "es-AR" : "en-US", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "—";
+
   return (
     <div>
       {/* Back */}
@@ -63,8 +74,8 @@ export default async function DevelopmentDetailPage({
       <div style={infoGrid}>
         <InfoCard label={td.form.completionDate} value={fmtDate(dev.completion_date)} />
         <InfoCard label={td.form.status} value={td.status[dev.status as keyof typeof td.status] ?? dev.status} />
-        <InfoCard label="Creado" value={fmtDate(dev.created_at)} />
-        <InfoCard label="Última actualización" value={fmtDate(dev.updated_at)} />
+        <InfoCard label="Creado" value={fmtDateTime(dev.created_at)} />
+        <InfoCard label="Última actualización" value={fmtDateTime(dev.updated_at)} />
       </div>
 
       {dev.description && (

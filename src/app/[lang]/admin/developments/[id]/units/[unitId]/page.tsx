@@ -21,7 +21,7 @@ export default async function UnitDetailPage({
 
   const fmt = (v: number | null, suffix = "") => v != null ? `${v}${suffix}` : "—";
   const fmtUsd = (v: number | null) => v != null ? `USD ${Number(v).toLocaleString()}` : "—";
-  const fmtDate = (v: unknown) => v ? new Date(v as string).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+  const fmtDate = (v: unknown) => v ? new Date(v as string).toLocaleString("es-AR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 
   const fields = [
     { label: tu.form.floor,       value: fmt(unit.floor) },
