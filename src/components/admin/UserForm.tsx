@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { PASSWORD_RULES } from "@/lib/password";
+import PasswordInput from "@/components/PasswordInput";
 
 type Mode = "create" | "edit";
 
@@ -198,9 +199,8 @@ export default function UserForm({ lang, mode, userId, initial }: Props) {
       {/* Password */}
       <label style={label}>
         {mode === "create" ? "Contraseña" : "Nueva contraseña (dejar vacío para no cambiar)"}
-        <input
+        <PasswordInput
           style={input}
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required={mode === "create"}

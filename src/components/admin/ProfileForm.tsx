@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import PasswordInput from "@/components/PasswordInput";
 
 type Props = {
   initial: {
@@ -158,11 +159,11 @@ export default function ProfileForm({ initial }: Props) {
       <div style={grid}>
         <div style={fieldGroup}>
           <label style={label}>Nueva contraseña</label>
-          <input style={input} type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" placeholder="Mínimo 8 caracteres" />
+          <PasswordInput style={input} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" placeholder="Mínimo 8 caracteres" />
         </div>
         <div style={fieldGroup}>
           <label style={label}>Confirmar contraseña</label>
-          <input style={input} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
+          <PasswordInput style={input} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
         </div>
       </div>
 

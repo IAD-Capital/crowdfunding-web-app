@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import PasswordInput from "./PasswordInput";
 
 type Mode = "login" | "signup";
 
@@ -125,9 +126,8 @@ export default function AuthCTASection({ lang }: { lang: string }) {
 
             <div style={field}>
               <label style={label}>Contraseña</label>
-              <input
+              <PasswordInput
                 style={input}
-                type="password"
                 placeholder={mode === "signup" ? "Mínimo 8 caracteres" : "Tu contraseña"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
