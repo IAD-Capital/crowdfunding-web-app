@@ -136,7 +136,7 @@ export default function CSVImportView({ lang, developments }: Props) {
           />
           {file ? (
             <div style={{ textAlign: "center" }}>
-              <p style={{ fontWeight: 700, margin: "0 0 0.25rem" }}>📄 {file.name}</p>
+              <p style={{ fontWeight: 700, margin: "0 0 0.25rem" }}>{file.name}</p>
               <p style={{ color: "#6b7280", fontSize: "0.82rem", margin: 0 }}>
                 {(file.size / 1024).toFixed(1)} KB · Hacé click para cambiar
               </p>

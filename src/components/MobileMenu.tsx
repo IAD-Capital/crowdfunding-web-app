@@ -64,7 +64,7 @@ export default function MobileMenu({ lang, session, notifications, labels }: Pro
 
                   {session.role !== "superadmin" && (
                     <Link href={`/${lang}/wallet`} className={s.navLink} onClick={close}>
-                      💼 Mi cartera
+                      Mi cartera
                     </Link>
                   )}
                   {session.role === "superadmin" && (

@@ -34,9 +34,7 @@ export default function ImageGallery({ images }: Props) {
         {images.map((src, i) => (
           <button key={src} type="button" onClick={() => setLightbox(i)} style={thumb}>
             <Image src={src} alt="" fill style={{ objectFit: "cover", borderRadius: 6, pointerEvents: "none" }} />
-            <div style={thumbOverlay}>
-              <span style={{ fontSize: "1.1rem" }}>🔍</span>
-            </div>
+            <div style={thumbOverlay} />
           </button>
         ))}
       </div>

@@ -70,7 +70,6 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
   if (done) {
     return (
       <div style={panelSuccess}>
-        <span style={{ fontSize: "1.5rem" }}>🎉</span>
         <div>
           <p style={{ fontWeight: 700, margin: 0 }}>¡Solicitud enviada!</p>
           <p style={{ color: "#166534", fontSize: "0.82rem", margin: "0.2rem 0 0" }}>

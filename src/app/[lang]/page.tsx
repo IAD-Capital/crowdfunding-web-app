@@ -160,7 +160,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
             {isInvestor ? (
               <span style={heroBadge}>
                 <span style={heroBadgeDot} />
-                Bienvenido, {session!.fullName} 👋
+                Bienvenido, {session!.fullName}
               </span>
             ) : (
               <span style={heroBadge}>
@@ -293,9 +293,9 @@ export default async function Home({ params }: { params: { lang: string } }) {
               <div style={featuredAddrCaps}>{featuredDev.address.toUpperCase()}</div>
 
               <div style={featuredChipsRow}>
-                <span style={featuredChip}>🏠 {featuredDev.unit_count} unidad{featuredDev.unit_count !== 1 ? "es" : ""}</span>
+                <span style={featuredChip}>{featuredDev.unit_count} unidad{featuredDev.unit_count !== 1 ? "es" : ""}</span>
                 {fmtMonthYear(featuredDev.completion_date) && (
-                  <span style={featuredChip}>📅 Entrega {fmtMonthYear(featuredDev.completion_date)}</span>
+                  <span style={featuredChip}>Entrega {fmtMonthYear(featuredDev.completion_date)}</span>
                 )}
                 {featuredDev.amenities?.slice(0, 3).map((a) => (
                   <span key={a} style={featuredChip}>{a}</span>

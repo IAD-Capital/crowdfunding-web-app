@@ -128,7 +128,6 @@ export default async function WalletPage({ params }: { params: { lang: string } 
         {/* Investments list */}
         {investments.length === 0 ? (
           <div style={empty}>
-            <span style={{ fontSize: "3rem", opacity: 0.2 }}>💼</span>
             <p style={{ fontWeight: 600, margin: "0.5rem 0 0.25rem" }}>No tenés inversiones todavía</p>
             <p style={{ color: "#9ca3af", fontSize: "0.9rem", margin: 0 }}>
               Explorá los emprendimientos disponibles y empezá a invertir.
@@ -152,7 +151,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
                     {coverImg ? (
                       <Image src={coverImg} alt={inv.identifier} fill style={{ objectFit: "cover" }} />
                     ) : (
-                      <div style={cardPlaceholder}><span style={{ fontSize: "1.5rem", opacity: 0.15 }}>🏠</span></div>
+                      <div style={cardPlaceholder} />
                     )}
                     <span style={{ ...statusBadge, background: statusColor.bg, color: statusColor.fg }}>
                       {STATUS_LABELS[inv.status] ?? inv.status}
@@ -187,10 +186,10 @@ export default async function WalletPage({ params }: { params: { lang: string } 
                       <div style={{ ...expiryBanner, ...(expired ? expiryBannerExpired : urgent ? expiryBannerUrgent : expiryBannerOk) }}>
                         <span style={{ fontWeight: 700 }}>
                           {expired
-                            ? `⛔ Grupo vencido hace ${Math.abs(days!)} día${Math.abs(days!) !== 1 ? "s" : ""}`
+                            ? `Grupo vencido hace ${Math.abs(days!)} día${Math.abs(days!) !== 1 ? "s" : ""}`
                             : days === 0
-                            ? "⏳ El grupo vence hoy"
-                            : `⏳ Grupo vence en ${days} día${days !== 1 ? "s" : ""}`}
+                            ? "El grupo vence hoy"
+                            : `Grupo vence en ${days} día${days !== 1 ? "s" : ""}`}
                         </span>
                         <span style={{ opacity: 0.7, fontSize: "0.7rem" }}>{fmtDate(inv.group_expires_at as string)}</span>
                       </div>

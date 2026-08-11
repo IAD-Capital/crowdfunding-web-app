@@ -86,18 +86,16 @@ function GridView({ developments, t, lang }: Props) {
               {d.images?.[0] ? (
                 <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover" }} />
               ) : (
-                <div style={coverPlaceholder}>
-                  <span style={{ fontSize: "2rem", opacity: 0.25 }}>🏢</span>
-                </div>
+                <div style={coverPlaceholder} />
               )}
               <span style={statusChip(d.status)}>
                 {t.status[d.status] ?? d.status}
               </span>
               {d.visible === false && (
-                <span style={hiddenChip}>🚫 Oculto</span>
+                <span style={hiddenChip}>Oculto</span>
               )}
               {d.images?.length > 0 && (
-                <span style={photoCount}>📷 {d.images.length}</span>
+                <span style={photoCount}>{d.images.length}</span>
               )}
             </div>
 
@@ -108,10 +106,10 @@ function GridView({ developments, t, lang }: Props) {
 
               {/* Stats */}
               <div style={statsRow}>
-                <span style={stat}>🏠 {d.unit_count} {t.units}</span>
+                <span style={stat}>{d.unit_count} {t.units}</span>
                 {d.completion_date && (
                   <span style={stat}>
-                    📅 {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric", timeZone: "UTC" })}
+                    {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric", timeZone: "UTC" })}
                   </span>
                 )}
               </div>
@@ -171,9 +169,7 @@ function ListView({ developments, t, lang }: Props) {
               {d.images?.[0] ? (
                 <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover", borderRadius: 8 }} />
               ) : (
-                <div style={{ ...coverPlaceholder, borderRadius: 8 }}>
-                  <span style={{ fontSize: "1.25rem", opacity: 0.25 }}>🏢</span>
-                </div>
+                <div style={{ ...coverPlaceholder, borderRadius: 8 }} />
               )}
             </div>
 
@@ -183,18 +179,18 @@ function ListView({ developments, t, lang }: Props) {
                 <h2 style={{ fontSize: "1rem", fontWeight: 700, margin: 0 }}>{d.name}</h2>
                 <span style={statusChip(d.status)}>{t.status[d.status] ?? d.status}</span>
                 {d.visible === false && (
-                  <span style={hiddenChip}>🚫 Oculto</span>
+                  <span style={hiddenChip}>Oculto</span>
                 )}
               </div>
               <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0 0 0.5rem" }}>{d.address}</p>
               <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-                <span style={stat}>🏠 {d.unit_count} {t.units}</span>
+                <span style={stat}>{d.unit_count} {t.units}</span>
                 {d.completion_date && (
                   <span style={stat}>
-                    📅 {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric", timeZone: "UTC" })}
+                    {new Date(d.completion_date).toLocaleDateString("es-AR", { month: "short", year: "numeric", timeZone: "UTC" })}
                   </span>
                 )}
-                {d.images?.length > 0 && <span style={stat}>📷 {d.images.length}</span>}
+                {d.images?.length > 0 && <span style={stat}>{d.images.length}</span>}
               </div>
               {d.amenities?.length > 0 && (
                 <div style={{ ...amenitiesRow, marginTop: "0.4rem" }}>

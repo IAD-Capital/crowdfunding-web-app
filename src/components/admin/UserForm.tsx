@@ -112,9 +112,7 @@ export default function UserForm({ lang, mode, userId, initial }: Props) {
           {avatar ? (
             <Image src={avatar} alt="Avatar" fill style={{ objectFit: "cover", borderRadius: "50%" }} />
           ) : (
-            <div style={avatarPlaceholder}>
-              <span style={{ fontSize: "2rem", opacity: 0.3 }}>👤</span>
-            </div>
+            <div style={avatarPlaceholder} />
           )}
           <div style={avatarOverlay}>
             <span style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 600 }}>

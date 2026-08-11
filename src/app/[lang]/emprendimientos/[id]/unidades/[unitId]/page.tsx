@@ -84,7 +84,7 @@ export default async function PublicUnitPage({
         ) : dev.images?.[0] ? (
           <Image src={dev.images[0]} alt={dev.name} fill style={{ objectFit: "cover" }} priority />
         ) : (
-          <div style={heroPlaceholder}><span style={{ fontSize: "4rem", opacity: 0.1 }}>🏠</span></div>
+          <div style={heroPlaceholder} />
         )}
         <div style={heroGradient} />
         <div style={heroContent}>
@@ -94,7 +94,7 @@ export default async function PublicUnitPage({
             </Link>
             <span style={{ ...statusPill, background: sc.bg, color: sc.fg }}>{sc.label}</span>
             <h1 style={heroTitle}>{unit.identifier}</h1>
-            <p style={heroSub}>📍 {dev.address}</p>
+            <p style={heroSub}>{dev.address}</p>
           </div>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default async function PublicUnitPage({
                 {groupExpires && (
                   <div style={{ ...groupBanner, ...(groupExpired ? groupBannerExpired : {}) }}>
                     <span style={{ fontWeight: 700 }}>
-                      {groupExpired ? "⛔ Grupo cerrado" : "⏳ Cierre del grupo"}
+                      {groupExpired ? "Grupo cerrado" : "Cierre del grupo"}
                     </span>
                     <span style={{ opacity: 0.85 }}>
                       {groupExpired
@@ -151,7 +151,6 @@ export default async function PublicUnitPage({
 
                 {coInvestorAgg.count === 0 ? (
                   <div style={emptyGroup}>
-                    <span style={{ fontSize: "2rem", opacity: 0.15 }}>👥</span>
                     <p style={{ margin: 0, color: "#9ca3af", fontSize: "0.9rem" }}>
                       Sos el primer inversor en esta unidad.
                     </p>

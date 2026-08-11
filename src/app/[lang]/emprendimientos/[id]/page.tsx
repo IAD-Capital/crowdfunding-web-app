@@ -36,7 +36,7 @@ export default async function PublicDevelopmentPage({
         {dev.images?.[0] ? (
           <Image src={dev.images[0]} alt={dev.name} fill style={{ objectFit: "cover" }} priority />
         ) : (
-          <div style={heroPlaceholder}><span style={{ fontSize: "4rem", opacity: 0.1 }}>🏢</span></div>
+          <div style={heroPlaceholder} />
         )}
         <div style={heroGradient} />
         <div style={heroContent}>
@@ -44,7 +44,7 @@ export default async function PublicDevelopmentPage({
             <Link href={`/${lang}`} style={backLink}>← Volver</Link>
             <div style={statusPill}>{STATUS_LABELS[dev.status] ?? dev.status}</div>
             <h1 style={heroTitle}>{dev.name}</h1>
-            <p style={heroAddr}>📍 {dev.address}</p>
+            <p style={heroAddr}>{dev.address}</p>
           </div>
         </div>
       </div>
@@ -109,7 +109,7 @@ export default async function PublicDevelopmentPage({
                           {u.images?.[0] ? (
                             <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} />
                           ) : (
-                            <div style={imgPlaceholder}><span style={{ fontSize: "1.5rem", opacity: 0.15 }}>🏠</span></div>
+                            <div style={imgPlaceholder} />
                           )}
                         </div>
                         <div style={unitBody}>

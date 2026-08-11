@@ -102,7 +102,7 @@ export default function BuyDrawer({
           {done ? (
             /* ── Success state ── */
             <div style={successWrap}>
-              <div style={successIcon}>🎉</div>
+              <div style={successIcon} />
               <h3 style={successTitle}>¡Solicitud enviada!</h3>
               <p style={successSub}>
                 Solicitaste el <strong>{effectivePct}%</strong> de {identifier} por{" "}

@@ -35,9 +35,7 @@ export default function DevelopersView({ developers, lang }: Props) {
                   {d.logo ? (
                     <Image src={d.logo} alt={d.name} fill style={{ objectFit: "cover" }} />
                   ) : (
-                    <div style={logoPlaceholder}>
-                      <span style={{ fontSize: "1.25rem", opacity: 0.25 }}>🏗️</span>
-                    </div>
+                    <div style={logoPlaceholder} />
                   )}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>

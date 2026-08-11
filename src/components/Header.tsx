@@ -81,7 +81,7 @@ export default async function Header({ lang }: Props) {
             <>
               {session.role !== "superadmin" && (
                 <Link href={`/${lang}/wallet`} className={s.navLink}>
-                  💼 Mi cartera
+                  Mi cartera
                 </Link>
               )}
               {session.role === "superadmin" && (

@@ -127,9 +127,7 @@ export default function ImageUploader({ images, onChange, max = DEFAULT_MAX, exi
                 onClick={() => setLightbox(i)}
                 style={previewBtn}
                 title="Ver foto"
-              >
-                🔍
-              </button>
+              />
 
               <button
                 type="button"
