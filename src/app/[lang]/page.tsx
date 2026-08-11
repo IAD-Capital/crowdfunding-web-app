@@ -215,7 +215,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
             <div style={heroChipMin} className="hero-chip-min">
               <div style={heroChipMinLabel}>Entrada mínima</div>
               <div style={heroChipMinValue}>
-                {featuredMinPrice != null ? fmtUsd(featuredMinPrice * 0.05) : "USD 5.000"}
+                {featuredMinPrice != null ? fmtUsd(featuredMinPrice * 0.05) : "Consultar"}
               </div>
             </div>
           </div>
