@@ -1,9 +1,11 @@
 const path = require("path");
 const postgres = require("postgres");
 
-const url = process.env.DATABASE_URL;
+const url = `
+  postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}
+`;
 if (!url) {
-  console.error("DATABASE_URL is not set.");
+  console.error("One or more required PostgreSQL environment variables are not set.");
   process.exit(1);
 }
 

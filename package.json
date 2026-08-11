@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "db:seed": "curl -s http://localhost:3000/api/admin/setup | jq .",
-    "db:migrate": "docker exec -i app_db psql -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-appdb} < src/db/schema.sql",
-    "db:reset": "docker exec app_db psql -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-appdb} -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' && npm run db:migrate",
+    "db:migrate": "docker exec -i app_db psql -U ${DB_USER:-postgres} -d ${DB_NAME:-iadcapital_db_local} < src/db/schema.sql",
+    "db:reset": "docker exec app_db psql -U ${DB_USER:-postgres} -d ${DB_NAME:-iadcapital_db_local} -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' && npm run db:migrate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
