@@ -14,7 +14,15 @@ function getDb(): ReturnType<typeof postgres> {
   console.log("Connecting to PostgreSQL with connection string:", connectionString);
 
   if (!process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_HOST || !process.env.DB_PORT || !process.env.DB_NAME) {
-    throw new Error("One or more required PostgreSQL environment variables are not set");
+    throw new Error("One or more required PostgreSQL environment variables are not set", {
+      cause: {
+        DB_USER: process.env.DB_USER,
+        DB_PASSWORD: process.env.DB_PASSWORD,
+        DB_HOST: process.env.DB_HOST,
+        DB_PORT: process.env.DB_PORT,
+        DB_NAME: process.env.DB_NAME,
+      },
+    });
   }
 
   const client = postgres(connectionString);

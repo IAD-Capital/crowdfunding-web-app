@@ -5,7 +5,14 @@ const url = `
   postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}
 `;
 if (!url) {
-  console.error("One or more required PostgreSQL environment variables are not set.");
+  // console.log("PostgreSQL connection string:", url);
+  console.error("One or more required PostgreSQL environment variables are not set.", {
+    DB_USER: process.env.DB_USER,
+    DB_PASSWORD: process.env.DB_PASSWORD,
+    DB_HOST: process.env.DB_HOST,
+    DB_PORT: process.env.DB_PORT,
+    DB_NAME: process.env.DB_NAME
+  });
   process.exit(1);
 }
 
