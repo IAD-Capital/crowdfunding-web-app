@@ -19,9 +19,14 @@ export default function DevelopersView({ developers, lang }: Props) {
     <div>
       <div style={header}>
         <h1 style={pageTitle}>Desarrolladoras</h1>
-        <Link href={`/${lang}/admin/developers/new`} style={btnPrimary}>
-          + Nueva desarrolladora
-        </Link>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <Link href={`/${lang}/admin/developers/import`} style={btnSecondary}>
+            ⬆ Importar CSV
+          </Link>
+          <Link href={`/${lang}/admin/developers/new`} style={btnPrimary}>
+            + Nueva desarrolladora
+          </Link>
+        </div>
       </div>
 
       {developers.length === 0 ? (
@@ -72,6 +77,10 @@ const pageTitle: React.CSSProperties = { fontSize: "1.5rem", fontWeight: 700 };
 const btnPrimary: React.CSSProperties = {
   padding: "0.5rem 1rem", background: "#111", color: "#fff",
   borderRadius: 8, textDecoration: "none", fontWeight: 600, fontSize: "0.875rem",
+};
+const btnSecondary: React.CSSProperties = {
+  padding: "0.5rem 1rem", background: "#fff", color: "#374151",
+  border: "1px solid #d1d5db", borderRadius: 8, textDecoration: "none", fontWeight: 600, fontSize: "0.875rem",
 };
 
 const grid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: "1.25rem" };
