@@ -10,6 +10,21 @@ export async function GET() {
   }
 
   try {
+    // Roles
+    await db`
+      CREATE TABLE IF NOT EXISTS roles (
+        role_id    TEXT        PRIMARY KEY,
+        label      TEXT        NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+    await db`
+      INSERT INTO roles (role_id, label) VALUES
+        ('superadmin', 'Administrator'),
+        ('investor',   'Investor')
+      ON CONFLICT (role_id) DO NOTHING
+    `;
+
     // Users
     await db`
       CREATE TABLE IF NOT EXISTS users (
@@ -27,6 +42,18 @@ export async function GET() {
     await db`ALTER TABLE users ADD COLUMN IF NOT EXISTS alternate_email TEXT`;
     // Migrate legacy 'admin' role to 'superadmin'
     await db`UPDATE users SET role = 'superadmin' WHERE role = 'admin'`;
+    await db`ALTER TABLE users ALTER COLUMN role SET DEFAULT 'investor'`;
+    await db`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'users_role_fkey'
+        ) THEN
+          ALTER TABLE users
+            ADD CONSTRAINT users_role_fkey FOREIGN KEY (role) REFERENCES roles(role_id);
+        END IF;
+      END $$
+    `;
 
     // Developers (Desarrolladoras)
     await db`

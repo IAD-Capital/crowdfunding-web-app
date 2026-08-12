@@ -1,9 +1,19 @@
+CREATE TABLE IF NOT EXISTS roles (
+  role_id    TEXT        PRIMARY KEY,
+  label      TEXT        NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+INSERT INTO roles (role_id, label) VALUES
+  ('superadmin', 'Administrator'),
+  ('investor',   'Investor')
+ON CONFLICT (role_id) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS users (
   id               SERIAL PRIMARY KEY,
   full_name        TEXT        NOT NULL,
   email            TEXT        NOT NULL UNIQUE,
   password_hash    TEXT        NOT NULL,
-  role             TEXT        NOT NULL DEFAULT 'admin',
+  role             TEXT        NOT NULL DEFAULT 'investor' REFERENCES roles(role_id),
   avatar           TEXT,
   phone            TEXT,
   alternate_email  TEXT,
