@@ -18,6 +18,7 @@ export default function LoginForm({ t, lang }: Props) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -31,13 +32,14 @@ export default function LoginForm({ t, lang }: Props) {
     });
 
     const data = await res.json();
-    setLoading(false);
 
     if (!res.ok) {
+      setLoading(false);
       setError(data.error ?? t.error.generic);
       return;
     }
 
+    setRedirecting(true);
     const dest = data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
     router.push(dest);
     router.refresh();
@@ -107,8 +109,8 @@ export default function LoginForm({ t, lang }: Props) {
 
               {error && <p style={errorStyle}>{error}</p>}
 
-              <button style={btn} type="submit" disabled={loading}>
-                {loading ? t.loading : t.submit}
+              <button style={btn} type="submit" disabled={loading || redirecting}>
+                {redirecting ? t.redirecting : loading ? t.loading : t.submit}
               </button>
             </form>
 
