@@ -11,16 +11,11 @@ export default async function EditUnitPage({
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const t = await getDictionary(lang);
 
-  const [[dev], [unit], unitImageRows] = await Promise.all([
+  const [[dev], [unit]] = await Promise.all([
     db`SELECT id, name, images FROM developments WHERE id = ${params.id}`,
     db<UnitInitial[]>`SELECT * FROM units WHERE id = ${params.unitId} AND development_id = ${params.id}`,
-    db<{ images: string[] }[]>`SELECT images FROM units WHERE development_id = ${params.id}`,
   ]);
   if (!dev || !unit) notFound();
-
-  const existingImages = Array.from(
-    new Set([...(dev.images ?? []), ...unitImageRows.flatMap((u) => u.images ?? [])])
-  );
 
   return (
     <UnitForm
@@ -29,7 +24,7 @@ export default async function EditUnitPage({
       developmentId={params.id}
       developmentName={dev.name}
       initial={unit}
-      existingImages={existingImages}
+      developmentImages={dev.images ?? []}
     />
   );
 }

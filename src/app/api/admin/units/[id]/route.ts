@@ -13,12 +13,12 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   const {
     identifier, floor, total_m2, covered_m2, uncovered_m2,
     rooms, bedrooms, bathrooms, orientation, price_usd, current_price_usd, status, description, images,
-    group_duration_months,
+    plan_images, group_duration_months,
   } = body;
 
-  const [existing] = await db`SELECT images, development_id FROM units WHERE id = ${params.id}`;
+  const [existing] = await db`SELECT images, plan_images, development_id FROM units WHERE id = ${params.id}`;
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const oldImages: string[] = existing.images ?? [];
+  const oldImages: string[] = [...(existing.images ?? []), ...(existing.plan_images ?? [])];
 
   const [row] = await db`
     UPDATE units SET
@@ -36,6 +36,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
       status                = ${status ?? "available"},
       description           = ${description ?? null},
       images                = ${images ?? []},
+      plan_images           = ${plan_images ?? []},
       group_duration_months = ${group_duration_months ?? null},
       updated_at            = NOW()
     WHERE id = ${params.id}
@@ -44,7 +45,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   // Sync images into the media table (grouped by development for the Gallery view)
-  const imgList: string[] = images ?? [];
+  const imgList: string[] = [...(images ?? []), ...(plan_images ?? [])];
   if (imgList.length > 0) {
     await db`
       INSERT INTO media (url, unit_id, development_id)
@@ -53,7 +54,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     `;
   }
 
-  // Clean up storage + media rows for images removed from the array
+  // Clean up storage + media rows for images removed from either array
   const removedImages = oldImages.filter((u) => !imgList.includes(u));
   await cleanupImages(removedImages);
 
@@ -75,11 +76,11 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     );
   }
 
-  const [unit] = await db`SELECT images FROM units WHERE id = ${params.id}`;
+  const [unit] = await db`SELECT images, plan_images FROM units WHERE id = ${params.id}`;
   if (!unit) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   await db`DELETE FROM units WHERE id = ${params.id}`;
-  await cleanupImages(unit.images ?? []);
+  await cleanupImages([...(unit.images ?? []), ...(unit.plan_images ?? [])]);
 
   return NextResponse.json({ ok: true });
 }

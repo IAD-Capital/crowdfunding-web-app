@@ -14,20 +14,13 @@ export default async function NewUnitPage({
   const [dev] = await db`SELECT id, name, images FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
 
-  const unitImageRows = await db<{ images: string[] }[]>`
-    SELECT images FROM units WHERE development_id = ${params.id}
-  `;
-  const existingImages = Array.from(
-    new Set([...(dev.images ?? []), ...unitImageRows.flatMap((u) => u.images ?? [])])
-  );
-
   return (
     <UnitForm
       t={t.admin.units}
       lang={lang}
       developmentId={params.id}
       developmentName={dev.name}
-      existingImages={existingImages}
+      developmentImages={dev.images ?? []}
     />
   );
 }

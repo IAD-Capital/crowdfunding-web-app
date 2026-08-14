@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS units (
   status                TEXT          NOT NULL DEFAULT 'available',
   description           TEXT,
   images                TEXT[]        NOT NULL DEFAULT '{}',
+  plan_images           TEXT[]        NOT NULL DEFAULT '{}',
   group_duration_months INTEGER,
   created_at            TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
   updated_at            TIMESTAMPTZ   NOT NULL DEFAULT NOW()

@@ -3,7 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { Dictionary } from "@/i18n";
-import ImageUploader from "./ImageUploader";
+import UnitImagePicker from "./UnitImagePicker";
 import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
 
 type T = Dictionary["admin"]["units"];
@@ -24,6 +24,7 @@ export type Initial = {
   status: string;
   description?: string;
   images?: string[];
+  plan_images?: string[];
   group_duration_months?: number | null;
 };
 
@@ -33,10 +34,10 @@ type Props = {
   developmentId: string;
   developmentName: string;
   initial?: Initial;
-  existingImages?: string[];
+  developmentImages?: string[];
 };
 
-export default function UnitForm({ t, lang, developmentId, developmentName, initial, existingImages = [] }: Props) {
+export default function UnitForm({ t, lang, developmentId, developmentName, initial, developmentImages = [] }: Props) {
   const router = useRouter();
   const isEdit = !!initial;
 
@@ -54,6 +55,7 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
   const [status, setStatus] = useState(initial?.status ?? "available");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
+  const [planImages, setPlanImages] = useState<string[]>(initial?.plan_images ?? []);
   const [groupDurationMonths, setGroupDurationMonths] = useState<string>(
     initial?.group_duration_months?.toString() ?? ""
   );
@@ -86,6 +88,7 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
       status,
       description: description.trim() || null,
       images,
+      plan_images: planImages,
       group_duration_months: groupDurationMonths ? parseInt(groupDurationMonths) : null,
     };
 
@@ -186,7 +189,15 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
         </Field>
 
         <Field label="Fotos">
-          <ImageUploader images={images} onChange={setImages} existingImages={existingImages} />
+          <UnitImagePicker
+            lang={lang}
+            developmentId={developmentId}
+            developmentImages={developmentImages}
+            interiorImages={images}
+            planImages={planImages}
+            onChangeInterior={setImages}
+            onChangePlan={setPlanImages}
+          />
         </Field>
 
         <div style={groupSection}>
