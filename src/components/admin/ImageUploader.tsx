@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 
-const DEFAULT_MAX = 10;
+const DEFAULT_MAX = 30;
 
 type Props = {
   images: string[];

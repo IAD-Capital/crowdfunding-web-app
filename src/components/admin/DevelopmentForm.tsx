@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, KeyboardEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Dictionary } from "@/i18n";
 import ImageUploader from "./ImageUploader";
 import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
@@ -141,7 +142,14 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
 
   return (
     <div style={wrap}>
-      <h1 style={title}>{isEdit ? t.form.titleEdit : t.form.titleNew}</h1>
+      <div style={titleRow}>
+        <h1 style={{ ...title, marginBottom: 0 }}>{isEdit ? t.form.titleEdit : t.form.titleNew}</h1>
+        {isEdit && (
+          <Link href={`/${lang}/admin/developments/${initial!.id}/units/new`} style={newUnitLink}>
+            + Nueva unidad
+          </Link>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit} style={form}>
         <Row>
@@ -343,6 +351,11 @@ const toggleThumb = (on: boolean): React.CSSProperties => ({
 });
 const wrap: React.CSSProperties = { background: "#fff", borderRadius: 12, padding: "2rem", border: "1px solid #e5e7eb" };
 const title: React.CSSProperties = { fontSize: "1.25rem", fontWeight: 700, marginBottom: "1.5rem" };
+const titleRow: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" };
+const newUnitLink: React.CSSProperties = {
+  padding: "0.5rem 1rem", background: "#111", color: "#fff",
+  borderRadius: 8, textDecoration: "none", fontWeight: 600, fontSize: "0.85rem",
+};
 const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1rem" };
 const input: React.CSSProperties = {
   padding: "0.55rem 0.75rem", border: "1px solid #d1d5db",
