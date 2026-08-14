@@ -4,22 +4,25 @@
  * those columns with the new public URLs.
  *
  * Usage:
- *   DATABASE_URL=... SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... \
+ *   DB_USER=... DB_PASSWORD=... DB_HOST=... DB_PORT=... DB_NAME=... SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... \
  *     node scripts/migrate-uploads-to-supabase.js
  */
 const fs = require("fs");
 const path = require("path");
 const postgres = require("postgres");
 
-const { DATABASE_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
+const {DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
+
+
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? "uploads";
 const UPLOADS_DIR = path.join(__dirname, "..", "public", "uploads");
 
-if (!DATABASE_URL || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("DATABASE_URL, SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are all required.");
+if (!DB_HOST || !DB_PORT || !DB_NAME || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error("DB_HOST, DB_PORT, DB_NAME, SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are all required.");
   process.exit(1);
 }
 
+const DATABASE_URL = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
 const sql = postgres(DATABASE_URL, { ssl: "require" });
 
 function extToContentType(ext) {
