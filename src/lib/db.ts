@@ -11,7 +11,6 @@ function getDb(): ReturnType<typeof postgres> {
   const connectionString = `
     postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}
   `;
-  console.log("Connecting to PostgreSQL with connection string:", connectionString);
 
   if (!process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_HOST || !process.env.DB_PORT || !process.env.DB_NAME) {
     throw new Error("One or more required PostgreSQL environment variables are not set", {
