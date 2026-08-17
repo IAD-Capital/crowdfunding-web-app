@@ -21,7 +21,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   if (error) return error;
 
   const body = await req.json();
-  const { name, address, neighborhood, city, description, completion_date, status, amenities, images, featured, visible, zone_price_per_m2, slug } = body;
+  const { name, address, neighborhood, city, description, completion_date, status, amenities, images, featured, visible, zone_price_per_m2, slug, developer_id } = body;
 
   const [existing] = await db`SELECT images FROM developments WHERE id = ${params.id}`;
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -42,6 +42,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
       visible           = ${visible ?? true},
       zone_price_per_m2 = ${zone_price_per_m2 ?? null},
       slug              = ${slug?.trim() || null},
+      developer_id      = ${developer_id ?? null},
       updated_at        = NOW()
     WHERE id = ${params.id}
     RETURNING *

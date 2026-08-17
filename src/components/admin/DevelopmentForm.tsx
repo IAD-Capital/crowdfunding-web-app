@@ -30,11 +30,20 @@ export type Initial = {
   visible?: boolean;
   zone_price_per_m2?: number | string | null;
   slug?: string | null;
+  developer_id?: number | string | null;
 };
 
-type Props = { t: T; lang: string; initial?: Initial; existingImages?: string[] };
+export type DeveloperOption = { id: number; name: string };
 
-export default function DevelopmentForm({ t, lang, initial, existingImages = [] }: Props) {
+type Props = {
+  t: T;
+  lang: string;
+  initial?: Initial;
+  existingImages?: string[];
+  allDevelopers?: DeveloperOption[];
+};
+
+export default function DevelopmentForm({ t, lang, initial, existingImages = [], allDevelopers = [] }: Props) {
   const router = useRouter();
   const isEdit = !!initial;
 
@@ -56,6 +65,9 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
   const [visible, setVisible] = useState(initial?.visible ?? true);
   const [zonePricePerM2, setZonePricePerM2] = useState(
     initial?.zone_price_per_m2 != null ? String(initial.zone_price_per_m2) : ""
+  );
+  const [developerId, setDeveloperId] = useState(
+    initial?.developer_id != null ? String(initial.developer_id) : ""
   );
   const amenityRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
@@ -116,6 +128,7 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
       visible,
       zone_price_per_m2: zonePricePerM2.trim() ? Number(zonePricePerM2) : null,
       slug: slug.trim() || null,
+      developer_id: developerId ? Number(developerId) : null,
     };
 
     const url = isEdit ? `/api/admin/developments/${initial!.id}` : "/api/admin/developments";
@@ -188,6 +201,14 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
           </Field>
           <Field label="Ciudad">
             <input style={input} value={city} onChange={(e) => setCity(e.target.value)} placeholder="Buenos Aires" />
+          </Field>
+          <Field label="Desarrolladora">
+            <select style={input} value={developerId} onChange={(e) => setDeveloperId(e.target.value)}>
+              <option value="">Sin desarrolladora</option>
+              {allDevelopers.map((d) => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
           </Field>
         </Row>
 

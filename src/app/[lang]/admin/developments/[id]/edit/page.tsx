@@ -11,12 +11,13 @@ export default async function EditDevelopmentPage({
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const t = await getDictionary(lang);
 
-  const [dev] = await db`SELECT * FROM developments WHERE id = ${params.id}`;
+  const [[dev], unitImageRows, allDevelopers] = await Promise.all([
+    db`SELECT * FROM developments WHERE id = ${params.id}`,
+    db<{ images: string[] }[]>`SELECT images FROM units WHERE development_id = ${params.id}`,
+    db<{ id: number; name: string }[]>`SELECT id, name FROM developers ORDER BY name`,
+  ]);
   if (!dev) notFound();
 
-  const unitImageRows = await db<{ images: string[] }[]>`
-    SELECT images FROM units WHERE development_id = ${params.id}
-  `;
   const existingImages = Array.from(
     new Set([...(dev.images ?? []), ...unitImageRows.flatMap((u) => u.images ?? [])])
   );
@@ -27,6 +28,7 @@ export default async function EditDevelopmentPage({
       lang={lang}
       initial={dev as any}
       existingImages={existingImages}
+      allDevelopers={allDevelopers}
     />
   );
 }
