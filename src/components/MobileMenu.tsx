@@ -63,9 +63,14 @@ export default function MobileMenu({ lang, session, notifications, labels }: Pro
                   <span className={s.userLabel}>{session.fullName}</span>
 
                   {session.role !== "superadmin" && (
-                    <Link href={`/${lang}/wallet`} className={s.navLink} onClick={close}>
-                      Mi cartera
-                    </Link>
+                    <>
+                      <Link href={`/${lang}/wallet`} className={s.navLink} onClick={close}>
+                        Mi cartera
+                      </Link>
+                      <Link href={`/${lang}/profile`} className={s.navLink} onClick={close}>
+                        Mi perfil
+                      </Link>
+                    </>
                   )}
                   {session.role === "superadmin" && (
                     <Link href={`/${lang}/admin`} className={s.navLink} onClick={close}>

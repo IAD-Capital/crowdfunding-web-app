@@ -48,6 +48,7 @@ type Props = {
   developments: Development[];
   units: Unit[];
   isInvestor: boolean;
+  hasPhone?: boolean;
   myInvestedUnitIds?: number[];
   lang: string;
   tierThresholds: TierThresholds;
@@ -59,7 +60,7 @@ const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
   sold:      { bg: "#991b1b", fg: "#fff", label: "Vendida" },
 };
 
-export default function CatalogSection({ developments, units, isInvestor, myInvestedUnitIds = [], lang, tierThresholds }: Props) {
+export default function CatalogSection({ developments, units, isInvestor, hasPhone = true, myInvestedUnitIds = [], lang, tierThresholds }: Props) {
   const [devFilter, setDevFilter] = useState<number | "all">("all");
   const [developerFilter, setDeveloperFilter] = useState<number | "all">("all");
   const [tierFilter, setTierFilter] = useState<TierKey | "all">("all");
@@ -265,6 +266,7 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
           coverImg={drawerUnit.images?.[0] ?? null}
           lang={lang}
           availablePct={drawerUnit.available_pct ?? 100}
+          hasPhone={hasPhone}
           onClose={() => setDrawerUnit(null)}
         />
       )}

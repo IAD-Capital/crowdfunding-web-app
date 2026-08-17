@@ -33,6 +33,11 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
   const isInvestor = session?.role === "investor";
 
+  const [phoneRow] = isInvestor
+    ? await db<{ phone: string | null }[]>`SELECT phone FROM users WHERE id = ${Number(session!.sub)}`
+    : [null];
+  const hasPhone = !!phoneRow?.phone?.trim();
+
   const [tierRow] = await db<TierThresholds[]>`
     SELECT bronze_from, silver_from, gold_from, platinum_from FROM app_settings WHERE id = 1
   `;
@@ -367,6 +372,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
           developments={serialized.developments as Parameters<typeof CatalogSection>[0]["developments"]}
           units={serialized.units as Parameters<typeof CatalogSection>[0]["units"]}
           isInvestor={isInvestor}
+          hasPhone={hasPhone}
           myInvestedUnitIds={myInvestedUnitIds}
           lang={lang}
           tierThresholds={tierThresholds}

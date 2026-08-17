@@ -49,6 +49,11 @@ export default async function PublicUnitPage({
       `
     : [null];
 
+  const [phoneRow] = canInvest
+    ? await db<{ phone: string | null }[]>`SELECT phone FROM users WHERE id = ${Number(session!.sub)}`
+    : [null];
+  const hasPhone = !!phoneRow?.phone?.trim();
+
   // Co-investors: visible to investors only — anonymous, just the aggregate
   const [coInvestorAgg] = canInvest
     ? await db`
@@ -207,6 +212,7 @@ export default async function PublicUnitPage({
                   identifier={unit.identifier}
                   lang={lang}
                   availablePct={Number(unit.available_pct)}
+                  hasPhone={hasPhone}
                 />
               ) : canInvest && groupExpired ? (
                 <p style={soldNote}>El grupo de inversión para esta unidad ya está cerrado.</p>

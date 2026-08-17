@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import PhoneRequiredNotice from "./PhoneRequiredNotice";
 
 type Props = {
   unitId: number;
@@ -9,11 +10,12 @@ type Props = {
   identifier: string;
   lang: string;
   availablePct?: number;
+  hasPhone?: boolean;
 };
 
 type Mode = "slider" | "fixed" | "full";
 
-export default function BuyPanel({ unitId, priceUsd, identifier, lang, availablePct = 100 }: Props) {
+export default function BuyPanel({ unitId, priceUsd, identifier, lang, availablePct = 100, hasPhone = true }: Props) {
   const router = useRouter();
   const maxSlider = Math.min(50, availablePct);
   const hasOtherInvestors = availablePct < 100;
@@ -65,6 +67,10 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
     setPct(Math.min(5, maxSlider));
     setFixedAmountStr("");
     setError(null);
+  }
+
+  if (!hasPhone) {
+    return <PhoneRequiredNotice lang={lang} />;
   }
 
   if (done) {
