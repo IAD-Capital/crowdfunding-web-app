@@ -22,6 +22,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     status: "ok",
     to,
-    resendConfigured: !!process.env.RESEND_API_KEY,
+    nodemailerConfigured: !!(process.env.MAIL_USER && process.env.MAIL_PASSWORD),
   });
 }
