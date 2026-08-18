@@ -184,7 +184,7 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [],
 
         <Field label="Slug (URL amigable)">
           <div style={slugWrap}>
-            <span style={slugPrefix}>/emprendimientos/</span>
+            <span style={slugPrefix}>/developments/</span>
             <input
               style={{ ...input, borderLeft: "none", borderRadius: "0 8px 8px 0" }}
               value={slug}

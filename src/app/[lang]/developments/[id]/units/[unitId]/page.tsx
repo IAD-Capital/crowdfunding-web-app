@@ -94,7 +94,7 @@ export default async function PublicUnitPage({
         <div style={heroGradient} />
         <div style={heroContent}>
           <div style={heroInner}>
-            <Link href={`/${lang}/emprendimientos/${dev.slug ?? dev.id}`} style={backLink}>
+            <Link href={`/${lang}/developments/${dev.slug ?? dev.id}`} style={backLink}>
               ← {dev.name}
             </Link>
             <span style={{ ...statusPill, background: sc.bg, color: sc.fg }}>{sc.label}</span>

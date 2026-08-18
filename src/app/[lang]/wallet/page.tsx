@@ -132,7 +132,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
             <p style={{ color: "#9ca3af", fontSize: "0.9rem", margin: 0 }}>
               Explorá los emprendimientos disponibles y empezá a invertir.
             </p>
-            <Link href={`/${lang}#catalogo`} style={btnExplore}>Ver emprendimientos</Link>
+            <Link href={`/${lang}#catalog`} style={btnExplore}>Ver emprendimientos</Link>
           </div>
         ) : (
           <div style={cards}>
@@ -210,7 +210,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
                     <div style={cardFooter}>
                       <span style={dateLabel}>{fmtDate(inv.created_at)}</span>
                       <Link
-                        href={`/${lang}/emprendimientos/${inv.development_slug ?? inv.development_id}`}
+                        href={`/${lang}/developments/${inv.development_slug ?? inv.development_id}`}
                         style={viewLink}
                       >
                         Ver emprendimiento →

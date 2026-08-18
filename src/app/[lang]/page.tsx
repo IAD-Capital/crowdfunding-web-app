@@ -189,7 +189,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
                   </Link>
                 </>
               ) : isInvestor ? (
-                <a href="#catalogo" style={btnPrimary}>
+                <a href="#catalog" style={btnPrimary}>
                   Ver oportunidades
                 </a>
               ) : null}
@@ -272,13 +272,13 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
       {/* ─── Featured emprendimiento ─────────────────── */}
       {featuredDev && (
-        <section id="emprendimientos" style={featuredSection}>
+        <section id="developments" style={featuredSection}>
           <div style={featuredHeader}>
             <div>
               <h2 style={featuredTitle}>Emprendimientos destacados</h2>
               <p style={featuredSub}>Oportunidades seleccionadas en las mejores ubicaciones</p>
             </div>
-            <a href="#catalogo" style={featuredAllLink}>Ver todos →</a>
+            <a href="#catalog" style={featuredAllLink}>Ver todos →</a>
           </div>
 
           <div style={featuredCard} className="featured-card">
@@ -326,7 +326,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
                 )}
               </div>
 
-              <Link href={`/${lang}/emprendimientos/${featuredDev.slug ?? featuredDev.id}`} style={featuredCta}>
+              <Link href={`/${lang}/developments/${featuredDev.slug ?? featuredDev.id}`} style={featuredCta}>
                 Ver emprendimiento →
               </Link>
             </div>
@@ -335,7 +335,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
       )}
 
       {/* ─── How it works ───────────────────────────── */}
-      <section id="como-funciona" style={howSection}>
+      <section id="how-it-works" style={howSection}>
         <div style={howInner}>
           <div style={howHeader}>
             <div style={{ ...eyebrow, color: "#7fa0ff" }}>Cómo funciona</div>
@@ -358,7 +358,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
       </section>
 
       {/* ─── Simulador de inversión ─────────────────── */}
-      <div id="simulador">
+      <div id="simulator">
         <InvestmentSimulator
           developments={serialized.developments as Parameters<typeof InvestmentSimulator>[0]["developments"]}
           units={serialized.units as Parameters<typeof InvestmentSimulator>[0]["units"]}
@@ -367,7 +367,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
       </div>
 
       {/* ─── Full catalog ───────────────────────────── */}
-      <div id="catalogo">
+      <div id="catalog">
         <CatalogSection
           developments={serialized.developments as Parameters<typeof CatalogSection>[0]["developments"]}
           units={serialized.units as Parameters<typeof CatalogSection>[0]["units"]}

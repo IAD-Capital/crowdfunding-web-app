@@ -104,7 +104,7 @@ export default async function PublicDevelopmentPage({
                   {units.map((u) => {
                     const sc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
                     return (
-                      <Link key={u.id} href={`/${lang}/emprendimientos/${dev.slug ?? dev.id}/unidades/${u.id}`} style={{ ...unitCard, textDecoration: "none", color: "inherit" }}>
+                      <Link key={u.id} href={`/${lang}/developments/${dev.slug ?? dev.id}/units/${u.id}`} style={{ ...unitCard, textDecoration: "none", color: "inherit" }}>
                         <div style={unitCover}>
                           {u.images?.[0] ? (
                             <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} />

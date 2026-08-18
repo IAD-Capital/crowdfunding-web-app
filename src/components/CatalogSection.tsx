@@ -281,7 +281,7 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
     : null;
 
   return (
-    <Link href={`/${lang}/emprendimientos/${d.slug ?? d.id}`} style={devCard}>
+    <Link href={`/${lang}/developments/${d.slug ?? d.id}`} style={devCard}>
       <div style={devCover}>
         {d.images?.[0] ? (
           <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover" }} />
@@ -339,7 +339,7 @@ function UnitCard({
 
   return (
     <div style={unitCard}>
-      <Link href={`/${lang}/emprendimientos/${devSlug}/unidades/${u.id}`} style={unitLink}>
+      <Link href={`/${lang}/developments/${devSlug}/units/${u.id}`} style={unitLink}>
         <UnitCoverSlider images={u.images} identifier={u.identifier} statusBadge={{ background: sc.bg, color: sc.fg, label: sc.label }} />
         <div style={unitBody}>
           <div style={unitTopRow}>
@@ -364,7 +364,7 @@ function UnitCard({
 
       {entryPrice != null && (
         <div style={unitPriceRow}>
-          <Link href={`/${lang}/emprendimientos/${devSlug}/unidades/${u.id}`} style={{ textDecoration: "none" }}>
+          <Link href={`/${lang}/developments/${devSlug}/units/${u.id}`} style={{ textDecoration: "none" }}>
             <div style={priceSublabel}>Precio de entrada</div>
             <div style={priceEntry}>{fmtUsd(entryPrice)}</div>
             {minInvest != null && <div style={minInvestLabel}>Invertí desde {fmtUsd(minInvest)}</div>}

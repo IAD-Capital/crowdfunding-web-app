@@ -22,9 +22,9 @@ export default async function Footer({ lang }: Props) {
         <div className={s.linkCols}>
           <div className={s.linkCol}>
             <div className={s.linkColTitle}>Plataforma</div>
-            <a href={`/${lang}#emprendimientos`} className={s.linkColLink}>Emprendimientos</a>
-            <a href={`/${lang}#como-funciona`} className={s.linkColLink}>Cómo funciona</a>
-            <a href={`/${lang}#simulador`} className={s.linkColLink}>Simulador</a>
+            <a href={`/${lang}#developments`} className={s.linkColLink}>Emprendimientos</a>
+            <a href={`/${lang}#how-it-works`} className={s.linkColLink}>Cómo funciona</a>
+            <a href={`/${lang}#simulator`} className={s.linkColLink}>Simulador</a>
           </div>
           <div className={s.linkCol}>
             <div className={s.linkColTitle}>Cuenta</div>
