@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { hashPassword, PASSWORD_RULES } from "@/lib/password";
 import { signToken, COOKIE_NAME } from "@/lib/auth";
+import { sendMail, getAppUrl } from "@/lib/mail";
 
 export async function POST(req: NextRequest) {
   const { fullName, email, password } = await req.json();
@@ -34,6 +35,17 @@ export async function POST(req: NextRequest) {
     email: user.email,
     role: "investor",
     fullName: user.full_name,
+  });
+
+  await sendMail({
+    to: user.email,
+    subject: "Tu cuenta en IAD Capital fue creada",
+    html: `
+      <p>Hola ${user.full_name},</p>
+      <p>Tu cuenta en IAD Capital fue creada correctamente con el email <strong>${user.email}</strong>.</p>
+      <p>Ya podés explorar los emprendimientos disponibles y empezar a invertir.</p>
+      <p><a href="${getAppUrl()}">Ver oportunidades de inversión</a></p>
+    `,
   });
 
   const res = NextResponse.json({ ok: true });

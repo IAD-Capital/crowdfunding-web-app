@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-const FROM = process.env.MAIL_FROM ?? "onboarding@resend.dev";
+const FROM = process.env.RESEND_MAIL_FROM ?? "iadcapital.app@gmail.com";
 
 function getResend(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
@@ -29,7 +29,7 @@ export async function sendMail(opts: { to: string; subject: string; html: string
 }
 
 export function getAppUrl(): string {
-  const configured = process.env.APP_URL;
+  const configured = process.env.RESEND_APP_URL;
   if (configured) return configured.replace(/\/$/, "");
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return "http://localhost:3000";
