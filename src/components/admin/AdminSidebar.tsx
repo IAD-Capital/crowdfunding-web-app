@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -9,6 +9,7 @@ import {
   Plus, List, GitFork,
 } from "lucide-react";
 import NotificationBell, { type Notification } from "@/components/NotificationBell";
+import { useMobileSidebar } from "./MobileSidebarContext";
 
 type SubItem = { label: string; href: string; icon?: React.ReactNode };
 type NavItem = { key: string; label: string; icon: React.ReactNode; items: SubItem[]; direct?: boolean };
@@ -19,13 +20,20 @@ const SUB_ICON = 15;
 
 export default function AdminSidebar({ lang, notifications }: Props) {
   const pathname = usePathname();
+  const { open: mobileOpen, setOpen: setMobileOpen } = useMobileSidebar();
   const [collapsed, setCollapsed] = useState(false);
   const [hoverExpanded, setHoverExpanded] = useState(false);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(["developments"]));
   const [hovered, setHovered] = useState<string | null>(null);
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
 
-  const isExpanded = !collapsed || hoverExpanded;
+  const isExpanded = !collapsed || hoverExpanded || mobileOpen;
+
+  // Close the mobile drawer whenever the route changes (link clicked / back button)
+  useEffect(() => {
+    setMobileOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   function toggle() {
     const next = !collapsed;
@@ -114,8 +122,27 @@ export default function AdminSidebar({ lang, notifications }: Props) {
         .sidebar-section-btn:hover { background: #f3f6ff !important; color: #1b4de0 !important; }
         .sidebar-sub-item:hover { background: #f3f6ff !important; color: #1b4de0 !important; }
         .sidebar-toggle:hover { background: #f3f4f6 !important; color: #111 !important; }
+        @media (max-width: 768px) {
+          .admin-sidebar {
+            width: 240px !important;
+            transform: translateX(-100%);
+            box-shadow: none;
+          }
+          .admin-sidebar.mobile-open {
+            transform: translateX(0);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+          }
+          .admin-sidebar-toggle-row { display: none !important; }
+        }
       `}</style>
+
+      {/* Backdrop — only ever rendered while the mobile drawer is open */}
+      {mobileOpen && (
+        <div style={backdrop} onClick={() => setMobileOpen(false)} aria-hidden />
+      )}
+
       <aside
+        className={`admin-sidebar${mobileOpen ? " mobile-open" : ""}`}
         style={{ ...sidebar, width: isExpanded ? 240 : 68 }}
         onMouseEnter={() => collapsed && setHoverExpanded(true)}
         onMouseLeave={() => setHoverExpanded(false)}
@@ -218,8 +245,8 @@ export default function AdminSidebar({ lang, notifications }: Props) {
           <NotificationBell notifications={notifications} sidebarExpanded={isExpanded} />
         </div>
 
-        {/* Toggle button — bottom */}
-        <div style={toggleRow}>
+        {/* Toggle button — bottom (desktop only; the mobile drawer closes via the backdrop) */}
+        <div style={toggleRow} className="admin-sidebar-toggle-row">
           <button className="sidebar-toggle" style={toggleBtn} onClick={toggle} title={collapsed ? "Expandir menú" : "Colapsar menú"}>
             {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
             {isExpanded && <span style={toggleLabel}>Colapsar</span>}
@@ -241,10 +268,17 @@ const sidebar: React.CSSProperties = {
   borderRight: "1px solid #e5e7eb",
   display: "flex",
   flexDirection: "column",
-  zIndex: 40,
-  transition: "width 0.2s ease",
+  zIndex: 50,
+  transition: "width 0.2s ease, transform 0.25s ease",
   overflowY: "auto",
   overflowX: "hidden",
+};
+
+const backdrop: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.4)",
+  zIndex: 45,
 };
 
 const logoRow: React.CSSProperties = {

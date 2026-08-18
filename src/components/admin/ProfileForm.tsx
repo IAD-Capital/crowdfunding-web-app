@@ -88,8 +88,14 @@ export default function ProfileForm({ initial }: Props) {
 
   return (
     <form onSubmit={handleSubmit} style={form}>
+      <style>{`
+        @media (max-width: 640px) {
+          .profile-form-grid { grid-template-columns: 1fr !important; }
+          .profile-avatar-section { flex-direction: column !important; align-items: flex-start !important; }
+        }
+      `}</style>
       {/* Avatar */}
-      <div style={avatarSection}>
+      <div style={avatarSection} className="profile-avatar-section">
         <div style={avatarWrap}>
           {avatar ? (
             <Image src={avatar} alt="Avatar" width={96} height={96} style={avatarImg} />
@@ -130,7 +136,7 @@ export default function ProfileForm({ initial }: Props) {
       <div style={divider} />
 
       {/* Fields */}
-      <div style={grid}>
+      <div style={grid} className="profile-form-grid">
         <div style={fieldGroup}>
           <label style={label}>Nombre completo</label>
           <input style={input} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
@@ -156,7 +162,7 @@ export default function ProfileForm({ initial }: Props) {
         <span style={sectionTitle}>Cambiar contraseña</span>
         <span style={sectionNote}>Dejá vacío para no cambiarla</span>
       </div>
-      <div style={grid}>
+      <div style={grid} className="profile-form-grid">
         <div style={fieldGroup}>
           <label style={label}>Nueva contraseña</label>
           <PasswordInput style={input} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" placeholder="Mínimo 8 caracteres" />
