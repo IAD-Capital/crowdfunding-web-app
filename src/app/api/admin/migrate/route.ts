@@ -37,6 +37,9 @@ export async function POST(req: NextRequest) {
     `.then((rows) => ({ count: rows.count }));
     results.push(`migrated ${count} development images`);
 
+    await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS plan_images TEXT[] NOT NULL DEFAULT '{}'`;
+    results.push("units.plan_images: ok");
+
     return NextResponse.json({ ok: true, results });
   } catch (err) {
     return NextResponse.json({ ok: false, error: String(err), results }, { status: 500 });

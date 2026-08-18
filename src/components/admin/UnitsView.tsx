@@ -209,12 +209,10 @@ export default function UnitsView({
                 {u.images?.[0] ? (
                   <div style={unitCover}>
                     <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} />
-                    <span style={photoCountBadge}>📷 {u.images.length}</span>
+                    <span style={photoCountBadge}>{u.images.length}</span>
                   </div>
                 ) : (
-                  <div style={{ ...unitCover, background: "linear-gradient(135deg, #f9fafb, #e5e7eb)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: "1.5rem", opacity: 0.2 }}>🏠</span>
-                  </div>
+                  <div style={{ ...unitCover, background: "linear-gradient(135deg, #f9fafb, #e5e7eb)", display: "flex", alignItems: "center", justifyContent: "center" }} />
                 )}
                 <input
                   type="checkbox"

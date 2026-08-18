@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import PhoneRequiredNotice from "./PhoneRequiredNotice";
 
 type Props = {
   unitId: number;
@@ -9,11 +10,12 @@ type Props = {
   identifier: string;
   lang: string;
   availablePct?: number;
+  hasPhone?: boolean;
 };
 
 type Mode = "slider" | "fixed" | "full";
 
-export default function BuyPanel({ unitId, priceUsd, identifier, lang, availablePct = 100 }: Props) {
+export default function BuyPanel({ unitId, priceUsd, identifier, lang, availablePct = 100, hasPhone = true }: Props) {
   const router = useRouter();
   const maxSlider = Math.min(50, availablePct);
   const hasOtherInvestors = availablePct < 100;
@@ -67,10 +69,13 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
     setError(null);
   }
 
+  if (!hasPhone) {
+    return <PhoneRequiredNotice lang={lang} />;
+  }
+
   if (done) {
     return (
       <div style={panelSuccess}>
-        <span style={{ fontSize: "1.5rem" }}>🎉</span>
         <div>
           <p style={{ fontWeight: 700, margin: 0 }}>¡Solicitud enviada!</p>
           <p style={{ color: "#166534", fontSize: "0.82rem", margin: "0.2rem 0 0" }}>

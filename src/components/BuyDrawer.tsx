@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import PhoneRequiredNotice from "./PhoneRequiredNotice";
 
 type Props = {
   unitId: number;
@@ -12,11 +13,12 @@ type Props = {
   coverImg?: string | null;
   lang: string;
   availablePct?: number;
+  hasPhone?: boolean;
   onClose: () => void;
 };
 
 export default function BuyDrawer({
-  unitId, priceUsd, identifier, devName, coverImg, lang, availablePct = 100, onClose,
+  unitId, priceUsd, identifier, devName, coverImg, lang, availablePct = 100, hasPhone = true, onClose,
 }: Props) {
   const router = useRouter();
   const maxSlider = Math.min(50, availablePct);
@@ -99,10 +101,12 @@ export default function BuyDrawer({
         </div>
 
         <div style={drawerBody}>
-          {done ? (
+          {!hasPhone ? (
+            <PhoneRequiredNotice lang={lang} />
+          ) : done ? (
             /* ── Success state ── */
             <div style={successWrap}>
-              <div style={successIcon}>🎉</div>
+              <div style={successIcon} />
               <h3 style={successTitle}>¡Solicitud enviada!</h3>
               <p style={successSub}>
                 Solicitaste el <strong>{effectivePct}%</strong> de {identifier} por{" "}
@@ -215,7 +219,7 @@ export default function BuyDrawer({
         </div>
 
         {/* Footer CTA */}
-        {!done && (
+        {hasPhone && !done && (
           <div style={drawerFooter}>
             <button
               style={{ ...confirmBtn, opacity: loading ? 0.7 : 1 }}

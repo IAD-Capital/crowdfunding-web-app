@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { PASSWORD_RULES } from "@/lib/password";
+import PasswordInput from "@/components/PasswordInput";
 
 type Mode = "create" | "edit";
 
@@ -111,9 +112,7 @@ export default function UserForm({ lang, mode, userId, initial }: Props) {
           {avatar ? (
             <Image src={avatar} alt="Avatar" fill style={{ objectFit: "cover", borderRadius: "50%" }} />
           ) : (
-            <div style={avatarPlaceholder}>
-              <span style={{ fontSize: "2rem", opacity: 0.3 }}>👤</span>
-            </div>
+            <div style={avatarPlaceholder} />
           )}
           <div style={avatarOverlay}>
             <span style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 600 }}>
@@ -198,9 +197,8 @@ export default function UserForm({ lang, mode, userId, initial }: Props) {
       {/* Password */}
       <label style={label}>
         {mode === "create" ? "Contraseña" : "Nueva contraseña (dejar vacío para no cambiar)"}
-        <input
+        <PasswordInput
           style={input}
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required={mode === "create"}

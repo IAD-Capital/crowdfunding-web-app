@@ -14,6 +14,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Solo los inversores pueden comprar participaciones." }, { status: 403 });
   }
 
+  const [user] = await db`SELECT phone FROM users WHERE id = ${session!.sub}`;
+  if (!user?.phone?.trim()) {
+    return NextResponse.json(
+      { error: "Necesitás cargar tu número de teléfono en tu perfil antes de invertir." },
+      { status: 400 }
+    );
+  }
+
   const { unit_id, percentage } = await req.json();
 
   // Slider: 5–50 step 5. Fixed amount: any value >= 5. Platinum: exactly 100.

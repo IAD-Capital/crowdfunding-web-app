@@ -15,13 +15,13 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
     INSERT INTO units
       (development_id, identifier, floor, total_m2, covered_m2, uncovered_m2,
        rooms, bedrooms, bathrooms, orientation, price_usd, current_price_usd, status, description, images,
-       group_duration_months)
+       plan_images, group_duration_months)
     VALUES (
       ${u.development_id}, ${u.identifier + " (copia)"},
       ${u.floor}, ${u.total_m2}, ${u.covered_m2}, ${u.uncovered_m2},
       ${u.rooms}, ${u.bedrooms}, ${u.bathrooms}, ${u.orientation},
       ${u.price_usd}, ${u.current_price_usd}, ${"available"}, ${u.description}, ${u.images},
-      ${u.group_duration_months}
+      ${u.plan_images}, ${u.group_duration_months}
     )
     RETURNING *
   `;

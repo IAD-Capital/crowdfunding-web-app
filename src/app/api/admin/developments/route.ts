@@ -21,19 +21,19 @@ export async function POST(req: NextRequest) {
   if (error) return error;
 
   const body = await req.json();
-  const { name, address, neighborhood, city, description, completion_date, status, amenities, images, featured, visible, zone_price_per_m2, slug } = body;
+  const { name, address, neighborhood, city, description, completion_date, status, amenities, images, featured, visible, zone_price_per_m2, slug, developer_id } = body;
 
   if (!name?.trim() || !address?.trim()) {
     return NextResponse.json({ error: "Name and address are required." }, { status: 400 });
   }
 
   const [row] = await db`
-    INSERT INTO developments (name, address, neighborhood, city, description, completion_date, status, amenities, images, featured, visible, zone_price_per_m2, slug)
+    INSERT INTO developments (name, address, neighborhood, city, description, completion_date, status, amenities, images, featured, visible, zone_price_per_m2, slug, developer_id)
     VALUES (
       ${name.trim()}, ${address.trim()}, ${neighborhood?.trim() || null}, ${city?.trim() || null}, ${description ?? null},
       ${completion_date ?? null}, ${status ?? "active"},
       ${amenities ?? []}, ${images ?? []}, ${featured ?? false}, ${visible ?? true}, ${zone_price_per_m2 ?? null},
-      ${slug?.trim() || null}
+      ${slug?.trim() || null}, ${developer_id ?? null}
     )
     RETURNING *
   `;

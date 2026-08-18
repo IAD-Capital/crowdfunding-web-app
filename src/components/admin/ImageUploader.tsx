@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 
-const DEFAULT_MAX = 10;
+const DEFAULT_MAX = 30;
 
 type Props = {
   images: string[];
@@ -127,9 +127,7 @@ export default function ImageUploader({ images, onChange, max = DEFAULT_MAX, exi
                 onClick={() => setLightbox(i)}
                 style={previewBtn}
                 title="Ver foto"
-              >
-                🔍
-              </button>
+              />
 
               <button
                 type="button"

@@ -8,9 +8,20 @@ declare global {
 function getDb(): ReturnType<typeof postgres> {
   if (globalThis._db) return globalThis._db;
 
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("DATABASE_URL environment variable is not set");
+  const connectionString = `
+    postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}
+  `;
+
+  if (!process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_HOST || !process.env.DB_PORT || !process.env.DB_NAME) {
+    throw new Error("One or more required PostgreSQL environment variables are not set", {
+      cause: {
+        DB_USER: process.env.DB_USER,
+        DB_PASSWORD: process.env.DB_PASSWORD,
+        DB_HOST: process.env.DB_HOST,
+        DB_PORT: process.env.DB_PORT,
+        DB_NAME: process.env.DB_NAME,
+      },
+    });
   }
 
   const client = postgres(connectionString);
@@ -23,7 +34,7 @@ function getDb(): ReturnType<typeof postgres> {
 }
 
 // Lazy proxy — connection created only on first query, not at module import time.
-// This prevents next build from failing when DATABASE_URL is not set at build time.
+// This prevents next build from failing when any required environment variable is not set at build time.
 const db = new Proxy(
   ((...args: Parameters<ReturnType<typeof postgres>>) =>
     (getDb() as (...a: Parameters<ReturnType<typeof postgres>>) => ReturnType<ReturnType<typeof postgres>>)(...args)) as ReturnType<typeof postgres>,

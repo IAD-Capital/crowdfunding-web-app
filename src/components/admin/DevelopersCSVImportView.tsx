@@ -8,15 +8,13 @@ type Props = { lang: string };
 
 type Result = {
   imported: number;
-  developments: { id: number; name: string; slug: string | null }[];
+  developers: { id: number; name: string }[];
 };
 
-const TEMPLATE_HEADER =
-  "name,slug,address,neighborhood,city,description,completion_date,status,developer_name,amenities,projected_value_usd,projected_gain_pct,zone_price_per_m2,featured,visible";
-const TEMPLATE_EXAMPLE =
-  "IAD Palermo Soho,iad-palermo-soho,Gorriti 4800,Palermo,CABA,Edificio de categoría a metros de plaza Serrano.,2028-03-15,active,IAD Group,Piscina;Gimnasio;SUM,2500000,18.5,3200,true,true";
+const TEMPLATE_HEADER = "name,website";
+const TEMPLATE_EXAMPLE = "IAD Group,https://iadgroup.com";
 
-export default function DevelopmentsCSVImportView({ lang }: Props) {
+export default function DevelopersCSVImportView({ lang }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -42,7 +40,7 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
     const fd = new FormData();
     fd.append("file", file);
 
-    const res = await fetch("/api/admin/developments/import", { method: "POST", body: fd });
+    const res = await fetch("/api/admin/developers/import", { method: "POST", body: fd });
     const data = await res.json();
     setLoading(false);
 
@@ -61,7 +59,7 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "template-emprendimientos.csv";
+    a.download = "template-desarrolladoras.csv";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -75,13 +73,9 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
           <button style={btnSecondary} onClick={downloadTemplate}>⬇ Descargar template</button>
         </div>
         <div style={codeBlock}>
-          <p style={codeLine}><strong>Obligatorias:</strong> name, address</p>
-          <p style={codeLine}>
-            <strong>Opcionales:</strong> slug, neighborhood, city, description, completion_date (AAAA-MM-DD o MM/AAAA, ej: 07/2027 — se guarda como el día 1 de ese mes),
-            status (active / completed / cancelled), developer_name, amenities (separadas por “;”),
-            projected_value_usd, projected_gain_pct, zone_price_per_m2, featured (true/false), visible (true/false)
-          </p>
-          <p style={codeLine}>Este importador no carga imágenes ni unidades — solo los datos del emprendimiento.</p>
+          <p style={codeLine}><strong>Obligatorias:</strong> name</p>
+          <p style={codeLine}><strong>Opcionales:</strong> website</p>
+          <p style={codeLine}>Este importador no carga logos — se pueden agregar después editando la desarrolladora.</p>
           <p style={{ ...codeLine, marginTop: "0.75rem", fontFamily: "monospace", fontSize: "0.8rem", color: "#374151", wordBreak: "break-all" }}>
             {TEMPLATE_HEADER}
           </p>
@@ -133,15 +127,15 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
         {result && (
           <div style={successBox}>
             <p style={{ fontWeight: 700, margin: "0 0 0.35rem" }}>
-              ✓ {result.imported} emprendimiento{result.imported !== 1 ? "s" : ""} importado{result.imported !== 1 ? "s" : ""} correctamente
+              ✓ {result.imported} desarrolladora{result.imported !== 1 ? "s" : ""} importada{result.imported !== 1 ? "s" : ""} correctamente
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", marginTop: "0.5rem" }}>
-              {result.developments.map((d) => (
+              {result.developers.map((d) => (
                 <span key={d.id} style={importedChip}>{d.name}</span>
               ))}
             </div>
-            <Link href={`/${lang}/admin/developments`} style={{ ...btnSecondary, display: "inline-block", marginTop: "1rem", textDecoration: "none" }}>
-              Ver todos los emprendimientos →
+            <Link href={`/${lang}/admin/developers`} style={{ ...btnSecondary, display: "inline-block", marginTop: "1rem", textDecoration: "none" }}>
+              Ver todas las desarrolladoras →
             </Link>
           </div>
         )}
@@ -152,7 +146,7 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
             onClick={handleImport}
             disabled={!file || loading}
           >
-            {loading ? "Importando…" : "Importar emprendimientos"}
+            {loading ? "Importando…" : "Importar desarrolladoras"}
           </button>
         </div>
       </div>

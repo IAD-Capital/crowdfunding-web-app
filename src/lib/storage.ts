@@ -19,6 +19,8 @@ async function stillReferenced(urls: string[]): Promise<Set<string>> {
       UNION ALL
       SELECT unnest(images) AS u FROM units WHERE images && ${urls}::text[]
       UNION ALL
+      SELECT unnest(plan_images) AS u FROM units WHERE plan_images && ${urls}::text[]
+      UNION ALL
       SELECT logo AS u FROM developers WHERE logo = ANY(${urls}::text[])
       UNION ALL
       SELECT avatar AS u FROM users WHERE avatar = ANY(${urls}::text[])

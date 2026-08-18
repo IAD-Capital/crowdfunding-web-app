@@ -86,14 +86,24 @@ export default async function UnitDetailPage({
       {unit.images?.length > 0 ? (
         <div style={{ marginTop: "1.5rem" }}>
           <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#6b7280", marginBottom: "0.5rem" }}>
-            Fotos ({unit.images.length})
+            Fotos de interior ({unit.images.length})
           </p>
           <ImageGallery images={unit.images} />
         </div>
       ) : (
         <p style={{ color: "#9ca3af", fontSize: "0.875rem", marginTop: "1.5rem" }}>
-          Sin fotos cargadas.
+          Sin fotos de interior cargadas.
         </p>
+      )}
+
+      {/* Floor plans */}
+      {unit.plan_images?.length > 0 && (
+        <div style={{ marginTop: "1.5rem" }}>
+          <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#6b7280", marginBottom: "0.5rem" }}>
+            Planos ({unit.plan_images.length})
+          </p>
+          <ImageGallery images={unit.plan_images} />
+        </div>
       )}
     </div>
   );

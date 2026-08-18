@@ -80,9 +80,14 @@ export default async function Header({ lang }: Props) {
           {session ? (
             <>
               {session.role !== "superadmin" && (
-                <Link href={`/${lang}/wallet`} className={s.navLink}>
-                  💼 Mi cartera
-                </Link>
+                <>
+                  <Link href={`/${lang}/wallet`} className={s.navLink}>
+                    Mi cartera
+                  </Link>
+                  <Link href={`/${lang}/profile`} className={s.navLink}>
+                    Mi perfil
+                  </Link>
+                </>
               )}
               {session.role === "superadmin" && (
                 <Link href={`/${lang}/admin`} className={s.navLink}>

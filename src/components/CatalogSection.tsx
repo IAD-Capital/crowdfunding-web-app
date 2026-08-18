@@ -48,6 +48,7 @@ type Props = {
   developments: Development[];
   units: Unit[];
   isInvestor: boolean;
+  hasPhone?: boolean;
   myInvestedUnitIds?: number[];
   lang: string;
   tierThresholds: TierThresholds;
@@ -59,7 +60,7 @@ const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
   sold:      { bg: "#991b1b", fg: "#fff", label: "Vendida" },
 };
 
-export default function CatalogSection({ developments, units, isInvestor, myInvestedUnitIds = [], lang, tierThresholds }: Props) {
+export default function CatalogSection({ developments, units, isInvestor, hasPhone = true, myInvestedUnitIds = [], lang, tierThresholds }: Props) {
   const [devFilter, setDevFilter] = useState<number | "all">("all");
   const [developerFilter, setDeveloperFilter] = useState<number | "all">("all");
   const [tierFilter, setTierFilter] = useState<TierKey | "all">("all");
@@ -228,7 +229,7 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
 
         {isInvestor && availableUnits.length > 0 && (
           <p style={investorHint}>
-            💡 Como inversor podés adquirir entre el 5% y el 100% de cada departamento.
+            Como inversor podés adquirir entre el 5% y el 100% de cada departamento.
             Seleccioná uno para calcular tu inversión.
           </p>
         )}
@@ -265,6 +266,7 @@ export default function CatalogSection({ developments, units, isInvestor, myInve
           coverImg={drawerUnit.images?.[0] ?? null}
           lang={lang}
           availablePct={drawerUnit.available_pct ?? 100}
+          hasPhone={hasPhone}
           onClose={() => setDrawerUnit(null)}
         />
       )}
@@ -284,10 +286,10 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
         {d.images?.[0] ? (
           <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover" }} />
         ) : (
-          <div style={devPlaceholder}><span style={{ fontSize: "2rem", opacity: 0.2 }}>🏢</span></div>
+          <div style={devPlaceholder} />
         )}
         {d.images?.length > 1 && (
-          <span style={photoBadge}>📷 {d.images.length}</span>
+          <span style={photoBadge}>{d.images.length}</span>
         )}
       </div>
       <div style={devBody}>
@@ -297,8 +299,8 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
           <p style={devDeveloper}>Desarrolladora {d.developer_name}</p>
         )}
         <div style={devStats}>
-          <span style={statChip}>🏠 {d.unit_count} unidades</span>
-          {fmtDate && <span style={statChip}>📅 {fmtDate}</span>}
+          <span style={statChip}>{d.unit_count} unidades</span>
+          {fmtDate && <span style={statChip}>{fmtDate}</span>}
         </div>
         {d.amenities?.length > 0 && (
           <div style={amenRow}>

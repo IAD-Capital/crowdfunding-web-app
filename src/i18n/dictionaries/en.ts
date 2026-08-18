@@ -24,6 +24,7 @@ const en: Dictionary = {
       password: "Password",
       submit: "Sign in",
       loading: "Signing in…",
+      redirecting: "Redirecting…",
       noAccount: "Don't have an account?",
       createOne: "Create one",
       error: {

@@ -33,6 +33,11 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
   const isInvestor = session?.role === "investor";
 
+  const [phoneRow] = isInvestor
+    ? await db<{ phone: string | null }[]>`SELECT phone FROM users WHERE id = ${Number(session!.sub)}`
+    : [null];
+  const hasPhone = !!phoneRow?.phone?.trim();
+
   const [tierRow] = await db<TierThresholds[]>`
     SELECT bronze_from, silver_from, gold_from, platinum_from FROM app_settings WHERE id = 1
   `;
@@ -160,7 +165,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
             {isInvestor ? (
               <span style={heroBadge}>
                 <span style={heroBadgeDot} />
-                Bienvenido, {session!.fullName} 👋
+                Bienvenido, {session!.fullName}
               </span>
             ) : (
               <span style={heroBadge}>
@@ -215,7 +220,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
             <div style={heroChipMin} className="hero-chip-min">
               <div style={heroChipMinLabel}>Entrada mínima</div>
               <div style={heroChipMinValue}>
-                {featuredMinPrice != null ? fmtUsd(featuredMinPrice * 0.05) : "USD 5.000"}
+                {featuredMinPrice != null ? fmtUsd(featuredMinPrice * 0.05) : "Consultar"}
               </div>
             </div>
           </div>
@@ -293,9 +298,9 @@ export default async function Home({ params }: { params: { lang: string } }) {
               <div style={featuredAddrCaps}>{featuredDev.address.toUpperCase()}</div>
 
               <div style={featuredChipsRow}>
-                <span style={featuredChip}>🏠 {featuredDev.unit_count} unidad{featuredDev.unit_count !== 1 ? "es" : ""}</span>
+                <span style={featuredChip}>{featuredDev.unit_count} unidad{featuredDev.unit_count !== 1 ? "es" : ""}</span>
                 {fmtMonthYear(featuredDev.completion_date) && (
-                  <span style={featuredChip}>📅 Entrega {fmtMonthYear(featuredDev.completion_date)}</span>
+                  <span style={featuredChip}>Entrega {fmtMonthYear(featuredDev.completion_date)}</span>
                 )}
                 {featuredDev.amenities?.slice(0, 3).map((a) => (
                   <span key={a} style={featuredChip}>{a}</span>
@@ -367,6 +372,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
           developments={serialized.developments as Parameters<typeof CatalogSection>[0]["developments"]}
           units={serialized.units as Parameters<typeof CatalogSection>[0]["units"]}
           isInvestor={isInvestor}
+          hasPhone={hasPhone}
           myInvestedUnitIds={myInvestedUnitIds}
           lang={lang}
           tierThresholds={tierThresholds}

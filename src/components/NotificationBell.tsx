@@ -72,11 +72,11 @@ export default function NotificationBell({ notifications: initial, dark = false,
       day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC",
     });
 
-  const VS: Record<Notification["variant"], { icon: string; bg: string; fg: string }> = {
-    pending: { icon: "⏳", bg: "#fffbeb", fg: "#92400e" },
-    warning: { icon: "⚠️",  bg: "#fef2f2", fg: "#991b1b" },
-    info:    { icon: "ℹ️",  bg: "#f0f9ff", fg: "#0369a1" },
-    success: { icon: "✅", bg: "#f0fdf4", fg: "#166534" },
+  const VS: Record<Notification["variant"], { bg: string; fg: string }> = {
+    pending: { bg: "#fffbeb", fg: "#92400e" },
+    warning: { bg: "#fef2f2", fg: "#991b1b" },
+    info:    { bg: "#f0f9ff", fg: "#0369a1" },
+    success: { bg: "#f0fdf4", fg: "#166534" },
   };
 
   const ACTION_STYLES: Record<NotificationAction["variant"], React.CSSProperties> = {
@@ -158,7 +158,6 @@ export default function NotificationBell({ notifications: initial, dark = false,
                     <div style={{ ...notifItem, background: vs.bg }}>
                       {/* Header row */}
                       <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
-                        <span style={{ fontSize: "1rem", flexShrink: 0, marginTop: 1 }}>{vs.icon}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ margin: 0, fontWeight: 700, fontSize: "0.82rem", color: vs.fg }}>{n.title}</p>
                           <p style={{ margin: "0.15rem 0 0", fontSize: "0.75rem", color: "#6b7280", lineHeight: 1.4 }}>{n.body}</p>

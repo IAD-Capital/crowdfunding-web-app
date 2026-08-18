@@ -22,6 +22,7 @@ const es = {
       password: "Contraseña",
       submit: "Iniciar sesión",
       loading: "Iniciando sesión…",
+      redirecting: "Redirigiendo…",
       noAccount: "¿No tienes una cuenta?",
       createOne: "Créala aquí",
       error: {

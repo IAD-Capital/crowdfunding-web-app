@@ -199,7 +199,6 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
   if (investments.length === 0) {
     return (
       <div style={empty}>
-        <span style={{ fontSize: "2.5rem", opacity: 0.15 }}>📊</span>
         <p style={{ margin: 0, color: "#9ca3af" }}>No hay inversiones registradas todavía.</p>
       </div>
     );
@@ -252,7 +251,6 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
 
       {groups.length === 0 && (
         <div style={empty}>
-          <span style={{ fontSize: "2rem", opacity: 0.15 }}>🔍</span>
           <p style={{ margin: 0, color: "#9ca3af" }}>Sin resultados para los filtros seleccionados.</p>
         </div>
       )}
@@ -278,10 +276,10 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
                   <div style={groupTitle}>
                     {group.identifier}
                     {group.pendingApprovals > 0 && (
-                      <span style={pendingPill}>🕓 {group.pendingApprovals} solicitud{group.pendingApprovals > 1 ? "es" : ""} por aprobar</span>
+                      <span style={pendingPill}>{group.pendingApprovals} solicitud{group.pendingApprovals > 1 ? "es" : ""} por aprobar</span>
                     )}
                     {group.pendingRemovals > 0 && (
-                      <span style={pendingPill}>⚠️ {group.pendingRemovals} remoción{group.pendingRemovals > 1 ? "es" : ""} pendiente{group.pendingRemovals > 1 ? "s" : ""}</span>
+                      <span style={pendingPill}>{group.pendingRemovals} remoción{group.pendingRemovals > 1 ? "es" : ""} pendiente{group.pendingRemovals > 1 ? "s" : ""}</span>
                     )}
                   </div>
                   <div style={groupSub}>{group.development_name}</div>
@@ -313,10 +311,10 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.15rem" }}>
                       <span style={{ ...expiryChip, ...(groupExpired ? expiryExpired : urgent ? expiryUrgent : {}) }}>
                         {groupExpired
-                          ? `⛔ venció hace ${Math.abs(days)} día${Math.abs(days) !== 1 ? "s" : ""}`
+                          ? `venció hace ${Math.abs(days)} día${Math.abs(days) !== 1 ? "s" : ""}`
                           : days === 0
-                          ? "⏳ vence hoy"
-                          : `⏳ restan ${days} día${days !== 1 ? "s" : ""}`}
+                          ? "vence hoy"
+                          : `restan ${days} día${days !== 1 ? "s" : ""}`}
                       </span>
                       <span style={{ fontSize: "0.62rem", color: "#9ca3af" }}>{fmtDate(groupExpires.toISOString())}</span>
                     </div>
@@ -406,7 +404,7 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
                               </div>
                             ) : hasPendingRemoval ? (
                               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.3rem" }}>
-                                <span style={removalLabel}>⚠️ Remoción solicitada</span>
+                                <span style={removalLabel}>Remoción solicitada</span>
                                 <div style={actionRow}>
                                   <button style={btnApprove} onClick={() => approveRemoval(inv.id)} disabled={isPending}>Aprobar</button>
                                   <button style={btnReject} onClick={() => rejectRemoval(inv.id)} disabled={isPending}>Rechazar</button>

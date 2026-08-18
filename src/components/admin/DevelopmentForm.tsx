@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, KeyboardEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Dictionary } from "@/i18n";
 import ImageUploader from "./ImageUploader";
 import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
@@ -29,11 +30,20 @@ export type Initial = {
   visible?: boolean;
   zone_price_per_m2?: number | string | null;
   slug?: string | null;
+  developer_id?: number | string | null;
 };
 
-type Props = { t: T; lang: string; initial?: Initial; existingImages?: string[] };
+export type DeveloperOption = { id: number; name: string };
 
-export default function DevelopmentForm({ t, lang, initial, existingImages = [] }: Props) {
+type Props = {
+  t: T;
+  lang: string;
+  initial?: Initial;
+  existingImages?: string[];
+  allDevelopers?: DeveloperOption[];
+};
+
+export default function DevelopmentForm({ t, lang, initial, existingImages = [], allDevelopers = [] }: Props) {
   const router = useRouter();
   const isEdit = !!initial;
 
@@ -55,6 +65,9 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
   const [visible, setVisible] = useState(initial?.visible ?? true);
   const [zonePricePerM2, setZonePricePerM2] = useState(
     initial?.zone_price_per_m2 != null ? String(initial.zone_price_per_m2) : ""
+  );
+  const [developerId, setDeveloperId] = useState(
+    initial?.developer_id != null ? String(initial.developer_id) : ""
   );
   const amenityRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
@@ -115,6 +128,7 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
       visible,
       zone_price_per_m2: zonePricePerM2.trim() ? Number(zonePricePerM2) : null,
       slug: slug.trim() || null,
+      developer_id: developerId ? Number(developerId) : null,
     };
 
     const url = isEdit ? `/api/admin/developments/${initial!.id}` : "/api/admin/developments";
@@ -141,7 +155,14 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
 
   return (
     <div style={wrap}>
-      <h1 style={title}>{isEdit ? t.form.titleEdit : t.form.titleNew}</h1>
+      <div style={titleRow}>
+        <h1 style={{ ...title, marginBottom: 0 }}>{isEdit ? t.form.titleEdit : t.form.titleNew}</h1>
+        {isEdit && (
+          <Link href={`/${lang}/admin/developments/${initial!.id}/units/new`} style={newUnitLink}>
+            + Nueva unidad
+          </Link>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit} style={form}>
         <Row>
@@ -180,6 +201,14 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [] 
           </Field>
           <Field label="Ciudad">
             <input style={input} value={city} onChange={(e) => setCity(e.target.value)} placeholder="Buenos Aires" />
+          </Field>
+          <Field label="Desarrolladora">
+            <select style={input} value={developerId} onChange={(e) => setDeveloperId(e.target.value)}>
+              <option value="">Sin desarrolladora</option>
+              {allDevelopers.map((d) => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
           </Field>
         </Row>
 
@@ -343,6 +372,11 @@ const toggleThumb = (on: boolean): React.CSSProperties => ({
 });
 const wrap: React.CSSProperties = { background: "#fff", borderRadius: 12, padding: "2rem", border: "1px solid #e5e7eb" };
 const title: React.CSSProperties = { fontSize: "1.25rem", fontWeight: 700, marginBottom: "1.5rem" };
+const titleRow: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" };
+const newUnitLink: React.CSSProperties = {
+  padding: "0.5rem 1rem", background: "#111", color: "#fff",
+  borderRadius: 8, textDecoration: "none", fontWeight: 600, fontSize: "0.85rem",
+};
 const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1rem" };
 const input: React.CSSProperties = {
   padding: "0.55rem 0.75rem", border: "1px solid #d1d5db",
