@@ -35,7 +35,7 @@ export default function DevelopmentsMenu({
   return (
     <div className={s.navItem} onMouseEnter={show} onMouseLeave={hide}>
       <Link
-        href={`/${lang}#catalogo`}
+        href={`/${lang}#catalog`}
         className={`${s.navLink} ${s.navTrigger}`}
         onFocus={show}
         onBlur={hide}
@@ -60,7 +60,7 @@ export default function DevelopmentsMenu({
             <div className={s.megaMenuInner}>
               <div className={s.megaMenuGrid}>
                 {developments.map((d) => (
-                  <Link key={d.id} href={`/${lang}/emprendimientos/${d.slug ?? d.id}`} className={s.megaItem}>
+                  <Link key={d.id} href={`/${lang}/developments/${d.slug ?? d.id}`} className={s.megaItem}>
                     <div className={s.megaItemImage}>
                       {d.image ? (
                         <Image src={d.image} alt={d.name} fill style={{ objectFit: "cover" }} className={s.megaItemImg} />
@@ -83,7 +83,7 @@ export default function DevelopmentsMenu({
                   </Link>
                 ))}
               </div>
-              <Link href={`/${lang}#catalogo`} className={s.megaFooterLink}>
+              <Link href={`/${lang}#catalog`} className={s.megaFooterLink}>
                 Ver todos los emprendimientos →
               </Link>
             </div>

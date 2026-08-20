@@ -10,6 +10,7 @@ import PasswordInput from "./PasswordInput";
 type Props = {
   t: Dictionary["auth"]["signup"];
   lang: string;
+  next?: string;
 };
 
 const PASSWORD_CHECKS = (t: Props["t"]) => [
@@ -20,7 +21,7 @@ const PASSWORD_CHECKS = (t: Props["t"]) => [
   { label: t.checks.special,   test: (p: string) => /[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]/.test(p) },
 ];
 
-export default function SignupForm({ t, lang }: Props) {
+export default function SignupForm({ t, lang, next }: Props) {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -56,7 +57,7 @@ export default function SignupForm({ t, lang }: Props) {
       return;
     }
 
-    router.push(`/${lang}`);
+    router.push(next && next.startsWith("/") ? next : `/${lang}`);
     router.refresh();
   }
 
@@ -157,7 +158,7 @@ export default function SignupForm({ t, lang }: Props) {
 
             <p style={footer}>
               {t.haveAccount}{" "}
-              <Link href={`/${lang}/login`} style={link}>{t.signIn}</Link>
+              <Link href={`/${lang}/login${next ? `?next=${encodeURIComponent(next)}` : ""}`} style={link}>{t.signIn}</Link>
             </p>
           </div>
         </div>

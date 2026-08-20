@@ -1,6 +1,7 @@
 import { isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminTopbar from "@/components/admin/AdminTopbar";
+import { MobileSidebarProvider } from "@/components/admin/MobileSidebarContext";
 import { getSession } from "@/lib/session";
 import db from "@/lib/db";
 import type { Notification } from "@/components/NotificationBell";
@@ -70,28 +71,32 @@ export default async function AdminLayout({
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f4f6fb" }}>
-      <AdminSidebar lang={lang} notifications={notifications} />
+    <MobileSidebarProvider>
+      <div style={{ display: "flex", minHeight: "100vh", background: "#f4f6fb" }}>
+        <AdminSidebar lang={lang} notifications={notifications} />
 
-      {/* Main area — offset by sidebar width (handled via CSS var) */}
-      <div style={mainArea}>
-        <AdminTopbar
-          lang={lang}
-          userEmail={session?.email ?? ""}
-          userName={session?.fullName ?? session?.email ?? ""}
-          userAvatar={session?.avatar ?? null}
-        />
-        <main style={content}>
-          {children}
-        </main>
+        {/* Main area — offset by sidebar width (handled via CSS var) */}
+        <div style={mainArea} className="admin-main-area">
+          <AdminTopbar
+            lang={lang}
+            userEmail={session?.email ?? ""}
+            userName={session?.fullName ?? session?.email ?? ""}
+            userAvatar={session?.avatar ?? null}
+          />
+          <main style={content} className="admin-content">
+            {children}
+          </main>
+        </div>
+
+        <style>{`
+          :root { --sidebar-w: 240px; }
+          @media (max-width: 768px) {
+            .admin-main-area { margin-left: 0 !important; }
+            .admin-content { padding: 1.25rem 1rem !important; }
+          }
+        `}</style>
       </div>
-
-      {/* Overlay for collapsed sidebar on mobile — optional future enhancement */}
-      <style>{`
-        :root { --sidebar-w: 240px; }
-        @media (max-width: 768px) { :root { --sidebar-w: 64px; } }
-      `}</style>
-    </div>
+    </MobileSidebarProvider>
   );
 }
 

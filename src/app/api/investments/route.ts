@@ -87,5 +87,17 @@ export async function POST(req: NextRequest) {
     `,
   });
 
+  const walletUrl = `${getAppUrl()}/${DEFAULT_LOCALE}/wallet`;
+  await sendMail({
+    to: session!.email,
+    subject: `Recibimos tu solicitud de inversión — ${unit.identifier}, ${unit.development_name}`,
+    html: `
+      <p>Hola ${session!.fullName},</p>
+      <p>Recibimos tu solicitud de inversión del <strong>${percentage}%</strong> en <strong>${unit.identifier}</strong>, ${unit.development_name}, por <strong>USD ${amount_usd.toLocaleString("en-US", { maximumFractionDigits: 2 })}</strong>.</p>
+      <p>Tu inversión quedará confirmada una vez que sea aprobada.</p>
+      <p><a href="${walletUrl}">Ver mi cartera</a></p>
+    `,
+  });
+
   return NextResponse.json(inv, { status: 201 });
 }

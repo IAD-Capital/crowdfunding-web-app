@@ -4,6 +4,7 @@ import PublicShell from "@/components/PublicShell";
 import CatalogSection from "@/components/CatalogSection";
 import InvestmentSimulator from "@/components/InvestmentSimulator";
 import AuthCTASection from "@/components/AuthCTASection";
+import FeaturedUnitsHero, { type FeaturedUnit } from "@/components/FeaturedUnitsHero";
 import Link from "next/link";
 import Image from "next/image";
 import { FileCheck2, Eye, Activity, ShieldCheck } from "lucide-react";
@@ -94,6 +95,17 @@ export default async function Home({ params }: { params: { lang: string } }) {
     ORDER BY d.updated_at DESC
   `;
   const featuredDev = featuredRows[0] ?? null;
+
+  const featuredUnitRows = await db<(FeaturedUnit & { price_usd: string | number })[]>`
+    SELECT u.id, u.identifier, u.images, u.price_usd, u.total_m2, u.rooms,
+           d.id AS development_id, d.name AS development_name, d.address AS development_address, d.slug AS development_slug
+    FROM units u
+    JOIN developments d ON d.id = u.development_id
+    WHERE u.featured = true AND d.status = 'active' AND d.visible = true AND u.status != 'sold'
+    ORDER BY u.featured_order
+    LIMIT 8
+  `;
+  const featuredUnits8: FeaturedUnit[] = featuredUnitRows.map((u) => ({ ...u, price_usd: Number(u.price_usd) }));
   const featuredUnits = featuredDev ? units.filter((u) => u.development_id === featuredDev.id) : [];
   const featuredMinPrice = featuredUnits.length > 0
     ? Math.min(...featuredUnits.map((u) => Number(u.price_usd)))
@@ -151,7 +163,6 @@ export default async function Home({ params }: { params: { lang: string } }) {
           .stats-strip { grid-template-columns: 1fr 1fr !important; }
           .stats-strip > div:nth-child(2) { border-right: none !important; }
           .trust-grid { grid-template-columns: 1fr 1fr !important; }
-          .featured-card { grid-template-columns: 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
           .hero-chip-return { top: -12px !important; right: 8px !important; }
           .hero-chip-min { bottom: -12px !important; left: 8px !important; }
@@ -159,6 +170,11 @@ export default async function Home({ params }: { params: { lang: string } }) {
       `,
         }}
       />
+      {/* ─── Featured units ──────────────────────────── */}
+      <div id="developments">
+        <FeaturedUnitsHero units={featuredUnits8} lang={lang} />
+      </div>
+      
       <section style={hero}>
         <div style={heroInner} className="hero-inner">
           <div style={heroText}>
@@ -189,7 +205,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
                   </Link>
                 </>
               ) : isInvestor ? (
-                <a href="#catalogo" style={btnPrimary}>
+                <a href="#catalog" style={btnPrimary}>
                   Ver oportunidades
                 </a>
               ) : null}
@@ -270,72 +286,8 @@ export default async function Home({ params }: { params: { lang: string } }) {
         </div>
       </section>
 
-      {/* ─── Featured emprendimiento ─────────────────── */}
-      {featuredDev && (
-        <section id="emprendimientos" style={featuredSection}>
-          <div style={featuredHeader}>
-            <div>
-              <h2 style={featuredTitle}>Emprendimientos destacados</h2>
-              <p style={featuredSub}>Oportunidades seleccionadas en las mejores ubicaciones</p>
-            </div>
-            <a href="#catalogo" style={featuredAllLink}>Ver todos →</a>
-          </div>
-
-          <div style={featuredCard} className="featured-card">
-            <div style={featuredImageWrap}>
-              {featuredDev.images?.[0] ? (
-                <Image src={featuredDev.images[0]} alt={featuredDev.name} fill style={{ objectFit: "cover" }} />
-              ) : (
-                <div style={featuredImagePlaceholder} />
-              )}
-              <span style={featuredStatusBadge}>Disponible</span>
-            </div>
-            <div style={featuredBody}>
-              <div style={featuredDeveloperLine}>
-                {featuredDev.developer_name ? `Desarrolladora ${featuredDev.developer_name} · ` : ""}{featuredDev.address}
-              </div>
-              <h3 style={featuredName}>{featuredDev.name}</h3>
-              <div style={featuredAddrCaps}>{featuredDev.address.toUpperCase()}</div>
-
-              <div style={featuredChipsRow}>
-                <span style={featuredChip}>{featuredDev.unit_count} unidad{featuredDev.unit_count !== 1 ? "es" : ""}</span>
-                {fmtMonthYear(featuredDev.completion_date) && (
-                  <span style={featuredChip}>Entrega {fmtMonthYear(featuredDev.completion_date)}</span>
-                )}
-                {featuredDev.amenities?.slice(0, 3).map((a) => (
-                  <span key={a} style={featuredChip}>{a}</span>
-                ))}
-              </div>
-
-              <div style={featuredPriceRow}>
-                <div>
-                  <div style={featuredPriceLabel}>Desde</div>
-                  <div style={featuredPriceValue}>{featuredMinPrice != null ? fmtUsd(featuredMinPrice) : "Consultar"}</div>
-                </div>
-                <div>
-                  <div style={featuredPriceLabel}>Valor m²</div>
-                  <div style={{ ...featuredPriceValue, color: "var(--c-positive)" }}>
-                    {featuredPricePerM2 != null ? fmtPerM2(featuredPricePerM2) : "—"}
-                  </div>
-                </div>
-                {featuredZonePricePerM2 != null && (
-                  <div>
-                    <div style={featuredPriceLabel}>Valor m² zona</div>
-                    <div style={featuredPriceValue}>{fmtPerM2(featuredZonePricePerM2)}</div>
-                  </div>
-                )}
-              </div>
-
-              <Link href={`/${lang}/emprendimientos/${featuredDev.slug ?? featuredDev.id}`} style={featuredCta}>
-                Ver emprendimiento →
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* ─── How it works ───────────────────────────── */}
-      <section id="como-funciona" style={howSection}>
+      <section id="how-it-works" style={howSection}>
         <div style={howInner}>
           <div style={howHeader}>
             <div style={{ ...eyebrow, color: "#7fa0ff" }}>Cómo funciona</div>
@@ -358,7 +310,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
       </section>
 
       {/* ─── Simulador de inversión ─────────────────── */}
-      <div id="simulador">
+      <div id="simulator">
         <InvestmentSimulator
           developments={serialized.developments as Parameters<typeof InvestmentSimulator>[0]["developments"]}
           units={serialized.units as Parameters<typeof InvestmentSimulator>[0]["units"]}
@@ -367,7 +319,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
       </div>
 
       {/* ─── Full catalog ───────────────────────────── */}
-      <div id="catalogo">
+      <div id="catalog">
         <CatalogSection
           developments={serialized.developments as Parameters<typeof CatalogSection>[0]["developments"]}
           units={serialized.units as Parameters<typeof CatalogSection>[0]["units"]}
@@ -480,43 +432,6 @@ const trustIconWrap: React.CSSProperties = {
 };
 const trustCardTitle: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, margin: "0 0 0.5rem", color: "var(--c-ink)" };
 const trustCardDesc: React.CSSProperties = { fontSize: "0.9rem", lineHeight: 1.5, color: "var(--c-text-secondary)", margin: 0 };
-
-/* Featured */
-const featuredSection: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "1.5rem 1.5rem 4rem" };
-const featuredHeader: React.CSSProperties = { display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "1.75rem", gap: "1.5rem", flexWrap: "wrap" };
-const featuredTitle: React.CSSProperties = { fontSize: "2.1rem", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 0.5rem", color: "var(--c-ink)" };
-const featuredSub: React.CSSProperties = { fontSize: "1rem", color: "var(--c-text-secondary)", margin: 0 };
-const featuredAllLink: React.CSSProperties = { textDecoration: "none", color: "var(--c-accent)", fontWeight: 600, fontSize: "0.95rem" };
-const featuredCard: React.CSSProperties = {
-  background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 22, overflow: "hidden",
-  display: "grid", gridTemplateColumns: "1.15fr 1fr", boxShadow: "0 24px 50px -28px rgba(14,23,38,0.22)",
-};
-const featuredImageWrap: React.CSSProperties = { position: "relative", minHeight: 420, background: "linear-gradient(135deg, #e8eef7, #dfe7f2)" };
-const featuredImagePlaceholder: React.CSSProperties = { position: "absolute", inset: 0 };
-const featuredStatusBadge: React.CSSProperties = {
-  position: "absolute", top: 18, left: 18, background: "var(--c-positive)", color: "#fff",
-  fontSize: "0.78rem", fontWeight: 700, padding: "0.4rem 0.75rem", borderRadius: 999,
-};
-const featuredBody: React.CSSProperties = { padding: "2.4rem 2.5rem", display: "flex", flexDirection: "column" };
-const featuredDeveloperLine: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 600, color: "var(--c-text-tertiary)", marginBottom: "0.5rem" };
-const featuredName: React.CSSProperties = { fontSize: "1.7rem", fontWeight: 800, letterSpacing: "-0.02em", margin: "0 0 0.35rem", color: "var(--c-ink)" };
-const featuredAddrCaps: React.CSSProperties = { fontSize: "0.92rem", color: "var(--c-text-secondary)", marginBottom: "1.5rem" };
-const featuredChipsRow: React.CSSProperties = { display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "1.5rem" };
-const featuredChip: React.CSSProperties = {
-  fontSize: "0.82rem", fontWeight: 600, color: "var(--c-ink)", background: "var(--c-chip-bg)",
-  border: "1px solid var(--c-border)", padding: "0.5rem 0.8rem", borderRadius: 9,
-};
-const featuredPriceRow: React.CSSProperties = {
-  display: "flex", gap: "2rem", padding: "1.25rem 0", borderTop: "1px solid var(--c-border-soft)",
-  borderBottom: "1px solid var(--c-border-soft)", marginBottom: "1.5rem",
-};
-const featuredPriceLabel: React.CSSProperties = { fontSize: "0.78rem", color: "var(--c-text-tertiary)", fontWeight: 600, marginBottom: "0.2rem" };
-const featuredPriceValue: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1.4rem", fontWeight: 800, color: "var(--c-ink)" };
-const featuredCta: React.CSSProperties = {
-  marginTop: "auto", textDecoration: "none", background: "var(--c-accent)", color: "#fff",
-  fontSize: "0.95rem", fontWeight: 600, padding: "0.9rem", borderRadius: 11, textAlign: "center",
-  boxShadow: "0 10px 22px rgba(27,77,224,0.22)",
-};
 
 /* How it works */
 const howSection: React.CSSProperties = { background: "var(--c-ink)", marginTop: "1.5rem" };

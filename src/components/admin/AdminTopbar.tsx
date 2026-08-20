@@ -3,7 +3,9 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Menu } from "lucide-react";
 import LogoutButton from "@/components/LogoutButton";
+import { useMobileSidebar } from "./MobileSidebarContext";
 
 type Props = {
   lang: string;
@@ -24,6 +26,7 @@ const CRUMBS: Record<string, string> = {
   new: "Nuevo",
   edit: "Editar",
   import: "Importar CSV",
+  featured: "Destacadas",
   profile: "Mi perfil",
 };
 
@@ -51,22 +54,43 @@ function initials(name: string) {
 export default function AdminTopbar({ lang, userEmail, userName, userAvatar }: Props) {
   const pathname = usePathname();
   const crumbs = buildBreadcrumbs(pathname, lang);
+  const { setOpen: setMobileSidebarOpen } = useMobileSidebar();
 
   return (
-    <header style={topbar}>
-      {/* Breadcrumb */}
-      <nav style={breadcrumb}>
-        {crumbs.map((c, i) => (
-          <span key={c.href} style={crumbWrap}>
-            {i > 0 && <span style={crumbSep}>/</span>}
-            {i === crumbs.length - 1 ? (
-              <span style={crumbCurrent}>{c.label}</span>
-            ) : (
-              <Link href={c.href} style={crumbLink}>{c.label}</Link>
-            )}
-          </span>
-        ))}
-      </nav>
+    <header style={topbar} className="admin-topbar">
+      <style>{`
+        .admin-topbar-hamburger { display: none; }
+        @media (max-width: 768px) {
+          .admin-topbar-hamburger { display: flex !important; }
+          .admin-topbar-visit-label, .admin-topbar-profile-info { display: none !important; }
+          .admin-topbar { padding: 0 1rem !important; }
+        }
+      `}</style>
+
+      <div style={left}>
+        <button
+          className="admin-topbar-hamburger"
+          style={hamburgerBtn}
+          onClick={() => setMobileSidebarOpen(true)}
+          aria-label="Abrir menú"
+        >
+          <Menu size={20} />
+        </button>
+
+        {/* Breadcrumb */}
+        <nav style={breadcrumb}>
+          {crumbs.map((c, i) => (
+            <span key={c.href} style={crumbWrap}>
+              {i > 0 && <span style={crumbSep}>/</span>}
+              {i === crumbs.length - 1 ? (
+                <span style={crumbCurrent}>{c.label}</span>
+              ) : (
+                <Link href={c.href} style={crumbLink}>{c.label}</Link>
+              )}
+            </span>
+          ))}
+        </nav>
+      </div>
 
       {/* Right side */}
       <div style={right}>
@@ -76,7 +100,7 @@ export default function AdminTopbar({ lang, userEmail, userName, userAvatar }: P
             <line x1="2" y1="12" x2="22" y2="12" />
             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
           </svg>
-          Web
+          <span className="admin-topbar-visit-label">Web</span>
         </Link>
 
         <div style={profileWrap}>
@@ -85,7 +109,7 @@ export default function AdminTopbar({ lang, userEmail, userName, userAvatar }: P
           ) : (
             <div style={avatar}>{initials(userName)}</div>
           )}
-          <div style={profileInfo}>
+          <div style={profileInfo} className="admin-topbar-profile-info">
             <span style={profileName}>{userName}</span>
             <span style={profileEmail}>{userEmail}</span>
           </div>
@@ -110,11 +134,34 @@ const topbar: React.CSSProperties = {
   zIndex: 30,
 };
 
+const left: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.75rem",
+  minWidth: 0,
+};
+
+const hamburgerBtn: React.CSSProperties = {
+  alignItems: "center",
+  justifyContent: "center",
+  width: 36,
+  height: 36,
+  flexShrink: 0,
+  background: "none",
+  border: "1px solid #e5e7eb",
+  borderRadius: 8,
+  color: "#374151",
+  cursor: "pointer",
+};
+
 const breadcrumb: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: "0.15rem",
   fontSize: "0.85rem",
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis",
 };
 
 const visitBtn: React.CSSProperties = {

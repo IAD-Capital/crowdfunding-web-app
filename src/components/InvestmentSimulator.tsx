@@ -165,7 +165,7 @@ export default function InvestmentSimulator({ developments, units, lang }: Props
 
           {selectedUnit && (
             <Link
-              href={`/${lang}/emprendimientos/${developments.find(d => d.id === selectedUnit.development_id)?.slug ?? selectedUnit.development_id}/unidades/${selectedUnit.id}`}
+              href={`/${lang}/developments/${developments.find(d => d.id === selectedUnit.development_id)?.slug ?? selectedUnit.development_id}/units/${selectedUnit.id}`}
               style={{ ...ctaBtn, ...(outOfRange ? ctaBtnDisabled : {}) }}
             >
               Ver unidad e invertir →

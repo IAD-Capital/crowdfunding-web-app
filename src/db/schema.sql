@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS developments (
   projected_gain_pct  NUMERIC(6,2),
   amenities           TEXT[]      NOT NULL DEFAULT '{}',
   images              TEXT[]      NOT NULL DEFAULT '{}',
+  plan_images         TEXT[]      NOT NULL DEFAULT '{}',
+  interior_images     TEXT[]      NOT NULL DEFAULT '{}',
   featured            BOOLEAN     NOT NULL DEFAULT FALSE,
   visible             BOOLEAN     NOT NULL DEFAULT TRUE,
   zone_price_per_m2   NUMERIC(10,2),
@@ -74,6 +76,8 @@ CREATE TABLE IF NOT EXISTS units (
   description           TEXT,
   images                TEXT[]        NOT NULL DEFAULT '{}',
   plan_images           TEXT[]        NOT NULL DEFAULT '{}',
+  featured              BOOLEAN       NOT NULL DEFAULT FALSE,
+  featured_order        INTEGER,
   group_duration_months INTEGER,
   created_at            TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
   updated_at            TIMESTAMPTZ   NOT NULL DEFAULT NOW()
@@ -92,11 +96,13 @@ CREATE TABLE IF NOT EXISTS investments (
 );
 
 CREATE TABLE IF NOT EXISTS app_settings (
-  id            SMALLINT      PRIMARY KEY DEFAULT 1,
-  bronze_from   NUMERIC(14,2) NOT NULL DEFAULT 5000,
-  silver_from   NUMERIC(14,2) NOT NULL DEFAULT 10000,
-  gold_from     NUMERIC(14,2) NOT NULL DEFAULT 25000,
-  platinum_from NUMERIC(14,2) NOT NULL DEFAULT 150000,
+  id                     SMALLINT      PRIMARY KEY DEFAULT 1,
+  bronze_from            NUMERIC(14,2) NOT NULL DEFAULT 5000,
+  silver_from            NUMERIC(14,2) NOT NULL DEFAULT 10000,
+  gold_from              NUMERIC(14,2) NOT NULL DEFAULT 25000,
+  platinum_from          NUMERIC(14,2) NOT NULL DEFAULT 150000,
+  coming_soon_enabled    BOOLEAN       NOT NULL DEFAULT FALSE,
+  coming_soon_expires_at TIMESTAMPTZ,
   CONSTRAINT app_settings_singleton CHECK (id = 1)
 );
 INSERT INTO app_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;

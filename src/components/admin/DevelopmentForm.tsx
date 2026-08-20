@@ -26,6 +26,8 @@ export type Initial = {
   status: string;
   amenities?: string[];
   images?: string[];
+  plan_images?: string[];
+  interior_images?: string[];
   featured?: boolean;
   visible?: boolean;
   zone_price_per_m2?: number | string | null;
@@ -61,6 +63,8 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [],
   const [amenities, setAmenities] = useState<string[]>(initial?.amenities ?? []);
   const [amenityInput, setAmenityInput] = useState("");
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
+  const [planImages, setPlanImages] = useState<string[]>(initial?.plan_images ?? []);
+  const [interiorImages, setInteriorImages] = useState<string[]>(initial?.interior_images ?? []);
   const [featured, setFeatured] = useState(initial?.featured ?? false);
   const [visible, setVisible] = useState(initial?.visible ?? true);
   const [zonePricePerM2, setZonePricePerM2] = useState(
@@ -124,6 +128,8 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [],
       projected_gain_pct: null,
       amenities,
       images,
+      plan_images: planImages,
+      interior_images: interiorImages,
       featured,
       visible,
       zone_price_per_m2: zonePricePerM2.trim() ? Number(zonePricePerM2) : null,
@@ -184,7 +190,7 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [],
 
         <Field label="Slug (URL amigable)">
           <div style={slugWrap}>
-            <span style={slugPrefix}>/emprendimientos/</span>
+            <span style={slugPrefix}>/developments/</span>
             <input
               style={{ ...input, borderLeft: "none", borderRadius: "0 8px 8px 0" }}
               value={slug}
@@ -320,8 +326,19 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [],
           <p style={hint}>Marcá las opciones que apliquen o agregá otras personalizadas (Enter o coma)</p>
         </Field>
 
-        <Field label="Fotos">
+        <Field label="Fotos del emprendimiento">
           <ImageUploader images={images} onChange={setImages} existingImages={existingImages} />
+          <p style={hint}>Fotos generales/exteriores del proyecto. Se muestran en el carousel principal.</p>
+        </Field>
+
+        <Field label="Planos">
+          <ImageUploader images={planImages} onChange={setPlanImages} existingImages={existingImages} />
+          <p style={hint}>Planos del emprendimiento (plantas, cortes, etc.)</p>
+        </Field>
+
+        <Field label="Interior">
+          <ImageUploader images={interiorImages} onChange={setInteriorImages} existingImages={existingImages} />
+          <p style={hint}>Fotos de interiores, amenities, terminaciones, etc.</p>
         </Field>
 
         {error && <p style={errorStyle}>{error}</p>}
