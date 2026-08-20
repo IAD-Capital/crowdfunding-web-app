@@ -191,9 +191,15 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
           </span>
         </div>
         <div style={{ ...summaryRow, borderTop: "1px solid #e5e7eb", paddingTop: "0.4rem", marginTop: "0.1rem" }}>
-          <span style={summaryLabel}>Valor total UF</span>
-          <span style={{ fontSize: "0.82rem", color: "#6b7280" }}>
+          <span style={summaryLabel}>Valor de la unidad</span>
+          <span style={summaryUnitValue}>
             USD {Number(priceUsd).toLocaleString("es-AR")}
+          </span>
+        </div>
+        <div style={summaryRow}>
+          <span style={summaryLabel}>Monto mínimo (5%)</span>
+          <span style={summaryMinAmount}>
+            USD {Math.ceil(priceUsd * 0.05).toLocaleString("es-AR")}
           </span>
         </div>
         {availablePct < 100 && mode !== "full" && (
@@ -260,6 +266,8 @@ const summary: React.CSSProperties = { background: "#f9fafb", borderRadius: 10, 
 const summaryRow: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "center" };
 const summaryLabel: React.CSSProperties = { fontSize: "0.8rem", color: "#6b7280" };
 const summaryAmount: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 800, color: "#111" };
+const summaryUnitValue: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 600, color: "#6b7280" };
+const summaryMinAmount: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, color: "#111" };
 
 const errorMsg: React.CSSProperties = { color: "#dc2626", fontSize: "0.82rem", margin: 0, background: "#fee2e2", borderRadius: 8, padding: "0.5rem 0.75rem" };
 const btnBuy: React.CSSProperties = {

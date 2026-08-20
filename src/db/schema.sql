@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS developments (
   projected_gain_pct  NUMERIC(6,2),
   amenities           TEXT[]      NOT NULL DEFAULT '{}',
   images              TEXT[]      NOT NULL DEFAULT '{}',
+  plan_images         TEXT[]      NOT NULL DEFAULT '{}',
+  interior_images     TEXT[]      NOT NULL DEFAULT '{}',
   featured            BOOLEAN     NOT NULL DEFAULT FALSE,
   visible             BOOLEAN     NOT NULL DEFAULT TRUE,
   zone_price_per_m2   NUMERIC(10,2),
