@@ -26,6 +26,7 @@ const CRUMBS: Record<string, string> = {
   new: "Nuevo",
   edit: "Editar",
   import: "Importar CSV",
+  featured: "Destacadas",
   profile: "Mi perfil",
 };
 

@@ -74,6 +74,8 @@ CREATE TABLE IF NOT EXISTS units (
   description           TEXT,
   images                TEXT[]        NOT NULL DEFAULT '{}',
   plan_images           TEXT[]        NOT NULL DEFAULT '{}',
+  featured              BOOLEAN       NOT NULL DEFAULT FALSE,
+  featured_order        INTEGER,
   group_duration_months INTEGER,
   created_at            TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
   updated_at            TIMESTAMPTZ   NOT NULL DEFAULT NOW()

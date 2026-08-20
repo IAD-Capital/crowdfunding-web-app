@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Building2, Home, Images, Users, TrendingUp, Settings,
   ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen,
-  Plus, List, GitFork,
+  Plus, List, GitFork, Star,
 } from "lucide-react";
 import NotificationBell, { type Notification } from "@/components/NotificationBell";
 import { useMobileSidebar } from "./MobileSidebarContext";
@@ -64,9 +64,9 @@ export default function AdminSidebar({ lang, notifications }: Props) {
       key: "units",
       label: "Departamentos",
       icon: <Home size={ICON} />,
-      direct: true,
       items: [
         { label: "Ver todos", href: `/${lang}/admin/units`, icon: <List size={SUB_ICON} /> },
+        { label: "Destacadas", href: `/${lang}/admin/units/featured`, icon: <Star size={SUB_ICON} /> },
       ],
     },
     {

@@ -40,6 +40,10 @@ export async function POST(req: NextRequest) {
     await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS plan_images TEXT[] NOT NULL DEFAULT '{}'`;
     results.push("units.plan_images: ok");
 
+    await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT FALSE`;
+    await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS featured_order INTEGER`;
+    results.push("units.featured/featured_order: ok");
+
     return NextResponse.json({ ok: true, results });
   } catch (err) {
     return NextResponse.json({ ok: false, error: String(err), results }, { status: 500 });
