@@ -10,9 +10,10 @@ import PasswordInput from "./PasswordInput";
 type Props = {
   t: Dictionary["auth"]["login"];
   lang: string;
+  next?: string;
 };
 
-export default function LoginForm({ t, lang }: Props) {
+export default function LoginForm({ t, lang, next }: Props) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,7 +41,10 @@ export default function LoginForm({ t, lang }: Props) {
     }
 
     setRedirecting(true);
-    const dest = data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
+    const dest =
+      next && next.startsWith("/")
+        ? next
+        : data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
     router.push(dest);
     router.refresh();
   }
@@ -116,7 +120,7 @@ export default function LoginForm({ t, lang }: Props) {
 
             <p style={footer}>
               {t.noAccount}{" "}
-              <Link href={`/${lang}/signup`} style={link}>{t.createOne}</Link>
+              <Link href={`/${lang}/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`} style={link}>{t.createOne}</Link>
             </p>
           </div>
         </div>
