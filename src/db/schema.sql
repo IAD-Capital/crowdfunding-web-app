@@ -96,11 +96,13 @@ CREATE TABLE IF NOT EXISTS investments (
 );
 
 CREATE TABLE IF NOT EXISTS app_settings (
-  id            SMALLINT      PRIMARY KEY DEFAULT 1,
-  bronze_from   NUMERIC(14,2) NOT NULL DEFAULT 5000,
-  silver_from   NUMERIC(14,2) NOT NULL DEFAULT 10000,
-  gold_from     NUMERIC(14,2) NOT NULL DEFAULT 25000,
-  platinum_from NUMERIC(14,2) NOT NULL DEFAULT 150000,
+  id                     SMALLINT      PRIMARY KEY DEFAULT 1,
+  bronze_from            NUMERIC(14,2) NOT NULL DEFAULT 5000,
+  silver_from            NUMERIC(14,2) NOT NULL DEFAULT 10000,
+  gold_from              NUMERIC(14,2) NOT NULL DEFAULT 25000,
+  platinum_from          NUMERIC(14,2) NOT NULL DEFAULT 150000,
+  coming_soon_enabled    BOOLEAN       NOT NULL DEFAULT FALSE,
+  coming_soon_expires_at TIMESTAMPTZ,
   CONSTRAINT app_settings_singleton CHECK (id = 1)
 );
 INSERT INTO app_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
