@@ -6,6 +6,7 @@ import PublicShell from "@/components/PublicShell";
 import ImageGallery from "@/components/admin/ImageGallery";
 import Link from "next/link";
 import Image from "next/image";
+import { getAmenityIcon } from "@/lib/icons";
 
 export default async function PublicDevelopmentPage({
   params,
@@ -79,9 +80,12 @@ export default async function PublicDevelopmentPage({
               <div style={amenSection}>
                 <h2 style={sectionTitle}>Amenities</h2>
                 <div style={amenRow}>
-                  {dev.amenities.map((a: string) => (
-                    <span key={a} style={amenChip}>{a}</span>
-                  ))}
+                  {dev.amenities.map((a: string) => {
+                    const Icon = getAmenityIcon(a);
+                    return (
+                      <span key={a} style={amenChip}><Icon size={14} /> {a}</span>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -235,7 +239,7 @@ const descClamp: React.CSSProperties = {
 };
 const amenSection: React.CSSProperties = {};
 const amenRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.4rem" };
-const amenChip: React.CSSProperties = { padding: "0.35rem 0.9rem", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 999, fontSize: "0.85rem", color: "#374151" };
+const amenChip: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.9rem", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 999, fontSize: "0.85rem", color: "#374151" };
 const gallerySection: React.CSSProperties = {};
 const unitsSection: React.CSSProperties = {};
 

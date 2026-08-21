@@ -9,6 +9,7 @@ import {
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { getTierDefs, unitQualifiesForTier, MIN_ENTRY_PCT, type TierThresholds, type TierKey } from "@/lib/investmentTiers";
+import { getAmenityIcon } from "@/lib/icons";
 
 export type Development = {
   id: number;
@@ -304,9 +305,12 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
         </div>
         {d.amenities?.length > 0 && (
           <div style={amenRow}>
-            {d.amenities.slice(0, 3).map((a) => (
-              <span key={a} style={amenChip}>{a}</span>
-            ))}
+            {d.amenities.slice(0, 3).map((a) => {
+              const Icon = getAmenityIcon(a);
+              return (
+                <span key={a} style={amenChip}><Icon size={12} /> {a}</span>
+              );
+            })}
             {d.amenities.length > 3 && (
               <span style={{ ...amenChip, color: "#9ca3af" }}>+{d.amenities.length - 3}</span>
             )}
@@ -523,7 +527,7 @@ const devAddr: React.CSSProperties = { fontSize: "0.82rem", color: "var(--c-text
 const devDeveloper: React.CSSProperties = { fontSize: "0.76rem", color: "var(--c-text-tertiary)", margin: 0, fontWeight: 600 };
 const devStats: React.CSSProperties = { display: "flex", gap: "0.5rem", flexWrap: "wrap" };
 const amenRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.25rem" };
-const amenChip: React.CSSProperties = { fontSize: "0.72rem", padding: "0.15rem 0.5rem", background: "var(--c-chip-bg)", color: "var(--c-ink)", borderRadius: 999, border: "1px solid var(--c-border)" };
+const amenChip: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.72rem", padding: "0.15rem 0.5rem", background: "var(--c-chip-bg)", color: "var(--c-ink)", borderRadius: 999, border: "1px solid var(--c-border)" };
 const devCta: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, color: "var(--c-accent)", marginTop: "auto", paddingTop: "0.5rem" };
 
 const unitLink: React.CSSProperties = { textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column" };

@@ -98,7 +98,8 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
   const featuredUnitRows = await db<(FeaturedUnit & { price_usd: string | number })[]>`
     SELECT u.id, u.identifier, u.images, u.price_usd, u.total_m2, u.rooms,
-           d.id AS development_id, d.name AS development_name, d.address AS development_address, d.slug AS development_slug
+           d.id AS development_id, d.name AS development_name, d.address AS development_address,
+           d.slug AS development_slug, d.amenities
     FROM units u
     JOIN developments d ON d.id = u.development_id
     WHERE u.featured = true AND d.status = 'active' AND d.visible = true AND u.status != 'sold'
