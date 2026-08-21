@@ -10,7 +10,7 @@ import Image from "next/image";
 import { FileCheck2, Eye, Activity, ShieldCheck } from "lucide-react";
 import db from "@/lib/db";
 import type { Development, Unit } from "@/components/CatalogSection";
-import type { TierThresholds } from "@/lib/investmentTiers";
+import { MIN_ENTRY_PCT, type TierThresholds } from "@/lib/investmentTiers";
 
 type DevRow = Omit<Development, "unit_count"> & { unit_count: number; completion_date: Date | string | null };
 type FeaturedRow = Omit<DevRow, "description"> & { zone_price_per_m2: number | string | null; slug?: string | null };
@@ -107,6 +107,11 @@ export default async function Home({ params }: { params: { lang: string } }) {
     LIMIT 8
   `;
   const featuredUnits8: FeaturedUnit[] = featuredUnitRows.map((u) => ({ ...u, price_usd: Number(u.price_usd) }));
+
+  const investableUnits = units.filter((u) => u.status !== "sold");
+  const minInvestUsd = investableUnits.length > 0
+    ? Math.min(...investableUnits.map((u) => Number(u.price_usd))) * MIN_ENTRY_PCT
+    : null;
   const featuredUnits = featuredDev ? units.filter((u) => u.development_id === featuredDev.id) : [];
   const featuredMinPrice = featuredUnits.length > 0
     ? Math.min(...featuredUnits.map((u) => Number(u.price_usd)))
@@ -173,7 +178,15 @@ export default async function Home({ params }: { params: { lang: string } }) {
       />
       {/* ─── Featured units ──────────────────────────── */}
       <div id="developments">
-        <FeaturedUnitsHero units={featuredUnits8} lang={lang} />
+        <FeaturedUnitsHero
+          units={featuredUnits8}
+          lang={lang}
+          minInvestUsd={minInvestUsd}
+          totalUnitsCount={units.length}
+          hasSession={!!session}
+          isInvestor={isInvestor}
+          fullName={session?.fullName}
+        />
       </div>
       
       <section style={hero}>
@@ -343,7 +356,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
 /* Hero */
 const hero: React.CSSProperties = {
   background: "var(--c-bg)", overflowX: "hidden",
-  marginTop: -92, paddingTop: "calc(72px + 92px)", paddingBottom: "2.5rem",
+  paddingTop: "2.5rem", paddingBottom: "2.5rem",
   paddingLeft: "1.5rem", paddingRight: "1.5rem",
 };
 const heroInner: React.CSSProperties = {
