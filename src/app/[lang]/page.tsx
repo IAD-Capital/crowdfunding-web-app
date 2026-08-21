@@ -171,6 +171,11 @@ export default async function Home({ params }: { params: { lang: string } }) {
       `,
         }}
       />
+      {/* ─── Featured units ──────────────────────────── */}
+      <div id="developments">
+        <FeaturedUnitsHero units={featuredUnits8} lang={lang} />
+      </div>
+      
       <section style={hero}>
         <div style={heroInner} className="hero-inner">
           <div style={heroText}>
@@ -281,11 +286,6 @@ export default async function Home({ params }: { params: { lang: string } }) {
           ))}
         </div>
       </section>
-
-      {/* ─── Featured units ──────────────────────────── */}
-      <div id="developments">
-        <FeaturedUnitsHero units={featuredUnits8} lang={lang} />
-      </div>
 
       {/* ─── How it works ───────────────────────────── */}
       <section id="how-it-works" style={howSection}>
