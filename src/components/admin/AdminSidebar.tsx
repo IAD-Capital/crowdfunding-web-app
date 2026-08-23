@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Building2, Home, Images, Users, TrendingUp, Settings,
   ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen,
-  Plus, List, GitFork, Star,
+  Plus, List, GitFork, Star, MessageCircle,
 } from "lucide-react";
 import NotificationBell, { type Notification } from "@/components/NotificationBell";
 import { useMobileSidebar } from "./MobileSidebarContext";
@@ -85,6 +85,16 @@ export default function AdminSidebar({ lang, notifications }: Props) {
       items: [
         { label: "Crear nueva", href: `/${lang}/admin/developers/new`, icon: <Plus size={SUB_ICON} /> },
         { label: "Ver todas", href: `/${lang}/admin/developers`, icon: <List size={SUB_ICON} /> },
+      ],
+    },
+    {
+      key: "chatbot",
+      label: "Chatbot",
+      icon: <MessageCircle size={ICON} />,
+      items: [
+        { label: "Crear nueva", href: `/${lang}/admin/chatbot/new`, icon: <Plus size={SUB_ICON} /> },
+        { label: "Ver todas", href: `/${lang}/admin/chatbot`, icon: <List size={SUB_ICON} /> },
+        { label: "Sin responder", href: `/${lang}/admin/chatbot/unanswered`, icon: <List size={SUB_ICON} /> },
       ],
     },
     {

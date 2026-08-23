@@ -103,6 +103,28 @@ CREATE TABLE IF NOT EXISTS app_settings (
   platinum_from          NUMERIC(14,2) NOT NULL DEFAULT 150000,
   coming_soon_enabled    BOOLEAN       NOT NULL DEFAULT FALSE,
   coming_soon_expires_at TIMESTAMPTZ,
+  chatbot_enabled        BOOLEAN       NOT NULL DEFAULT TRUE,
   CONSTRAINT app_settings_singleton CHECK (id = 1)
 );
 INSERT INTO app_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS chatbot_questions (
+  id         SERIAL PRIMARY KEY,
+  parent_id  INTEGER     REFERENCES chatbot_questions(id) ON DELETE CASCADE,
+  question   TEXT        NOT NULL,
+  answer     TEXT,
+  is_active  BOOLEAN     NOT NULL DEFAULT TRUE,
+  sort_order INTEGER     NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS chatbot_questions_parent_id_idx ON chatbot_questions(parent_id);
+
+CREATE TABLE IF NOT EXISTS chatbot_unanswered_questions (
+  id         SERIAL PRIMARY KEY,
+  question   TEXT        NOT NULL,
+  email      TEXT,
+  user_id    INTEGER     REFERENCES users(id) ON DELETE SET NULL,
+  status     TEXT        NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
