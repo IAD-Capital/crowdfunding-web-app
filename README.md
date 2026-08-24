@@ -77,3 +77,11 @@ Copy `.env.example` to `.env.local` and fill in the values before running.
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full checklist: required
 env vars, Supabase pooler vs. direct connection, image upload storage
 strategy, schema setup/reset scripts, and the investment tiers feature.
+
+---
+
+## Push notifications
+
+See [docs/PUSH_NOTIFICATIONS.md](docs/PUSH_NOTIFICATIONS.md) for the
+architecture, required VAPID env vars, how the client opt-in and admin
+broadcast work, and a manual testing checklist.
