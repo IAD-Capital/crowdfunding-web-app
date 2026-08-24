@@ -20,11 +20,13 @@ function getTransporter() {
   return transporter;
 }
 
-export async function sendMail(opts: { to: string; subject: string; html: string }) {
+export async function sendMail(
+  opts: { to: string; subject: string; html: string }
+): Promise<{ sent: boolean; error?: string }> {
   const t = getTransporter();
   if (!t) {
     console.warn("MAIL_USER/MAIL_PASSWORD is not set — skipping email send:", opts.subject);
-    return;
+    return { sent: false, error: "MAIL_USER/MAIL_PASSWORD no están configurados." };
   }
 
   try {
@@ -34,8 +36,10 @@ export async function sendMail(opts: { to: string; subject: string; html: string
       subject: opts.subject,
       html: opts.html,
     });
+    return { sent: true };
   } catch (err) {
     console.error("Failed to send email:", err);
+    return { sent: false, error: err instanceof Error ? err.message : "Error desconocido." };
   }
 }
 

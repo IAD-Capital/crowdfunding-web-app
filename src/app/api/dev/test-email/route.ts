@@ -13,15 +13,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing ?to=<email> query param" }, { status: 400 });
   }
 
-  await sendMail({
+  const result = await sendMail({
     to,
     subject: "Test email — Binova dev",
     html: `<p>This is a test email sent from the dev endpoint at ${new Date().toISOString()}.</p>`,
   });
 
   return NextResponse.json({
-    status: "ok",
+    status: result.sent ? "ok" : "error",
     to,
+    error: result.error,
     nodemailerConfigured: !!(process.env.MAIL_USER && process.env.MAIL_PASSWORD),
   });
 }
