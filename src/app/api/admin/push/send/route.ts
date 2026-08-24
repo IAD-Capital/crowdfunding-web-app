@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
-import webpush from "@/lib/webpush";
+import getWebpush from "@/lib/webpush";
 import { requireSuperAdmin } from "@/lib/requireAdmin";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
   }
 
   const subs = await db<Subscription[]>`SELECT endpoint, p256dh, auth FROM push_subscriptions`;
+  const webpush = getWebpush();
 
   const results = await Promise.allSettled(
     subs.map((sub) =>
