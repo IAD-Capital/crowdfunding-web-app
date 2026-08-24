@@ -2,6 +2,7 @@ import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import { Schibsted_Grotesk, Hanken_Grotesk } from "next/font/google";
 import { isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 
 const schibstedGrotesk = Schibsted_Grotesk({
   subsets: ["latin"],
@@ -29,6 +30,7 @@ export default function LangLayout({
       <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
       <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID || ""} />
       <VercelAnalytics />
+      <ServiceWorkerRegistrar />
     </html>
   );
 }

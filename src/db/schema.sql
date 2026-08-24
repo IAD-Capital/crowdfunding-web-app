@@ -128,3 +128,28 @@ CREATE TABLE IF NOT EXISTS chatbot_unanswered_questions (
   status     TEXT        NOT NULL DEFAULT 'pending',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id            SERIAL PRIMARY KEY,
+  user_id       INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  endpoint      TEXT        NOT NULL UNIQUE,
+  p256dh        TEXT        NOT NULL,
+  auth          TEXT        NOT NULL,
+  user_agent    TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(user_id);
+
+CREATE TABLE IF NOT EXISTS push_notifications (
+  id              SERIAL PRIMARY KEY,
+  title           TEXT        NOT NULL,
+  body            TEXT        NOT NULL,
+  url             TEXT,
+  sent_by         INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  recipient_count INTEGER     NOT NULL DEFAULT 0,
+  success_count   INTEGER     NOT NULL DEFAULT 0,
+  failure_count   INTEGER     NOT NULL DEFAULT 0,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_push_notifications_created_at ON push_notifications(created_at DESC);

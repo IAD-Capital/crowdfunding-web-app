@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Building2, Home, Images, Users, TrendingUp, Settings,
   ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen,
-  Plus, List, GitFork, Star, MessageCircle,
+  Plus, List, GitFork, Star, MessageCircle, Bell,
 } from "lucide-react";
 import NotificationBell, { type Notification } from "@/components/NotificationBell";
 import { useMobileSidebar } from "./MobileSidebarContext";
@@ -104,6 +104,15 @@ export default function AdminSidebar({ lang, notifications }: Props) {
       direct: true,
       items: [
         { label: "Ver inversiones", href: `/${lang}/admin/investments`, icon: <List size={SUB_ICON} /> },
+      ],
+    },
+    {
+      key: "notifications",
+      label: "Notificaciones",
+      icon: <Bell size={ICON} />,
+      direct: true,
+      items: [
+        { label: "Enviar notificación", href: `/${lang}/admin/notifications`, icon: <Bell size={SUB_ICON} /> },
       ],
     },
     {

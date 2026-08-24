@@ -1,0 +1,111 @@
+import db from "@/lib/db";
+import PushNotificationForm from "@/components/admin/PushNotificationForm";
+
+type Stats = { total: number; unique_users: number; anonymous: number };
+type SentNotification = {
+  id: number;
+  title: string;
+  body: string;
+  url: string | null;
+  recipient_count: number;
+  success_count: number;
+  failure_count: number;
+  created_at: string;
+  sent_by_name: string | null;
+};
+
+export default async function AdminNotificationsPage() {
+  const [[stats], history] = await Promise.all([
+    db<Stats[]>`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(DISTINCT user_id)::int AS unique_users,
+        COUNT(*) FILTER (WHERE user_id IS NULL)::int AS anonymous
+      FROM push_subscriptions
+    `,
+    db<SentNotification[]>`
+      SELECT
+        n.id, n.title, n.body, n.url, n.recipient_count, n.success_count, n.failure_count, n.created_at,
+        u.full_name AS sent_by_name
+      FROM push_notifications n
+      LEFT JOIN users u ON u.id = n.sent_by
+      ORDER BY n.created_at DESC
+      LIMIT 20
+    `,
+  ]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "-0.5rem" }}>Notificaciones</h1>
+
+      <div style={statsRow}>
+        <div style={statCard}>
+          <span style={statValue}>{stats?.total ?? 0}</span>
+          <span style={statLabel}>Dispositivos suscriptos</span>
+        </div>
+        <div style={statCard}>
+          <span style={statValue}>{stats?.unique_users ?? 0}</span>
+          <span style={statLabel}>Usuarios identificados</span>
+        </div>
+        <div style={statCard}>
+          <span style={statValue}>{stats?.anonymous ?? 0}</span>
+          <span style={statLabel}>Visitantes anónimos</span>
+        </div>
+      </div>
+
+      <PushNotificationForm />
+
+      <div style={historyWrap}>
+        <h2 style={historyTitle}>Historial de envíos</h2>
+        {history.length === 0 ? (
+          <p style={emptyText}>Todavía no se envió ninguna notificación.</p>
+        ) : (
+          <table style={table}>
+            <thead>
+              <tr>
+                <th style={th}>Fecha</th>
+                <th style={th}>Título</th>
+                <th style={th}>Mensaje</th>
+                <th style={th}>Enviado por</th>
+                <th style={th}>Resultado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((n) => (
+                <tr key={n.id}>
+                  <td style={td}>
+                    {new Date(n.created_at).toLocaleString("es-AR", {
+                      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+                    })}
+                  </td>
+                  <td style={td}>{n.title}</td>
+                  <td style={{ ...td, maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.body}</td>
+                  <td style={td}>{n.sent_by_name ?? "—"}</td>
+                  <td style={td}>
+                    {n.success_count}/{n.recipient_count} entregadas
+                    {n.failure_count > 0 ? ` (${n.failure_count} fallidas)` : ""}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const statsRow: React.CSSProperties = { display: "flex", gap: "1rem", flexWrap: "wrap" };
+const statCard: React.CSSProperties = {
+  background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12,
+  padding: "1.25rem 1.5rem", display: "flex", flexDirection: "column", gap: "0.25rem", minWidth: 180,
+};
+const statValue: React.CSSProperties = { fontSize: "1.75rem", fontWeight: 800, color: "#111" };
+const statLabel: React.CSSProperties = { fontSize: "0.8rem", color: "#6b7280", fontWeight: 600 };
+
+const historyWrap: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "1.5rem", overflowX: "auto" };
+const historyTitle: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" };
+const emptyText: React.CSSProperties = { fontSize: "0.85rem", color: "#6b7280" };
+const table: React.CSSProperties = { width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" };
+const th: React.CSSProperties = { textAlign: "left", padding: "0.5rem 0.75rem", borderBottom: "1px solid #e5e7eb", color: "#6b7280", fontWeight: 600, whiteSpace: "nowrap" };
+const td: React.CSSProperties = { padding: "0.6rem 0.75rem", borderBottom: "1px solid #f3f4f6", color: "#111" };

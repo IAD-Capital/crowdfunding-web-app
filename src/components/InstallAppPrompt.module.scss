@@ -33,6 +33,18 @@
   border-radius: 10px;
 }
 
+.iconCircle {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--c-accent-light);
+  color: var(--c-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .text {
   flex: 1;
   min-width: 0;
