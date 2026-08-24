@@ -1,7 +1,11 @@
 import Header from "./Header";
 import Footer from "./Footer";
 import ComingSoon from "./ComingSoon";
+<<<<<<< HEAD
 import ChatbotWidget from "./ChatbotWidget";
+=======
+import InstallAppPrompt from "./InstallAppPrompt";
+>>>>>>> 7384f17 (Make web works as PWA)
 import db from "@/lib/db";
 import { getSession } from "@/lib/session";
 import type { Locale } from "@/i18n";
@@ -39,7 +43,11 @@ export default async function PublicShell({
       <Header lang={lang} />
       <main style={{ flex: 1 }}>{children}</main>
       <Footer lang={lang} />
+<<<<<<< HEAD
       {(settings?.chatbot_enabled ?? true) && <ChatbotWidget userEmail={session?.email ?? null} />}
+=======
+      <InstallAppPrompt />
+>>>>>>> 7384f17 (Make web works as PWA)
     </div>
   );
 }

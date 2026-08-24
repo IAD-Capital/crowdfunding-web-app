@@ -1,0 +1,99 @@
+.banner {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 0.85rem 0.9rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(14, 23, 38, 0.16);
+  animation: slide-up 0.25s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+  border-radius: 10px;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: var(--c-text-secondary);
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+
+.inlineIcon {
+  display: inline;
+  vertical-align: -2px;
+  color: var(--c-accent);
+}
+
+.installBtn {
+  flex-shrink: 0;
+  background: var(--c-accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.installBtn:hover {
+  background: var(--c-accent-dark);
+}
+
+.closeBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: var(--c-text-tertiary);
+  cursor: pointer;
+}
+
+.closeBtn:hover {
+  background: var(--c-field-bg);
+  color: var(--c-ink);
+}
