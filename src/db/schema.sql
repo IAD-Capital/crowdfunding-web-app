@@ -153,3 +153,11 @@ CREATE TABLE IF NOT EXISTS push_notifications (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_push_notifications_created_at ON push_notifications(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS push_templates (
+  id         SERIAL PRIMARY KEY,
+  title      TEXT        NOT NULL,
+  body       TEXT        NOT NULL,
+  url        TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

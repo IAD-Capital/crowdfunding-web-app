@@ -75,6 +75,17 @@ export async function POST(req: NextRequest) {
     await db`CREATE INDEX IF NOT EXISTS idx_push_notifications_created_at ON push_notifications(created_at DESC)`;
     results.push("push_notifications table: ok");
 
+    await db`
+      CREATE TABLE IF NOT EXISTS push_templates (
+        id         SERIAL PRIMARY KEY,
+        title      TEXT        NOT NULL,
+        body       TEXT        NOT NULL,
+        url        TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+    results.push("push_templates table: ok");
+
     return NextResponse.json({ ok: true, results });
   } catch (err) {
     return NextResponse.json({ ok: false, error: String(err), results }, { status: 500 });

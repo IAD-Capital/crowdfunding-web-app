@@ -1,5 +1,5 @@
 import db from "@/lib/db";
-import PushNotificationForm from "@/components/admin/PushNotificationForm";
+import PushNotificationForm, { type PushTemplate } from "@/components/admin/PushNotificationForm";
 
 type Stats = { total: number; unique_users: number; anonymous: number };
 type SentNotification = {
@@ -15,7 +15,7 @@ type SentNotification = {
 };
 
 export default async function AdminNotificationsPage() {
-  const [[stats], history] = await Promise.all([
+  const [[stats], history, templates] = await Promise.all([
     db<Stats[]>`
       SELECT
         COUNT(*)::int AS total,
@@ -31,6 +31,9 @@ export default async function AdminNotificationsPage() {
       LEFT JOIN users u ON u.id = n.sent_by
       ORDER BY n.created_at DESC
       LIMIT 20
+    `,
+    db<PushTemplate[]>`
+      SELECT id, title, body, url FROM push_templates ORDER BY created_at DESC
     `,
   ]);
 
@@ -53,7 +56,7 @@ export default async function AdminNotificationsPage() {
         </div>
       </div>
 
-      <PushNotificationForm />
+      <PushNotificationForm initialTemplates={templates} />
 
       <div style={historyWrap}>
         <h2 style={historyTitle}>Historial de envíos</h2>
