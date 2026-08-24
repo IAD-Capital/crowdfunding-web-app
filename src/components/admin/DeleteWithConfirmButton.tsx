@@ -9,9 +9,10 @@ type Props = {
   confirmText: string;
   redirectTo?: string;
   label?: string;
+  menuItem?: boolean;
 };
 
-export default function DeleteWithConfirmButton({ deleteUrl, confirmText, redirectTo, label = "Eliminar" }: Props) {
+export default function DeleteWithConfirmButton({ deleteUrl, confirmText, redirectTo, label = "Eliminar", menuItem = false }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
@@ -42,7 +43,7 @@ export default function DeleteWithConfirmButton({ deleteUrl, confirmText, redire
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={styles.trigger}>
+      <button type="button" onClick={() => setOpen(true)} className={menuItem ? styles.menuItemTrigger : styles.trigger}>
         {label}
       </button>
 

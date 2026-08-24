@@ -6,6 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import DuplicateButton from "./DuplicateButton";
 import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
+import ActionsMenu from "./ActionsMenu";
+import styles from "./ResponsiveTable.module.scss";
 
 export type UnitRow = {
   id: number;
@@ -140,8 +142,8 @@ export default function UnitsView({
       )}
 
       {view === "table" ? (
-        <div style={tableWrap}>
-          <table style={table}>
+        <div style={tableWrap} className={styles.wrap}>
+          <table style={table} className={styles.table}>
             <thead>
               <tr>
                 <th style={th}>
@@ -156,44 +158,49 @@ export default function UnitsView({
             <tbody>
               {units.map((u) => (
                 <tr key={u.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                  <td style={td}>
+                  <td style={td} data-label="">
                     <input type="checkbox" checked={selected.has(u.id)} onChange={() => toggleOne(u.id)} />
                   </td>
                   {showDevelopment && (
-                    <td style={td}>
+                    <td style={td} data-label={developmentLabel}>
                       <Link href={`/${lang}/admin/developments/${u.development_id}`} style={devLink}>
                         {u.development_name}
                       </Link>
                     </td>
                   )}
-                  <td style={td}><strong>{u.identifier}</strong></td>
-                  <td style={td}>{u.floor ?? "—"}</td>
-                  <td style={td}>{u.total_m2 ?? "—"}</td>
-                  <td style={td}>{u.rooms ?? "—"}</td>
-                  <td style={td}>{fmtUsd(u.price_usd)}</td>
-                  <td style={td}>
+                  <td style={td} data-label="ID"><strong>{u.identifier}</strong></td>
+                  <td style={td} data-label={floorLabel}>{u.floor ?? "—"}</td>
+                  <td style={td} data-label="m² tot">{u.total_m2 ?? "—"}</td>
+                  <td style={td} data-label={roomsLabel}>{u.rooms ?? "—"}</td>
+                  <td style={td} data-label={priceLabel}>{fmtUsd(u.price_usd)}</td>
+                  <td style={td} data-label="Estado">
                     <span style={statusBadge(u.status)}>
                       {statusT[u.status as keyof StatusT] ?? u.status}
                     </span>
                   </td>
-                  <td style={td}>{u.images?.length ?? 0}</td>
-                  <td style={td}><InvestmentLinks ids={u.investment_ids} lang={lang} /></td>
-                  <td style={{ ...td, fontSize: "0.78rem", color: "#9ca3af", whiteSpace: "nowrap" }}>
+                  <td style={td} data-label="Fotos">{u.images?.length ?? 0}</td>
+                  <td style={td} data-label="Inversiones"><InvestmentLinks ids={u.investment_ids} lang={lang} /></td>
+                  <td style={{ ...td, fontSize: "0.78rem", color: "#9ca3af", whiteSpace: "nowrap" }} data-label="Actualizado">
                     {fmtUnitDate(u.updated_at) ?? "—"}
                   </td>
-                  <td style={td}>
-                    <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                      <Link href={`/${lang}/admin/developments/${u.development_id}/units/${u.id}`} style={linkPrimary}>Ver</Link>
-                      <Link href={`/${lang}/admin/developments/${u.development_id}/units/${u.id}/edit`} style={linkSecondary}>Editar</Link>
+                  <td style={td} data-label="">
+                    <ActionsMenu
+                      actions={[
+                        { label: "Ver", href: `/${lang}/admin/developments/${u.development_id}/units/${u.id}` },
+                        { label: "Editar", href: `/${lang}/admin/developments/${u.development_id}/units/${u.id}/edit` },
+                      ]}
+                    >
                       <DuplicateButton
+                        menuItem
                         duplicateUrl={`/api/admin/units/${u.id}/duplicate`}
                         redirectBase={`/${lang}/admin/developments/${u.development_id}/units`}
                       />
                       <DeleteWithConfirmButton
+                        menuItem
                         deleteUrl={`/api/admin/units/${u.id}`}
                         confirmText={u.identifier}
                       />
-                    </div>
+                    </ActionsMenu>
                   </td>
                 </tr>
               ))}
@@ -330,13 +337,11 @@ const toggleBtn = (active: boolean): React.CSSProperties => ({
 });
 
 /* Table */
-const tableWrap: React.CSSProperties = { background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" };
+const tableWrap: React.CSSProperties = { background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflowX: "auto" };
 const table: React.CSSProperties = { width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" };
 const th: React.CSSProperties = { padding: "0.65rem 1rem", textAlign: "left", background: "#f9fafb", fontWeight: 600, fontSize: "0.8rem", color: "#6b7280" };
 const td: React.CSSProperties = { padding: "0.65rem 1rem", color: "#111" };
 const devLink: React.CSSProperties = { color: "#374151", textDecoration: "none", fontWeight: 500 };
-const linkPrimary: React.CSSProperties = { color: "#111", fontSize: "0.8rem", fontWeight: 600 };
-const linkSecondary: React.CSSProperties = { color: "#6b7280", fontSize: "0.8rem" };
 
 /* Cards */
 const cardGrid: React.CSSProperties = {

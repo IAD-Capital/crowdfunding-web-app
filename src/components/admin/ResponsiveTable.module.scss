@@ -1,0 +1,74 @@
+// Shared "responsive table" treatment for admin data tables: once the
+// wrapper is too narrow for columns to fit, each row stops being a table
+// row and stacks into label/value lines instead — no horizontal scrolling
+// needed. Cells opt in with a `data-label` attribute; a `data-label` of ""
+// (avatars, checkboxes, the actions column) renders with no label.
+//
+// Uses a container query (scoped to .wrap's own rendered width), not a
+// viewport media query — the admin sidebar eats a fixed ~240px, so a table
+// can be too narrow to fit its columns well before the *viewport* hits any
+// particular breakpoint. A media query would miss that squeeze entirely.
+.wrap {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+@container (max-width: 640px) {
+  .table thead {
+    display: none;
+  }
+
+  .table,
+  .table tbody,
+  .table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .table tr {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .table tr:last-child {
+    border-bottom: none;
+  }
+
+  .table td {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.3rem 0 !important;
+    border: none !important;
+    text-align: right;
+    white-space: normal !important;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    text-align: left;
+  }
+
+  .table td[data-label=""] {
+    justify-content: flex-end;
+  }
+
+  .table td[data-label=""]::before {
+    display: none;
+  }
+}

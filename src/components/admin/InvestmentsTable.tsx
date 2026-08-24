@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import ActionsMenu from "./ActionsMenu";
+import styles from "./ResponsiveTable.module.scss";
 
 type Investment = {
   id: number;
@@ -325,8 +327,8 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
 
             {/* Investor rows */}
             {!isCollapsed && (
-              <div style={tableWrap}>
-                <table style={table}>
+              <div style={tableWrap} className={styles.wrap}>
+                <table style={table} className={styles.table}>
                   <thead>
                     <tr>
                       {["Inversor", "%", "Monto", "Estado", "Fecha", ""].map((h) => (
@@ -344,7 +346,7 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
                       return (
                         <tr id={`investment-${inv.id}`} key={inv.id} style={isEditing ? trEditing : isPendingApproval ? trPendingApproval : hasPendingRemoval ? trPendingRemoval : tr}>
                           {/* Investor */}
-                          <td style={td}>
+                          <td style={td} data-label="">
                             <div style={userCell}>
                               <div style={avatarWrap}>
                                 {inv.avatar ? (
@@ -361,17 +363,17 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
                           </td>
 
                           {/* Percentage */}
-                          <td style={{ ...td, textAlign: "center" }}>
+                          <td style={{ ...td, textAlign: "center" }} data-label="%">
                             <span style={pctBadge}>{inv.percentage}%</span>
                           </td>
 
                           {/* Amount */}
-                          <td style={td}>
+                          <td style={td} data-label="Monto">
                             <p style={amountText}>{fmtUsd(inv.amount_usd)}</p>
                           </td>
 
                           {/* Status */}
-                          <td style={td}>
+                          <td style={td} data-label="Estado">
                             {isEditing ? (
                               <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} style={selectInput}>
                                 {STATUS_OPTS.map((s) => (
@@ -386,35 +388,41 @@ export default function InvestmentsTable({ investments, lang }: { investments: I
                           </td>
 
                           {/* Date */}
-                          <td style={{ ...td, color: "#9ca3af", fontSize: "0.78rem" }}>
+                          <td style={{ ...td, color: "#9ca3af", fontSize: "0.78rem" }} data-label="Fecha">
                             {fmtDate(inv.created_at)}
                           </td>
 
                           {/* Actions */}
-                          <td style={{ ...td, textAlign: "right" }}>
+                          <td style={{ ...td, textAlign: "right" }} data-label="">
                             {isEditing ? (
                               <div style={actionRow}>
                                 <button style={btnSave} onClick={() => saveEdit(inv.id)} disabled={isPending}>Guardar</button>
                                 <button style={btnCancel} onClick={() => setEditingId(null)}>Cancelar</button>
                               </div>
                             ) : isPendingApproval ? (
-                              <div style={actionRow}>
-                                <button style={btnApprove} onClick={() => approveInvestment(inv.id)} disabled={isPending}>Aprobar</button>
-                                <button style={btnReject} onClick={() => rejectInvestment(inv.id)} disabled={isPending}>Rechazar</button>
-                              </div>
+                              <ActionsMenu
+                                actions={[
+                                  { label: "Aprobar", onClick: () => approveInvestment(inv.id), disabled: isPending },
+                                  { label: "Rechazar", onClick: () => rejectInvestment(inv.id), disabled: isPending, variant: "danger" },
+                                ]}
+                              />
                             ) : hasPendingRemoval ? (
-                              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.3rem" }}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.5rem" }}>
                                 <span style={removalLabel}>Remoción solicitada</span>
-                                <div style={actionRow}>
-                                  <button style={btnApprove} onClick={() => approveRemoval(inv.id)} disabled={isPending}>Aprobar</button>
-                                  <button style={btnReject} onClick={() => rejectRemoval(inv.id)} disabled={isPending}>Rechazar</button>
-                                </div>
+                                <ActionsMenu
+                                  actions={[
+                                    { label: "Aprobar remoción", onClick: () => approveRemoval(inv.id), disabled: isPending },
+                                    { label: "Rechazar remoción", onClick: () => rejectRemoval(inv.id), disabled: isPending, variant: "danger" },
+                                  ]}
+                                />
                               </div>
                             ) : (
-                              <div style={actionRow}>
-                                <button style={btnEdit} onClick={() => startEdit(inv)}>Editar</button>
-                                <button style={btnDelete} onClick={() => deleteInv(inv.id)}>Eliminar</button>
-                              </div>
+                              <ActionsMenu
+                                actions={[
+                                  { label: "Editar", onClick: () => startEdit(inv) },
+                                  { label: "Eliminar", onClick: () => deleteInv(inv.id), variant: "danger" },
+                                ]}
+                              />
                             )}
                           </td>
                         </tr>
@@ -445,15 +453,17 @@ const groupCard: React.CSSProperties = { background: "#fff", border: "1px solid 
 const groupHeader: React.CSSProperties = {
   width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
   padding: "1rem 1.25rem", background: "none", border: "none", cursor: "pointer",
-  gap: "1.5rem", textAlign: "left",
+  gap: "1rem", textAlign: "left", flexWrap: "wrap",
 };
-const groupHeaderLeft: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem", flex: 1, minWidth: 0 };
-const groupHeaderRight: React.CSSProperties = { display: "flex", alignItems: "center", gap: "1.5rem", flexShrink: 0 };
-const groupTitle: React.CSSProperties = { fontSize: "0.95rem", fontWeight: 800, color: "#111", display: "flex", alignItems: "center", gap: "0.5rem" };
+const groupHeaderLeft: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem", flex: 1, minWidth: 220 };
+const groupHeaderRight: React.CSSProperties = {
+  display: "flex", alignItems: "center", gap: "1.5rem", flexWrap: "wrap", justifyContent: "flex-end",
+};
+const groupTitle: React.CSSProperties = { fontSize: "0.95rem", fontWeight: 800, color: "#111", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" };
 const groupSub: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.1rem" };
-const groupStats: React.CSSProperties = { display: "flex", gap: "1.25rem" };
+const groupStats: React.CSSProperties = { display: "flex", gap: "1.25rem", flexWrap: "wrap" };
 const pendingPill: React.CSSProperties = {
-  fontSize: "0.65rem", fontWeight: 700, padding: "0.15rem 0.5rem",
+  fontSize: "0.65rem", fontWeight: 700, padding: "0.15rem 0.5rem", whiteSpace: "nowrap", flexShrink: 0,
   background: "#fffbeb", color: "#92400e", border: "1px solid #fde68a", borderRadius: 999,
 };
 const progressBar: React.CSSProperties = { width: 160, height: 6, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" };
@@ -471,7 +481,7 @@ const tr: React.CSSProperties = { borderBottom: "1px solid #f9fafb" };
 const trEditing: React.CSSProperties = { ...tr, background: "#f0f9ff" };
 const trPendingRemoval: React.CSSProperties = { ...tr, background: "#fffbeb" };
 const trPendingApproval: React.CSSProperties = { ...tr, background: "#fefce8" };
-const td: React.CSSProperties = { padding: "0.75rem 1rem", verticalAlign: "middle" };
+const td: React.CSSProperties = { padding: "0.75rem 1rem", verticalAlign: "middle", whiteSpace: "nowrap" };
 
 const userCell: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.6rem" };
 const avatarWrap: React.CSSProperties = { position: "relative", width: 30, height: 30, borderRadius: "50%", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" };
@@ -486,13 +496,9 @@ const statusBadge: React.CSSProperties = { padding: "0.2rem 0.55rem", borderRadi
 const selectInput: React.CSSProperties = { padding: "0.3rem 0.5rem", border: "1px solid #d1d5db", borderRadius: 6, fontSize: "0.82rem" };
 
 const actionRow: React.CSSProperties = { display: "flex", gap: "0.4rem", justifyContent: "flex-end" };
-const btnEdit: React.CSSProperties = { padding: "0.3rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 6, background: "#fff", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 };
 const btnSave: React.CSSProperties = { padding: "0.3rem 0.75rem", border: "none", borderRadius: 6, background: "#111", color: "#fff", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 };
 const btnCancel: React.CSSProperties = { padding: "0.3rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 6, background: "#fff", cursor: "pointer", fontSize: "0.78rem" };
-const btnDelete: React.CSSProperties = { padding: "0.3rem 0.75rem", border: "none", borderRadius: 6, background: "#fee2e2", color: "#991b1b", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 };
 const removalLabel: React.CSSProperties = { fontSize: "0.72rem", fontWeight: 700, color: "#92400e" };
-const btnApprove: React.CSSProperties = { padding: "0.3rem 0.65rem", border: "none", borderRadius: 6, background: "#dc2626", color: "#fff", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700 };
-const btnReject: React.CSSProperties = { padding: "0.3rem 0.65rem", border: "1px solid #d1d5db", borderRadius: 6, background: "#fff", color: "#374151", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 };
 
 const empty: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", padding: "4rem 2rem", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12 };
 const errorBanner: React.CSSProperties = { background: "#fee2e2", color: "#991b1b", padding: "0.6rem 1rem", borderRadius: 8, fontSize: "0.85rem", marginBottom: "1rem" };

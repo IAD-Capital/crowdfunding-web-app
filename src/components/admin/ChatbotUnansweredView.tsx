@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ActionsMenu from "./ActionsMenu";
 
 export type UnansweredQuestion = {
   id: number;
@@ -80,22 +80,20 @@ export default function ChatbotUnansweredView({ items, lang }: Props) {
                 {item.status === "pending" ? "Pendiente" : "Resuelta"}
               </span>
 
-              <div style={rowActions}>
-                <Link
-                  href={`/${lang}/admin/chatbot/new?prefill=${encodeURIComponent(item.question)}&fromUnanswered=${item.id}`}
-                  style={promoteLink}
-                >
-                  Crear pregunta desde esta
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => dismiss(item.id)}
-                  disabled={deletingId === item.id}
-                  style={dismissBtn}
-                >
-                  {deletingId === item.id ? "…" : "Descartar"}
-                </button>
-              </div>
+              <ActionsMenu
+                actions={[
+                  {
+                    label: "Crear pregunta desde esta",
+                    href: `/${lang}/admin/chatbot/new?prefill=${encodeURIComponent(item.question)}&fromUnanswered=${item.id}`,
+                  },
+                  {
+                    label: deletingId === item.id ? "Descartando…" : "Descartar",
+                    onClick: () => dismiss(item.id),
+                    disabled: deletingId === item.id,
+                    variant: "danger",
+                  },
+                ]}
+              />
             </div>
           ))}
         </div>
@@ -116,7 +114,7 @@ const tabBtn: React.CSSProperties = {
 const tabBtnActive: React.CSSProperties = { background: "#eff3ff", color: "#1b4de0", borderColor: "#c7d7ff" };
 const list: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.75rem" };
 const row: React.CSSProperties = {
-  display: "flex", alignItems: "flex-start", gap: "1rem",
+  display: "flex", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap",
   background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "1rem",
 };
 const rowContent: React.CSSProperties = { flex: 1, minWidth: 0 };
@@ -127,11 +125,3 @@ const badge: React.CSSProperties = {
 };
 const badgePending: React.CSSProperties = { background: "#fffbeb", color: "#92400e" };
 const badgeResolved: React.CSSProperties = { background: "#eaf7f0", color: "#0e9f6e" };
-const rowActions: React.CSSProperties = {
-  display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem", flexShrink: 0,
-};
-const promoteLink: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 600, color: "#1b4de0", textDecoration: "none", whiteSpace: "nowrap" };
-const dismissBtn: React.CSSProperties = {
-  fontSize: "0.78rem", fontWeight: 600, color: "#dc2626", background: "none",
-  border: "none", cursor: "pointer", padding: 0,
-};

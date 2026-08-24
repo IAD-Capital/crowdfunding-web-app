@@ -1,5 +1,6 @@
 import db from "@/lib/db";
 import PushNotificationForm, { type PushTemplate } from "@/components/admin/PushNotificationForm";
+import styles from "@/components/admin/ResponsiveTable.module.scss";
 
 type Stats = { total: number; unique_users: number; anonymous: number };
 type SentNotification = {
@@ -58,12 +59,12 @@ export default async function AdminNotificationsPage() {
 
       <PushNotificationForm initialTemplates={templates} />
 
-      <div style={historyWrap}>
+      <div style={historyWrap} className={styles.wrap}>
         <h2 style={historyTitle}>Historial de envíos</h2>
         {history.length === 0 ? (
           <p style={emptyText}>Todavía no se envió ninguna notificación.</p>
         ) : (
-          <table style={table}>
+          <table style={table} className={styles.table}>
             <thead>
               <tr>
                 <th style={th}>Fecha</th>
@@ -76,15 +77,15 @@ export default async function AdminNotificationsPage() {
             <tbody>
               {history.map((n) => (
                 <tr key={n.id}>
-                  <td style={td}>
+                  <td style={td} data-label="Fecha">
                     {new Date(n.created_at).toLocaleString("es-AR", {
                       day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
                     })}
                   </td>
-                  <td style={td}>{n.title}</td>
-                  <td style={{ ...td, maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.body}</td>
-                  <td style={td}>{n.sent_by_name ?? "—"}</td>
-                  <td style={td}>
+                  <td style={td} data-label="Título">{n.title}</td>
+                  <td style={{ ...td, maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} data-label="Mensaje">{n.body}</td>
+                  <td style={td} data-label="Enviado por">{n.sent_by_name ?? "—"}</td>
+                  <td style={td} data-label="Resultado">
                     {n.success_count}/{n.recipient_count} entregadas
                     {n.failure_count > 0 ? ` (${n.failure_count} fallidas)` : ""}
                   </td>

@@ -9,6 +9,20 @@
   cursor: pointer;
 }
 
+.menuItemTrigger {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.85rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #dc2626;
+  white-space: nowrap;
+}
+
 .overlay {
   position: fixed;
   inset: 0;

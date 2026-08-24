@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUp, ArrowDown, ArrowLeft } from "lucide-react";
 import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
+import ActionsMenu from "./ActionsMenu";
 
 export type ChatbotQuestion = {
   id: number;
@@ -113,18 +114,21 @@ export default function ChatbotQuestionsView({ questions: initial, lang, parentI
                 {q.is_active ? "Activa" : "Inactiva"}
               </span>
 
-              <div style={rowActions}>
-                <Link href={`/${lang}/admin/chatbot/${q.id}/children`} style={editLink}>
-                  {q.child_count > 0 ? `Ver opciones (${q.child_count})` : "+ Agregar opciones"}
-                </Link>
-                <Link href={`/${lang}/admin/chatbot/${q.id}/edit`} style={editLink}>
-                  Editar
-                </Link>
+              <ActionsMenu
+                actions={[
+                  {
+                    label: q.child_count > 0 ? `Ver opciones (${q.child_count})` : "+ Agregar opciones",
+                    href: `/${lang}/admin/chatbot/${q.id}/children`,
+                  },
+                  { label: "Editar", href: `/${lang}/admin/chatbot/${q.id}/edit` },
+                ]}
+              >
                 <DeleteWithConfirmButton
+                  menuItem
                   deleteUrl={`/api/admin/chatbot/questions/${q.id}`}
                   confirmText={q.question.slice(0, 60)}
                 />
-              </div>
+              </ActionsMenu>
             </div>
           ))}
         </div>
@@ -143,7 +147,7 @@ const header: React.CSSProperties = {
 const pageTitle: React.CSSProperties = { fontSize: "1.4rem", fontWeight: 700 };
 const list: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.75rem" };
 const row: React.CSSProperties = {
-  display: "flex", alignItems: "flex-start", gap: "1rem",
+  display: "flex", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap",
   background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "1rem",
 };
 const reorderCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.25rem", flexShrink: 0 };
@@ -163,8 +167,6 @@ const badge: React.CSSProperties = {
 };
 const badgeActive: React.CSSProperties = { background: "#eaf7f0", color: "#0e9f6e" };
 const badgeInactive: React.CSSProperties = { background: "#f3f4f6", color: "#9ca3af" };
-const rowActions: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 };
-const editLink: React.CSSProperties = { fontSize: "0.85rem", fontWeight: 600, color: "#1b4de0", textDecoration: "none", whiteSpace: "nowrap" };
 const btnPrimary: React.CSSProperties = {
   padding: "0.6rem 1.25rem", background: "#111", color: "#fff",
   border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: "0.9rem", textDecoration: "none",
