@@ -17,6 +17,12 @@
   animation: slide-up 0.25s ease-out;
 }
 
+@media (max-width: 640px) {
+  .banner {
+    bottom: 6rem;
+  }
+}
+
 @keyframes slide-up {
   from {
     opacity: 0;

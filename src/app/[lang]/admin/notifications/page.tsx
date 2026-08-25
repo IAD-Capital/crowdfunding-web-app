@@ -3,6 +3,14 @@ import PushNotificationForm, { type PushTemplate } from "@/components/admin/Push
 import styles from "@/components/admin/ResponsiveTable.module.scss";
 
 type Stats = { total: number; unique_users: number; anonymous: number };
+type Subscriber = {
+  id: number;
+  user_agent: string | null;
+  user_full_name: string | null;
+  user_email: string | null;
+  created_at: string;
+  last_seen_at: string;
+};
 type SentNotification = {
   id: number;
   title: string;
@@ -15,14 +23,51 @@ type SentNotification = {
   sent_by_name: string | null;
 };
 
+function describeDevice(ua: string | null): string {
+  if (!ua) return "—";
+
+  const os = /iphone|ipad|ipod/i.test(ua)
+    ? "iOS"
+    : /android/i.test(ua)
+      ? "Android"
+      : /mac os x/i.test(ua)
+        ? "macOS"
+        : /windows/i.test(ua)
+          ? "Windows"
+          : /linux/i.test(ua)
+            ? "Linux"
+            : "Otro SO";
+
+  const browser = /edg\//i.test(ua)
+    ? "Edge"
+    : /chrome\//i.test(ua)
+      ? "Chrome"
+      : /firefox\//i.test(ua)
+        ? "Firefox"
+        : /version\/.*safari/i.test(ua)
+          ? "Safari"
+          : "Otro navegador";
+
+  return `${browser} · ${os}`;
+}
+
 export default async function AdminNotificationsPage() {
-  const [[stats], history, templates] = await Promise.all([
+  const [[stats], subscribers, history, templates] = await Promise.all([
     db<Stats[]>`
       SELECT
         COUNT(*)::int AS total,
         COUNT(DISTINCT user_id)::int AS unique_users,
         COUNT(*) FILTER (WHERE user_id IS NULL)::int AS anonymous
       FROM push_subscriptions
+    `,
+    db<Subscriber[]>`
+      SELECT
+        s.id, s.user_agent, s.created_at, s.last_seen_at,
+        u.full_name AS user_full_name, u.email AS user_email
+      FROM push_subscriptions s
+      LEFT JOIN users u ON u.id = s.user_id
+      ORDER BY s.last_seen_at DESC
+      LIMIT 50
     `,
     db<SentNotification[]>`
       SELECT
@@ -58,6 +103,44 @@ export default async function AdminNotificationsPage() {
       </div>
 
       <PushNotificationForm initialTemplates={templates} />
+
+      <div style={historyWrap} className={styles.wrap}>
+        <h2 style={historyTitle}>Dispositivos suscriptos</h2>
+        {subscribers.length === 0 ? (
+          <p style={emptyText}>Todavía no hay dispositivos suscriptos.</p>
+        ) : (
+          <table style={table} className={styles.table}>
+            <thead>
+              <tr>
+                <th style={th}>Dispositivo</th>
+                <th style={th}>Usuario</th>
+                <th style={th}>Alta</th>
+                <th style={th}>Última actividad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {subscribers.map((sub) => (
+                <tr key={sub.id}>
+                  <td style={td} data-label="Dispositivo">{describeDevice(sub.user_agent)}</td>
+                  <td style={td} data-label="Usuario">
+                    {sub.user_full_name ? `${sub.user_full_name} (${sub.user_email})` : "Anónimo"}
+                  </td>
+                  <td style={td} data-label="Alta">
+                    {new Date(sub.created_at).toLocaleString("es-AR", {
+                      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+                    })}
+                  </td>
+                  <td style={td} data-label="Última actividad">
+                    {new Date(sub.last_seen_at).toLocaleString("es-AR", {
+                      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+                    })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
 
       <div style={historyWrap} className={styles.wrap}>
         <h2 style={historyTitle}>Historial de envíos</h2>
