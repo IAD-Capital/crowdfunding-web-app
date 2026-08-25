@@ -110,15 +110,6 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
         </div>
 
         <div style={carouselCol}>
-          <div style={nav} className="featured-units-nav">
-            <button type="button" style={navBtn} onClick={() => scrollBy(-1)} aria-label="Anterior">
-              <ChevronLeft size={18} />
-            </button>
-            <button type="button" style={navBtn} onClick={() => scrollBy(1)} aria-label="Siguiente">
-              <ChevronRight size={18} />
-            </button>
-          </div>
-
           <div style={track} className="featured-units-track" ref={trackRef}>
             {units.map((u) => (
               <Link
@@ -180,6 +171,15 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
               </Link>
             ))}
           </div>
+
+          <div style={nav} className="featured-units-nav">
+            <button type="button" style={navBtn} onClick={() => scrollBy(-1)} aria-label="Anterior">
+              <ChevronLeft size={18} />
+            </button>
+            <button type="button" style={navBtn} onClick={() => scrollBy(1)} aria-label="Siguiente">
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -228,7 +228,7 @@ const trustCheck: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center",
   color: "var(--c-positive)", fontSize: "0.65rem", fontWeight: 800,
 };
-const nav: React.CSSProperties = { display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginBottom: "0.85rem" };
+const nav: React.CSSProperties = { display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.85rem" };
 const navBtn: React.CSSProperties = {
   width: 40, height: 40, borderRadius: "50%", border: "1px solid var(--c-border)",
   background: "var(--c-surface)", color: "var(--c-ink)", display: "flex", alignItems: "center",
