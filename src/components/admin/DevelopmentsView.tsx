@@ -24,7 +24,7 @@ export type Development = {
 
 function fmtDate(d?: string) {
   if (!d) return null;
-  return new Date(d).toLocaleString("es-AR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return new Date(d).toLocaleString("es-AR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" });
 }
 
 type T = {

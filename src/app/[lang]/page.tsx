@@ -5,6 +5,7 @@ import CatalogSection from "@/components/CatalogSection";
 import InvestmentSimulator from "@/components/InvestmentSimulator";
 import AuthCTASection from "@/components/AuthCTASection";
 import FeaturedUnitsHero, { type FeaturedUnit } from "@/components/FeaturedUnitsHero";
+import ScrollReveal from "@/components/ScrollReveal";
 import Link from "next/link";
 import Image from "next/image";
 import { FileCheck2, Eye, Activity, ShieldCheck } from "lucide-react";
@@ -168,7 +169,8 @@ export default async function Home({ params }: { params: { lang: string } }) {
         @media (max-width: 760px) {
           .stats-strip { grid-template-columns: 1fr 1fr !important; }
           .stats-strip > div:nth-child(2) { border-right: none !important; }
-          .trust-grid { grid-template-columns: 1fr 1fr !important; }
+          .trust-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+          .trust-card { padding: 2rem 1.6rem !important; }
           .how-grid { grid-template-columns: 1fr !important; }
           .hero-chip-return { top: -12px !important; right: 8px !important; }
           .hero-chip-min { bottom: -12px !important; left: 8px !important; }
@@ -283,19 +285,23 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
       {/* ─── Trust band ──────────────────────────────── */}
       <section style={trustSection}>
-        <div style={trustHeader}>
-          <div style={eyebrow}>Por qué IAD Capital</div>
-          <h2 style={trustTitle}>Tu inversión, protegida en cada paso</h2>
-        </div>
+        <ScrollReveal>
+          <div style={trustHeader}>
+            <div style={eyebrow}>Por qué IAD Capital</div>
+            <h2 style={trustTitle}>Tu inversión, protegida en cada paso</h2>
+          </div>
+        </ScrollReveal>
         <div style={trustGrid} className="trust-grid">
-          {TRUST_ITEMS.map(({ Icon, title, desc }) => (
-            <div key={title} style={trustCard}>
-              <div style={trustIconWrap}>
-                <Icon size={20} color="var(--c-accent)" strokeWidth={2} />
+          {TRUST_ITEMS.map(({ Icon, title, desc }, i) => (
+            <ScrollReveal key={title} delay={i * 140}>
+              <div style={trustCard} className="trust-card">
+                <div style={trustIconWrap}>
+                  <Icon size={20} color="var(--c-accent)" strokeWidth={2} />
+                </div>
+                <h3 style={trustCardTitle}>{title}</h3>
+                <p style={trustCardDesc}>{desc}</p>
               </div>
-              <h3 style={trustCardTitle}>{title}</h3>
-              <p style={trustCardDesc}>{desc}</p>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </section>
