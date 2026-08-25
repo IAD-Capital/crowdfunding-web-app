@@ -6,6 +6,7 @@ import InvestmentSimulator from "@/components/InvestmentSimulator";
 import AuthCTASection from "@/components/AuthCTASection";
 import FeaturedUnitsHero, { type FeaturedUnit } from "@/components/FeaturedUnitsHero";
 import ScrollReveal from "@/components/ScrollReveal";
+import CountUpNumber from "@/components/CountUpNumber";
 import Link from "next/link";
 import Image from "next/image";
 import { FileCheck2, Eye, Activity, ShieldCheck } from "lucide-react";
@@ -263,20 +264,26 @@ export default async function Home({ params }: { params: { lang: string } }) {
       <section style={statsSection}>
         <div style={statsCard} className="stats-strip">
           <div style={statCell}>
-            <div style={statNum}>{developments.length}</div>
+            <div style={statNum}><CountUpNumber value={developments.length} delay={0} /></div>
             <div style={statLabel}>Emprendimientos activos</div>
           </div>
           <div style={statCell}>
-            <div style={statNum}>{units.length}</div>
+            <div style={statNum}><CountUpNumber value={units.length} delay={100} /></div>
             <div style={statLabel}>Unidades disponibles</div>
           </div>
           <div style={statCell}>
-            <div style={{ ...statNum, color: "var(--c-accent)" }}>5%</div>
+            <div style={{ ...statNum, color: "var(--c-accent)" }}>
+              <CountUpNumber value={5} delay={200} suffix="%" />
+            </div>
             <div style={statLabel}>Mínimo de inversión</div>
           </div>
           <div style={{ ...statCell, borderRight: "none" }}>
             <div style={{ ...statNum, color: "var(--c-positive)" }}>
-              {overallPricePerM2 != null ? fmtPerM2(overallPricePerM2) : "—"}
+              {overallPricePerM2 != null ? (
+                <CountUpNumber value={overallPricePerM2} delay={300} prefix="USD " suffix="/m²" locale="es-AR" />
+              ) : (
+                "—"
+              )}
             </div>
             <div style={statLabel}>Valor m² promedio <span style={{ color: "var(--c-text-faint)" }}>· en cartera</span></div>
           </div>
