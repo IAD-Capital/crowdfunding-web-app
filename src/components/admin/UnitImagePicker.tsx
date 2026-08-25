@@ -7,16 +7,28 @@ type Props = {
   lang: string;
   developmentId: string;
   developmentImages: string[];
+  developmentInteriorImages: string[];
+  developmentPlanImages: string[];
   interiorImages: string[];
   planImages: string[];
   onChangeInterior: (images: string[]) => void;
   onChangePlan: (images: string[]) => void;
 };
 
+function uniq(list: string[]): string[] {
+  return Array.from(new Set(list));
+}
+
 export default function UnitImagePicker({
-  lang, developmentId, developmentImages, interiorImages, planImages, onChangeInterior, onChangePlan,
+  lang, developmentId, developmentImages, developmentInteriorImages, developmentPlanImages,
+  interiorImages, planImages, onChangeInterior, onChangePlan,
 }: Props) {
-  if (developmentImages.length === 0) {
+  // Already-selected URLs are always shown even if they later fall out of the
+  // development's own galleries, so a saved selection never silently disappears.
+  const interiorPool = uniq([...developmentInteriorImages, ...developmentImages, ...interiorImages]);
+  const planPool = uniq([...developmentPlanImages, ...developmentImages, ...planImages]);
+
+  if (interiorPool.length === 0 && planPool.length === 0) {
     return (
       <div style={emptyBox}>
         <p style={{ margin: 0 }}>El emprendimiento todavía no tiene fotos cargadas.</p>
@@ -40,13 +52,13 @@ export default function UnitImagePicker({
     <div style={wrap}>
       <PickerGrid
         label="Fotos de interior"
-        images={developmentImages}
+        images={interiorPool}
         selected={interiorImages}
         onToggle={(src) => toggle(src, interiorImages, onChangeInterior, onChangePlan, planImages)}
       />
       <PickerGrid
         label="Planos"
-        images={developmentImages}
+        images={planPool}
         selected={planImages}
         onToggle={(src) => toggle(src, planImages, onChangePlan, onChangeInterior, interiorImages)}
       />

@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "./DuplicateButton.module.scss";
 
-type Props = { duplicateUrl: string; redirectBase: string };
+type Props = { duplicateUrl: string; redirectBase: string; menuItem?: boolean };
 
-export default function DuplicateButton({ duplicateUrl, redirectBase }: Props) {
+export default function DuplicateButton({ duplicateUrl, redirectBase, menuItem = false }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +23,7 @@ export default function DuplicateButton({ duplicateUrl, redirectBase }: Props) {
   }
 
   return (
-    <button onClick={handleDuplicate} disabled={loading} className={styles.btn}>
+    <button onClick={handleDuplicate} disabled={loading} className={menuItem ? styles.menuItemBtn : styles.btn}>
       {loading ? "…" : "Duplicar"}
     </button>
   );

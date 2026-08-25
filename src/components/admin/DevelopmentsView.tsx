@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import DuplicateButton from "./DuplicateButton";
 import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
+import { getAmenityIcon } from "@/lib/icons";
 
 export type Development = {
   id: number;
@@ -23,7 +24,7 @@ export type Development = {
 
 function fmtDate(d?: string) {
   if (!d) return null;
-  return new Date(d).toLocaleString("es-AR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return new Date(d).toLocaleString("es-AR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" });
 }
 
 type T = {
@@ -117,9 +118,12 @@ function GridView({ developments, t, lang }: Props) {
               {/* Amenities */}
               {d.amenities?.length > 0 && (
                 <div style={amenitiesRow}>
-                  {d.amenities.slice(0, 3).map((a) => (
-                    <span key={a} style={amenityChip}>{a}</span>
-                  ))}
+                  {d.amenities.slice(0, 3).map((a) => {
+                    const Icon = getAmenityIcon(a);
+                    return (
+                      <span key={a} style={amenityChip}><Icon size={12} /> {a}</span>
+                    );
+                  })}
                   {d.amenities.length > 3 && (
                     <span style={{ ...amenityChip, background: "#f3f4f6", color: "#9ca3af" }}>
                       +{d.amenities.length - 3}
@@ -194,9 +198,12 @@ function ListView({ developments, t, lang }: Props) {
               </div>
               {d.amenities?.length > 0 && (
                 <div style={{ ...amenitiesRow, marginTop: "0.4rem" }}>
-                  {d.amenities.slice(0, 4).map((a) => (
-                    <span key={a} style={amenityChip}>{a}</span>
-                  ))}
+                  {d.amenities.slice(0, 4).map((a) => {
+                    const Icon = getAmenityIcon(a);
+                    return (
+                      <span key={a} style={amenityChip}><Icon size={12} /> {a}</span>
+                    );
+                  })}
                   {d.amenities.length > 4 && (
                     <span style={{ ...amenityChip, color: "#9ca3af" }}>+{d.amenities.length - 4}</span>
                   )}
@@ -322,6 +329,7 @@ const statsRow: React.CSSProperties = { display: "flex", gap: "0.75rem", flexWra
 const stat: React.CSSProperties = { fontSize: "0.78rem", color: "#6b7280" };
 const amenitiesRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem" };
 const amenityChip: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "0.25rem",
   fontSize: "0.72rem", padding: "0.15rem 0.5rem",
   background: "#f3f4f6", color: "#374151", borderRadius: 999,
 };

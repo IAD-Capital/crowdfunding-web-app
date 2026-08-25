@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ImageGallery from "@/components/admin/ImageGallery";
 import UnitsView, { type UnitRow } from "@/components/admin/UnitsView";
+import { getAmenityIcon } from "@/lib/icons";
 
 export default async function DevelopmentDetailPage({
   params,
@@ -87,9 +88,12 @@ export default async function DevelopmentDetailPage({
         <div style={{ marginBottom: "1.5rem" }}>
           <p style={sectionLabel}>{td.form.amenities.split(" ")[0]}</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
-            {dev.amenities.map((a: string) => (
-              <span key={a} style={tag}>{a.trim()}</span>
-            ))}
+            {dev.amenities.map((a: string) => {
+              const Icon = getAmenityIcon(a);
+              return (
+                <span key={a} style={tag}><Icon size={12} /> {a.trim()}</span>
+              );
+            })}
           </div>
         </div>
       )}
@@ -155,6 +159,7 @@ const sectionLabel: React.CSSProperties = {
   fontSize: "0.8rem", fontWeight: 600, color: "#6b7280", marginBottom: "0.5rem",
 };
 const tag: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "0.3rem",
   padding: "0.2rem 0.6rem", background: "#f3f4f6", borderRadius: 999,
   fontSize: "0.78rem", color: "#374151",
 };

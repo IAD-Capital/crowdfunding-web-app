@@ -14,6 +14,7 @@ setting up or debugging production.
 | `SUPABASE_URL` | Yes | `https://<project-ref>.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase Settings → API → `service_role` secret. Used server-side only, for image uploads (bypasses RLS). **Never expose client-side.** |
 | `SUPABASE_STORAGE_BUCKET` | No | Defaults to `"uploads"` in code. Only set if your bucket has a different name. |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` / `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Yes, if push notifications are used | See [docs/PUSH_NOTIFICATIONS.md](PUSH_NOTIFICATIONS.md). Missing `VAPID_SUBJECT` at build time fails the whole build (`/api/admin/push/send` collects page data at build time) — always set all four before deploying. |
 | `NODE_ENV` | No | Set automatically by Vercel — never override manually. |
 
 Don't set `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` in your **local** `.env`

@@ -1,6 +1,8 @@
 import Header from "./Header";
 import Footer from "./Footer";
 import ComingSoon from "./ComingSoon";
+import ChatbotWidget from "./ChatbotWidget";
+import InstallAppPrompt from "./InstallAppPrompt";
 import db from "@/lib/db";
 import { getSession } from "@/lib/session";
 import type { Locale } from "@/i18n";
@@ -12,8 +14,13 @@ export default async function PublicShell({
   lang: Locale;
   children: React.ReactNode;
 }) {
-  const [settings] = await db<{ coming_soon_enabled: boolean; coming_soon_expires_at: string | null }[]>`
-    SELECT coming_soon_enabled, coming_soon_expires_at FROM app_settings WHERE id = 1
+  // SELECT * (rather than naming chatbot_enabled explicitly) so this keeps
+  // working even before migration 008 has added that column — the widget
+  // just defaults to enabled via the `?? true` below in that case.
+  const [settings] = await db<
+    { coming_soon_enabled: boolean; coming_soon_expires_at: string | null; chatbot_enabled?: boolean }[]
+  >`
+    SELECT * FROM app_settings WHERE id = 1
   `;
   const session = await getSession();
   const isSuperadmin = session?.role === "superadmin";
@@ -33,6 +40,8 @@ export default async function PublicShell({
       <Header lang={lang} />
       <main style={{ flex: 1 }}>{children}</main>
       <Footer lang={lang} />
+      {(settings?.chatbot_enabled ?? true) && <ChatbotWidget userEmail={session?.email ?? null} />}
+      <InstallAppPrompt />
     </div>
   );
 }

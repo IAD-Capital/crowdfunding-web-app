@@ -44,6 +44,48 @@ export async function POST(req: NextRequest) {
     await db`ALTER TABLE units ADD COLUMN IF NOT EXISTS featured_order INTEGER`;
     results.push("units.featured/featured_order: ok");
 
+    await db`
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id            SERIAL PRIMARY KEY,
+        user_id       INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        endpoint      TEXT        NOT NULL UNIQUE,
+        p256dh        TEXT        NOT NULL,
+        auth          TEXT        NOT NULL,
+        user_agent    TEXT,
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_seen_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+    await db`CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(user_id)`;
+    results.push("push_subscriptions table: ok");
+
+    await db`
+      CREATE TABLE IF NOT EXISTS push_notifications (
+        id              SERIAL PRIMARY KEY,
+        title           TEXT        NOT NULL,
+        body            TEXT        NOT NULL,
+        url             TEXT,
+        sent_by         INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        recipient_count INTEGER     NOT NULL DEFAULT 0,
+        success_count   INTEGER     NOT NULL DEFAULT 0,
+        failure_count   INTEGER     NOT NULL DEFAULT 0,
+        created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+    await db`CREATE INDEX IF NOT EXISTS idx_push_notifications_created_at ON push_notifications(created_at DESC)`;
+    results.push("push_notifications table: ok");
+
+    await db`
+      CREATE TABLE IF NOT EXISTS push_templates (
+        id         SERIAL PRIMARY KEY,
+        title      TEXT        NOT NULL,
+        body       TEXT        NOT NULL,
+        url        TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+    results.push("push_templates table: ok");
+
     return NextResponse.json({ ok: true, results });
   } catch (err) {
     return NextResponse.json({ ok: false, error: String(err), results }, { status: 500 });

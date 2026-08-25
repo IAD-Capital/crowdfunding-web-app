@@ -7,6 +7,7 @@ import type { Dictionary } from "@/i18n";
 import ImageUploader from "./ImageUploader";
 import DeleteWithConfirmButton from "./DeleteWithConfirmButton";
 import { slugify } from "@/lib/slugify";
+import { getAmenityIcon } from "@/lib/icons";
 
 type T = Dictionary["admin"]["developments"];
 
@@ -283,16 +284,19 @@ export default function DevelopmentForm({ t, lang, initial, existingImages = [],
         {/* Amenities checkboxes */}
         <Field label={t.form.amenities}>
           <div style={checkboxGrid}>
-            {COMMON_AMENITIES.map((a) => (
-              <label key={a} style={checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={amenities.includes(a)}
-                  onChange={() => toggleAmenity(a)}
-                />
-                {a}
-              </label>
-            ))}
+            {COMMON_AMENITIES.map((a) => {
+              const Icon = getAmenityIcon(a);
+              return (
+                <label key={a} style={checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={amenities.includes(a)}
+                    onChange={() => toggleAmenity(a)}
+                  />
+                  <Icon size={15} /> {a}
+                </label>
+              );
+            })}
           </div>
 
           {/* Custom extra amenities not in the common list */}

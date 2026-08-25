@@ -18,7 +18,7 @@ export default async function AdminLayout({
 
   let notifications: Notification[] = [];
   if (session?.role === "superadmin") {
-    const [removalRows, pendingRows] = await Promise.all([
+    const [removalRows, pendingRows, chatbotRows] = await Promise.all([
       db`
         SELECT i.id, i.removal_requested_at,
           u.identifier, d.name AS development_name, usr.full_name
@@ -38,6 +38,12 @@ export default async function AdminLayout({
         JOIN users usr ON usr.id = i.user_id
         WHERE i.status = 'pending'
         ORDER BY i.created_at ASC
+      `,
+      db`
+        SELECT id, question, created_at
+        FROM chatbot_unanswered_questions
+        WHERE status = 'pending'
+        ORDER BY created_at ASC
       `,
     ]);
 
@@ -67,7 +73,16 @@ export default async function AdminLayout({
       ],
     }));
 
-    notifications = [...pending, ...removals];
+    const chatbot: Notification[] = chatbotRows.map((r) => ({
+      id: `chatbot-${r.id}`,
+      title: "Nueva pregunta sin responder",
+      body: r.question,
+      href: `/${lang}/admin/chatbot/unanswered`,
+      timestamp: new Date(r.created_at as string).toISOString(),
+      variant: "info" as const,
+    }));
+
+    notifications = [...pending, ...removals, ...chatbot];
   }
 
   return (

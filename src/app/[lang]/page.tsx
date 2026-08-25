@@ -5,12 +5,14 @@ import CatalogSection from "@/components/CatalogSection";
 import InvestmentSimulator from "@/components/InvestmentSimulator";
 import AuthCTASection from "@/components/AuthCTASection";
 import FeaturedUnitsHero, { type FeaturedUnit } from "@/components/FeaturedUnitsHero";
+import ScrollReveal from "@/components/ScrollReveal";
+import CountUpNumber from "@/components/CountUpNumber";
 import Link from "next/link";
 import Image from "next/image";
 import { FileCheck2, Eye, Activity, ShieldCheck } from "lucide-react";
 import db from "@/lib/db";
 import type { Development, Unit } from "@/components/CatalogSection";
-import type { TierThresholds } from "@/lib/investmentTiers";
+import { MIN_ENTRY_PCT, type TierThresholds } from "@/lib/investmentTiers";
 
 type DevRow = Omit<Development, "unit_count"> & { unit_count: number; completion_date: Date | string | null };
 type FeaturedRow = Omit<DevRow, "description"> & { zone_price_per_m2: number | string | null; slug?: string | null };
@@ -98,7 +100,8 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
   const featuredUnitRows = await db<(FeaturedUnit & { price_usd: string | number })[]>`
     SELECT u.id, u.identifier, u.images, u.price_usd, u.total_m2, u.rooms,
-           d.id AS development_id, d.name AS development_name, d.address AS development_address, d.slug AS development_slug
+           d.id AS development_id, d.name AS development_name, d.address AS development_address,
+           d.slug AS development_slug, d.amenities
     FROM units u
     JOIN developments d ON d.id = u.development_id
     WHERE u.featured = true AND d.status = 'active' AND d.visible = true AND u.status != 'sold'
@@ -106,6 +109,11 @@ export default async function Home({ params }: { params: { lang: string } }) {
     LIMIT 8
   `;
   const featuredUnits8: FeaturedUnit[] = featuredUnitRows.map((u) => ({ ...u, price_usd: Number(u.price_usd) }));
+
+  const investableUnits = units.filter((u) => u.status !== "sold");
+  const minInvestUsd = investableUnits.length > 0
+    ? Math.min(...investableUnits.map((u) => Number(u.price_usd))) * MIN_ENTRY_PCT
+    : null;
   const featuredUnits = featuredDev ? units.filter((u) => u.development_id === featuredDev.id) : [];
   const featuredMinPrice = featuredUnits.length > 0
     ? Math.min(...featuredUnits.map((u) => Number(u.price_usd)))
@@ -162,17 +170,34 @@ export default async function Home({ params }: { params: { lang: string } }) {
         @media (max-width: 760px) {
           .stats-strip { grid-template-columns: 1fr 1fr !important; }
           .stats-strip > div:nth-child(2) { border-right: none !important; }
-          .trust-grid { grid-template-columns: 1fr 1fr !important; }
+          .trust-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+          .trust-card { padding: 2rem 1.6rem !important; }
           .how-grid { grid-template-columns: 1fr !important; }
           .hero-chip-return { top: -12px !important; right: 8px !important; }
           .hero-chip-min { bottom: -12px !important; left: 8px !important; }
+        }
+        @media (max-width: 480px) {
+          .stats-strip { grid-template-columns: 1fr !important; }
+          .stats-strip > div {
+            border-right: none !important;
+            border-bottom: 1px solid var(--c-border-soft) !important;
+          }
+          .stats-strip > div:last-child { border-bottom: none !important; }
         }
       `,
         }}
       />
       {/* ─── Featured units ──────────────────────────── */}
       <div id="developments">
-        <FeaturedUnitsHero units={featuredUnits8} lang={lang} />
+        <FeaturedUnitsHero
+          units={featuredUnits8}
+          lang={lang}
+          minInvestUsd={minInvestUsd}
+          totalUnitsCount={units.length}
+          hasSession={!!session}
+          isInvestor={isInvestor}
+          fullName={session?.fullName}
+        />
       </div>
       
       <section style={hero}>
@@ -247,20 +272,26 @@ export default async function Home({ params }: { params: { lang: string } }) {
       <section style={statsSection}>
         <div style={statsCard} className="stats-strip">
           <div style={statCell}>
-            <div style={statNum}>{developments.length}</div>
+            <div style={statNum}><CountUpNumber value={developments.length} delay={0} /></div>
             <div style={statLabel}>Emprendimientos activos</div>
           </div>
           <div style={statCell}>
-            <div style={statNum}>{units.length}</div>
+            <div style={statNum}><CountUpNumber value={units.length} delay={100} /></div>
             <div style={statLabel}>Unidades disponibles</div>
           </div>
           <div style={statCell}>
-            <div style={{ ...statNum, color: "var(--c-accent)" }}>5%</div>
+            <div style={{ ...statNum, color: "var(--c-accent)" }}>
+              <CountUpNumber value={5} delay={200} suffix="%" />
+            </div>
             <div style={statLabel}>Mínimo de inversión</div>
           </div>
           <div style={{ ...statCell, borderRight: "none" }}>
             <div style={{ ...statNum, color: "var(--c-positive)" }}>
-              {overallPricePerM2 != null ? fmtPerM2(overallPricePerM2) : "—"}
+              {overallPricePerM2 != null ? (
+                <CountUpNumber value={overallPricePerM2} delay={300} prefix="USD " suffix="/m²" locale="es-AR" />
+              ) : (
+                "—"
+              )}
             </div>
             <div style={statLabel}>Valor m² promedio <span style={{ color: "var(--c-text-faint)" }}>· en cartera</span></div>
           </div>
@@ -269,19 +300,23 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
       {/* ─── Trust band ──────────────────────────────── */}
       <section style={trustSection}>
-        <div style={trustHeader}>
-          <div style={eyebrow}>Por qué IAD Capital</div>
-          <h2 style={trustTitle}>Tu inversión, protegida en cada paso</h2>
-        </div>
+        <ScrollReveal>
+          <div style={trustHeader}>
+            <div style={eyebrow}>Por qué IAD Capital</div>
+            <h2 style={trustTitle}>Tu inversión, protegida en cada paso</h2>
+          </div>
+        </ScrollReveal>
         <div style={trustGrid} className="trust-grid">
-          {TRUST_ITEMS.map(({ Icon, title, desc }) => (
-            <div key={title} style={trustCard}>
-              <div style={trustIconWrap}>
-                <Icon size={20} color="var(--c-accent)" strokeWidth={2} />
+          {TRUST_ITEMS.map(({ Icon, title, desc }, i) => (
+            <ScrollReveal key={title} delay={i * 140}>
+              <div style={trustCard} className="trust-card">
+                <div style={trustIconWrap}>
+                  <Icon size={20} color="var(--c-accent)" strokeWidth={2} />
+                </div>
+                <h3 style={trustCardTitle}>{title}</h3>
+                <p style={trustCardDesc}>{desc}</p>
               </div>
-              <h3 style={trustCardTitle}>{title}</h3>
-              <p style={trustCardDesc}>{desc}</p>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </section>
@@ -342,7 +377,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
 /* Hero */
 const hero: React.CSSProperties = {
   background: "var(--c-bg)", overflowX: "hidden",
-  marginTop: -92, paddingTop: "calc(72px + 92px)", paddingBottom: "2.5rem",
+  paddingTop: "2.5rem", paddingBottom: "2.5rem",
   paddingLeft: "1.5rem", paddingRight: "1.5rem",
 };
 const heroInner: React.CSSProperties = {
