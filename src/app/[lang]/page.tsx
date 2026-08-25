@@ -176,6 +176,14 @@ export default async function Home({ params }: { params: { lang: string } }) {
           .hero-chip-return { top: -12px !important; right: 8px !important; }
           .hero-chip-min { bottom: -12px !important; left: 8px !important; }
         }
+        @media (max-width: 480px) {
+          .stats-strip { grid-template-columns: 1fr !important; }
+          .stats-strip > div {
+            border-right: none !important;
+            border-bottom: 1px solid var(--c-border-soft) !important;
+          }
+          .stats-strip > div:last-child { border-bottom: none !important; }
+        }
       `,
         }}
       />
