@@ -35,9 +35,14 @@ type Props = {
   developmentName: string;
   initial?: Initial;
   developmentImages?: string[];
+  developmentInteriorImages?: string[];
+  developmentPlanImages?: string[];
 };
 
-export default function UnitForm({ t, lang, developmentId, developmentName, initial, developmentImages = [] }: Props) {
+export default function UnitForm({
+  t, lang, developmentId, developmentName, initial,
+  developmentImages = [], developmentInteriorImages = [], developmentPlanImages = [],
+}: Props) {
   const router = useRouter();
   const isEdit = !!initial;
 
@@ -193,6 +198,8 @@ export default function UnitForm({ t, lang, developmentId, developmentName, init
             lang={lang}
             developmentId={developmentId}
             developmentImages={developmentImages}
+            developmentInteriorImages={developmentInteriorImages}
+            developmentPlanImages={developmentPlanImages}
             interiorImages={images}
             planImages={planImages}
             onChangeInterior={setImages}

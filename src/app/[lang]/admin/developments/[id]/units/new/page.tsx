@@ -11,7 +11,7 @@ export default async function NewUnitPage({
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const t = await getDictionary(lang);
 
-  const [dev] = await db`SELECT id, name, images FROM developments WHERE id = ${params.id}`;
+  const [dev] = await db`SELECT id, name, images, interior_images, plan_images FROM developments WHERE id = ${params.id}`;
   if (!dev) notFound();
 
   return (
@@ -21,6 +21,8 @@ export default async function NewUnitPage({
       developmentId={params.id}
       developmentName={dev.name}
       developmentImages={dev.images ?? []}
+      developmentInteriorImages={dev.interior_images ?? []}
+      developmentPlanImages={dev.plan_images ?? []}
     />
   );
 }

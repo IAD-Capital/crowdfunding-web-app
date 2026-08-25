@@ -12,7 +12,7 @@ export default async function EditUnitPage({
   const t = await getDictionary(lang);
 
   const [[dev], [unit]] = await Promise.all([
-    db`SELECT id, name, images FROM developments WHERE id = ${params.id}`,
+    db`SELECT id, name, images, interior_images, plan_images FROM developments WHERE id = ${params.id}`,
     db<UnitInitial[]>`SELECT * FROM units WHERE id = ${params.unitId} AND development_id = ${params.id}`,
   ]);
   if (!dev || !unit) notFound();
@@ -25,6 +25,8 @@ export default async function EditUnitPage({
       developmentName={dev.name}
       initial={unit}
       developmentImages={dev.images ?? []}
+      developmentInteriorImages={dev.interior_images ?? []}
+      developmentPlanImages={dev.plan_images ?? []}
     />
   );
 }
