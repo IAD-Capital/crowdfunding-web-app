@@ -16,7 +16,7 @@ type Props = {
 };
 
 function uniq(list: string[]): string[] {
-  return [...new Set(list)];
+  return Array.from(new Set(list));
 }
 
 export default function UnitImagePicker({
