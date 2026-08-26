@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { sendMail, getAppUrl } from "@/lib/mail";
+import { sendMail, getAppUrl, renderEmail } from "@/lib/mail";
 import { DEFAULT_LOCALE } from "@/i18n";
 
 const NOTIFY_EMAIL = "iadcapital.app@gmail.com";
@@ -80,23 +80,23 @@ export async function POST(req: NextRequest) {
   await sendMail({
     to: NOTIFY_EMAIL,
     subject: `Nueva inversión: ${session!.fullName} — ${unit.development_name} (${unit.identifier})`,
-    html: `
+    html: renderEmail(`
       <p><strong>${session!.fullName}</strong> (${session!.email}) invirtió <strong>${percentage}%</strong> en <strong>${unit.identifier}</strong>, ${unit.development_name}.</p>
       <p>Monto: USD ${amount_usd.toLocaleString("en-US", { maximumFractionDigits: 2 })}</p>
       <p><a href="${dashboardUrl}">Ver inversión en el dashboard</a></p>
-    `,
+    `),
   });
 
   const walletUrl = `${getAppUrl()}/${DEFAULT_LOCALE}/wallet`;
   await sendMail({
     to: session!.email,
     subject: `Recibimos tu solicitud de inversión — ${unit.identifier}, ${unit.development_name}`,
-    html: `
+    html: renderEmail(`
       <p>Hola ${session!.fullName},</p>
       <p>Recibimos tu solicitud de inversión del <strong>${percentage}%</strong> en <strong>${unit.identifier}</strong>, ${unit.development_name}, por <strong>USD ${amount_usd.toLocaleString("en-US", { maximumFractionDigits: 2 })}</strong>.</p>
       <p>Tu inversión quedará confirmada una vez que sea aprobada.</p>
       <p><a href="${walletUrl}">Ver mi cartera</a></p>
-    `,
+    `),
   });
 
   return NextResponse.json(inv, { status: 201 });

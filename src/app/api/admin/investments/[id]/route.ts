@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/requireAdmin";
+import { sendMail, getAppUrl, renderEmail } from "@/lib/mail";
+import { DEFAULT_LOCALE } from "@/i18n";
 
 type Ctx = { params: { id: string } };
 
@@ -9,6 +11,9 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   if (error) return error;
 
   const { status, percentage, amount_usd, clear_removal_request } = await req.json();
+
+  const [before] = await db`SELECT status FROM investments WHERE id = ${params.id}`;
+  const wasApproved = before?.status === "approved";
 
   // Approving an investment: check availability, then handle platinum (100%) takeover.
   if (status === "approved") {
@@ -73,6 +78,36 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   const sold = Number(agg.sold_pct);
   const unitStatus = sold >= 100 ? "sold" : sold > 0 ? "partial" : "available";
   await db`UPDATE units SET status = ${unitStatus} WHERE id = ${row.unit_id}`;
+
+  if (row.status === "approved" && !wasApproved) {
+    const [investor] = await db`SELECT full_name, email FROM users WHERE id = ${row.user_id}`;
+    const [unit] = await db`
+      SELECT un.identifier, d.name AS development_name
+      FROM units un
+      JOIN developments d ON d.id = un.development_id
+      WHERE un.id = ${row.unit_id}
+    `;
+    const details = investor && unit ? { ...investor, ...unit } : null;
+    if (details) {
+      const walletUrl = `${getAppUrl()}/${DEFAULT_LOCALE}/wallet`;
+      await sendMail({
+        to: details.email,
+        subject: `¡Tu inversión fue aprobada! — ${details.identifier}, ${details.development_name}`,
+        html: renderEmail(`
+          <p>Hola ${details.full_name},</p>
+          <p>¡Buenas noticias! Tu inversión del <strong>${Number(row.percentage)}%</strong> en <strong>${details.identifier}</strong>, ${details.development_name}, por <strong>USD ${Number(row.amount_usd).toLocaleString("en-US", { maximumFractionDigits: 2 })}</strong>, fue aprobada.</p>
+          <p><strong>Próximos pasos:</strong></p>
+          <ol>
+            <li>Nuestro equipo se va a contactar con vos para coordinar una reunión presencial.</li>
+            <li>En la reunión te vamos a aclarar todas las dudas que tengas.</li>
+            <li>Formalizamos la inversión con una seña.</li>
+            <li>Una vez formalizada, vas a poder seguir el estado y el rendimiento de tu inversión desde tu cartera.</li>
+          </ol>
+          <p><a href="${walletUrl}">Ver mi cartera</a></p>
+        `),
+      });
+    }
+  }
 
   return NextResponse.json(row);
 }
