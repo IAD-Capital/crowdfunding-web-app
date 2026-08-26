@@ -47,6 +47,22 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
         dangerouslySetInnerHTML={{
           __html: `
         .featured-units-track::-webkit-scrollbar { display: none; }
+        @keyframes investPillIn {
+          0% { opacity: 0; transform: translateY(-14px) scale(0.9); }
+          60% { opacity: 1; transform: translateY(2px) scale(1.04); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes investPillPulse {
+          0%, 100% { box-shadow: 0 8px 20px -6px rgba(14,23,38,0.35), 0 0 0 0 rgba(14,159,110,0.28); }
+          50% { box-shadow: 0 8px 20px -6px rgba(14,23,38,0.35), 0 0 0 7px rgba(14,159,110,0); }
+        }
+        .invest-pill {
+          animation: investPillIn 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+                     investPillPulse 2.6s ease-in-out 0.9s infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .invest-pill { animation: none !important; }
+        }
         @media (max-width: 760px) {
           .featured-units-card { width: 78vw !important; }
           .featured-units-nav { display: none !important; }
@@ -111,7 +127,7 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
 
         <div style={carouselCol}>
           <div style={track} className="featured-units-track" ref={trackRef}>
-            {units.map((u) => (
+            {units.map((u, idx) => (
               <Link
                 key={u.id}
                 href={`/${lang}/developments/${u.development_slug ?? u.development_id}/units/${u.id}`}
@@ -126,7 +142,7 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
                   )}
                   <div style={gradient} />
 
-                  <div style={investPill}>
+                  <div style={{ ...investPill, animationDelay: `${idx * 0.1}s, ${0.9 + idx * 0.1}s` }} className="invest-pill">
                     <span style={investPillLabel}>Invertí desde</span>
                     <span style={investPillValue}>{fmtUsd(u.price_usd * 0.05)}</span>
                   </div>
