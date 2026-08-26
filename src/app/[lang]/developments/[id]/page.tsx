@@ -111,7 +111,7 @@ export default async function PublicDevelopmentPage({
                       <Link key={u.id} href={`/${lang}/developments/${dev.slug ?? dev.id}/units/${u.id}`} style={{ ...unitCard, textDecoration: "none", color: "inherit" }}>
                         <div style={unitCover}>
                           {u.images?.[0] ? (
-                            <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} />
+                            <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 600px) 90vw, 220px" />
                           ) : (
                             <div style={imgPlaceholder} />
                           )}

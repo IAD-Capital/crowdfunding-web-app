@@ -8,14 +8,12 @@ import FeaturedUnitsHero, { type FeaturedUnit } from "@/components/FeaturedUnits
 import ScrollReveal from "@/components/ScrollReveal";
 import CountUpNumber from "@/components/CountUpNumber";
 import Link from "next/link";
-import Image from "next/image";
 import { FileCheck2, Eye, Activity, ShieldCheck } from "lucide-react";
 import db from "@/lib/db";
 import type { Development, Unit } from "@/components/CatalogSection";
 import { MIN_ENTRY_PCT, type TierThresholds } from "@/lib/investmentTiers";
 
 type DevRow = Omit<Development, "unit_count"> & { unit_count: number; completion_date: Date | string | null };
-type FeaturedRow = Omit<DevRow, "description"> & { zone_price_per_m2: number | string | null; slug?: string | null };
 type UnitRow = Omit<Unit, "price_usd" | "current_price_usd" | "available_pct" | "group_expires_at"> & {
   price_usd: number | string;
   current_price_usd: number | string | null;
@@ -84,20 +82,6 @@ export default async function Home({ params }: { params: { lang: string } }) {
     ORDER BY u.updated_at DESC
   `;
 
-  const featuredRows = await db<(FeaturedRow & { developer_name: string | null })[]>`
-    SELECT d.id, d.name, d.address, d.status,
-           d.completion_date, d.amenities, d.images, d.zone_price_per_m2, d.slug,
-           dv.name AS developer_name,
-           COUNT(u.id)::int AS unit_count
-    FROM developments d
-    LEFT JOIN units u ON u.development_id = d.id
-    LEFT JOIN developers dv ON dv.id = d.developer_id
-    WHERE d.featured = true AND d.status = 'active' AND d.visible = true
-    GROUP BY d.id, dv.name
-    ORDER BY d.updated_at DESC
-  `;
-  const featuredDev = featuredRows[0] ?? null;
-
   const featuredUnitRows = await db<(FeaturedUnit & { price_usd: string | number })[]>`
     SELECT u.id, u.identifier, u.images, u.price_usd, u.total_m2, u.rooms,
            d.id AS development_id, d.name AS development_name, d.address AS development_address,
@@ -114,10 +98,6 @@ export default async function Home({ params }: { params: { lang: string } }) {
   const minInvestUsd = investableUnits.length > 0
     ? Math.min(...investableUnits.map((u) => Number(u.price_usd))) * MIN_ENTRY_PCT
     : null;
-  const featuredUnits = featuredDev ? units.filter((u) => u.development_id === featuredDev.id) : [];
-  const featuredMinPrice = featuredUnits.length > 0
-    ? Math.min(...featuredUnits.map((u) => Number(u.price_usd)))
-    : null;
 
   // Price per m² (own), averaged over units that have m² recorded — never a return promise, just sqm pricing
   const avgPricePerM2 = (list: { price_usd: number | string; total_m2?: number | string | null }[]): number | null => {
@@ -127,9 +107,6 @@ export default async function Home({ params }: { params: { lang: string } }) {
     return total / valid.length;
   };
   const overallPricePerM2 = avgPricePerM2(units);
-  const featuredPricePerM2 = avgPricePerM2(featuredUnits);
-  const featuredZonePricePerM2 = featuredDev?.zone_price_per_m2 != null ? Number(featuredDev.zone_price_per_m2) : null;
-  const fmtPerM2 = (n: number) => `USD ${Math.round(n).toLocaleString("es-AR")}/m²`;
 
   const serialized = {
     developments: developments.map((d) => ({
@@ -153,7 +130,6 @@ export default async function Home({ params }: { params: { lang: string } }) {
       `).map((r) => Number(r.unit_id))
     : [];
 
-  const fmtUsd = (n: number) => `USD ${Math.round(n).toLocaleString("es-AR")}`;
   const fmtMonthYear = (d: string | Date | null) =>
     d ? new Date(d).toLocaleDateString("es-AR", { month: "long", year: "numeric", timeZone: "UTC" }) : null;
 
@@ -163,18 +139,12 @@ export default async function Home({ params }: { params: { lang: string } }) {
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        @media (max-width: 860px) {
-          .hero-inner { grid-template-columns: 1fr !important; gap: 2.5rem !important; }
-          .hero-visual { justify-self: stretch !important; }
-        }
         @media (max-width: 760px) {
           .stats-strip { grid-template-columns: 1fr 1fr !important; }
           .stats-strip > div:nth-child(2) { border-right: none !important; }
           .trust-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
           .trust-card { padding: 2rem 1.6rem !important; }
           .how-grid { grid-template-columns: 1fr !important; }
-          .hero-chip-return { top: -12px !important; right: 8px !important; }
-          .hero-chip-min { bottom: -12px !important; left: 8px !important; }
         }
         @media (max-width: 480px) {
           .stats-strip { grid-template-columns: 1fr !important; }
@@ -199,74 +169,6 @@ export default async function Home({ params }: { params: { lang: string } }) {
           fullName={session?.fullName}
         />
       </div>
-      
-      <section style={hero}>
-        <div style={heroInner} className="hero-inner">
-          <div style={heroText}>
-            {isInvestor ? (
-              <span style={heroBadge}>
-                <span style={heroBadgeDot} />
-                Bienvenido, {session!.fullName}
-              </span>
-            ) : (
-              <span style={heroBadge}>
-                <span style={heroBadgeDot} />
-                {developments.length} emprendimiento{developments.length !== 1 ? "s" : ""} activo{developments.length !== 1 ? "s" : ""} · invertí desde el 5%
-              </span>
-            )}
-            <h1 style={heroTitle}>Invertí en bienes raíces desde donde estés</h1>
-            <p style={heroSubtitle}>
-              Accedé a los mejores emprendimientos inmobiliarios y comprá desde un{" "}
-              <strong style={{ color: "var(--c-ink)" }}>5%</strong> de una unidad funcional. Simple, seguro y rentable.
-            </p>
-            <div style={heroCta}>
-              {!session ? (
-                <>
-                  <Link href={`/${lang}/signup`} style={btnPrimary}>
-                    Empezar a invertir
-                  </Link>
-                  <Link href={`/${lang}/login`} style={btnOutline}>
-                    Iniciar sesión
-                  </Link>
-                </>
-              ) : isInvestor ? (
-                <a href="#catalog" style={btnPrimary}>
-                  Ver oportunidades
-                </a>
-              ) : null}
-            </div>
-            <div style={heroTrust}>
-              <span style={heroTrustItem}><span style={heroTrustCheck}>✓</span>Escrituración legal</span>
-              <span style={heroTrustItem}><span style={heroTrustCheck}>✓</span>Transparencia total</span>
-            </div>
-          </div>
-
-          <div style={heroVisual} className="hero-visual">
-            <div style={heroImageFrame}>
-              {featuredDev?.images?.[0] ? (
-                <Image src={featuredDev.images[0]} alt={featuredDev.name} fill style={{ objectFit: "cover" }} priority />
-              ) : (
-                <div style={heroImagePlaceholder} />
-              )}
-              {featuredDev && (
-                <span style={heroImageTag}>{featuredDev.name} · {featuredDev.address}</span>
-              )}
-            </div>
-            <div style={heroChipReturn} className="hero-chip-return">
-              <div style={heroChipLabel}>Valor m²</div>
-              <div style={heroChipValue}>
-                {featuredPricePerM2 != null ? fmtPerM2(featuredPricePerM2) : "—"}
-              </div>
-            </div>
-            <div style={heroChipMin} className="hero-chip-min">
-              <div style={heroChipMinLabel}>Entrada mínima</div>
-              <div style={heroChipMinValue}>
-                {featuredMinPrice != null ? fmtUsd(featuredMinPrice * 0.05) : "Consultar"}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ─── Stats strip ─────────────────────────────── */}
       <section style={statsSection}>
@@ -373,76 +275,6 @@ export default async function Home({ params }: { params: { lang: string } }) {
 }
 
 /* ─── Styles ────────────────────────────────────── */
-
-/* Hero */
-const hero: React.CSSProperties = {
-  background: "var(--c-bg)", overflowX: "hidden",
-  paddingTop: "2.5rem", paddingBottom: "2.5rem",
-  paddingLeft: "1.5rem", paddingRight: "1.5rem",
-};
-const heroInner: React.CSSProperties = {
-  maxWidth: 1200, margin: "0 auto",
-  display: "grid", gridTemplateColumns: "1.05fr 0.95fr",
-  gap: "3.5rem", alignItems: "center",
-};
-const heroText: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1.4rem" };
-const heroBadge: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", gap: "0.5rem", width: "fit-content",
-  background: "var(--c-positive-light)", color: "var(--c-positive)", borderRadius: 999,
-  padding: "0.45rem 0.85rem", fontSize: "0.8rem", fontWeight: 600,
-};
-const heroBadgeDot: React.CSSProperties = { width: 7, height: 7, borderRadius: "50%", background: "var(--c-positive)", display: "inline-block" };
-const heroTitle: React.CSSProperties = {
-  fontSize: "clamp(2.1rem, 4.5vw, 3.4rem)", fontWeight: 800,
-  lineHeight: 1.06, letterSpacing: "-0.035em", margin: 0, color: "var(--c-ink)",
-};
-const heroSubtitle: React.CSSProperties = {
-  fontSize: "1.1rem", color: "var(--c-text-secondary)", lineHeight: 1.55, maxWidth: 480, margin: 0,
-};
-const heroCta: React.CSSProperties = { display: "flex", gap: "0.85rem", flexWrap: "wrap" };
-const btnPrimary: React.CSSProperties = {
-  padding: "0.9rem 1.6rem", background: "var(--c-accent)", color: "#fff",
-  borderRadius: 11, textDecoration: "none", fontWeight: 600, fontSize: "0.98rem",
-  boxShadow: "0 10px 24px rgba(27,77,224,0.26)",
-};
-const btnOutline: React.CSSProperties = {
-  padding: "0.9rem 1.6rem", background: "var(--c-surface)", color: "var(--c-ink)",
-  border: "1px solid var(--c-border-input)", borderRadius: 11,
-  textDecoration: "none", fontWeight: 600, fontSize: "0.98rem",
-};
-const heroTrust: React.CSSProperties = { display: "flex", alignItems: "center", gap: "1.1rem", flexWrap: "wrap", color: "var(--c-text-tertiary)", fontSize: "0.85rem", fontWeight: 500, marginTop: "0.4rem" };
-const heroTrustItem: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.5rem" };
-const heroTrustCheck: React.CSSProperties = {
-  width: 18, height: 18, borderRadius: "50%", border: "2px solid var(--c-positive)",
-  display: "inline-flex", alignItems: "center", justifyContent: "center",
-  color: "var(--c-positive)", fontSize: "0.65rem", fontWeight: 800,
-};
-
-/* Hero visual */
-const heroVisual: React.CSSProperties = { position: "relative" };
-const heroImageFrame: React.CSSProperties = {
-  position: "relative", aspectRatio: "4 / 4.4", borderRadius: 22, overflow: "hidden",
-  boxShadow: "0 30px 60px -20px rgba(14,23,38,0.32)", border: "1px solid var(--c-border)",
-  background: "linear-gradient(135deg, #e8eef7, #dfe7f2)",
-};
-const heroImagePlaceholder: React.CSSProperties = { position: "absolute", inset: 0, background: "linear-gradient(135deg, #e8eef7, #dfe7f2)" };
-const heroImageTag: React.CSSProperties = {
-  position: "absolute", top: 16, left: 16, background: "rgba(14,23,38,0.74)", backdropFilter: "blur(6px)",
-  color: "#fff", padding: "0.5rem 0.8rem", borderRadius: 9, fontSize: "0.8rem", fontWeight: 600,
-};
-const heroChipReturn: React.CSSProperties = {
-  position: "absolute", top: -18, right: -10, background: "var(--c-surface)", border: "1px solid var(--c-border)",
-  borderRadius: 14, padding: "0.85rem 1.1rem", boxShadow: "0 18px 38px -14px rgba(14,23,38,0.28)",
-};
-const heroChipLabel: React.CSSProperties = { fontSize: "0.72rem", color: "var(--c-text-tertiary)", fontWeight: 600, marginBottom: "0.1rem" };
-const heroChipValue: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1.6rem", fontWeight: 800, color: "var(--c-positive)", letterSpacing: "-0.02em" };
-const heroChipUnit: React.CSSProperties = { fontSize: "0.85rem", color: "var(--c-text-secondary)", fontWeight: 600, fontFamily: "var(--font-body)" };
-const heroChipMin: React.CSSProperties = {
-  position: "absolute", bottom: -20, left: -10, background: "var(--c-ink)", color: "#fff",
-  borderRadius: 14, padding: "0.85rem 1.1rem", boxShadow: "0 18px 38px -14px rgba(14,23,38,0.4)",
-};
-const heroChipMinLabel: React.CSSProperties = { fontSize: "0.72rem", color: "var(--c-text-on-dark)", fontWeight: 600, marginBottom: "0.1rem" };
-const heroChipMinValue: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1.45rem", fontWeight: 800, letterSpacing: "-0.02em" };
 
 /* Stats strip */
 const statsSection: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "1.5rem 1.5rem 3.5rem" };

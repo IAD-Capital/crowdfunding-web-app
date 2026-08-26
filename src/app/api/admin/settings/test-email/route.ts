@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/requireAdmin";
-import { sendMail } from "@/lib/mail";
+import { sendMail, renderEmail } from "@/lib/mail";
 
 export const dynamic = "force-dynamic";
 
@@ -25,11 +25,11 @@ export async function POST(req: NextRequest) {
   const result = await sendMail({
     to,
     subject: "Email de prueba — IAD Capital",
-    html: `
+    html: renderEmail(`
       <p>Este es un email de prueba enviado desde el panel de administración.</p>
       <p>Remitente: <strong>${sender}</strong></p>
       <p>Enviado el ${new Date().toLocaleString("es-AR")}.</p>
-    `,
+    `),
   });
 
   if (!result.sent) {

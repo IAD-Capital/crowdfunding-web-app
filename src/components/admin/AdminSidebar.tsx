@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation";
 import {
   Building2, Home, Images, Users, TrendingUp, Settings,
   ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen,
-  Plus, List, GitFork, Star, MessageCircle, Bell,
+  Plus, List, GitFork, Star, MessageCircle, Bell, Send,
 } from "lucide-react";
-import NotificationBell, { type Notification } from "@/components/NotificationBell";
+import type { Notification } from "@/components/NotificationBell";
+import AdminAlertsBellLink from "./AdminAlertsBellLink";
 import { useMobileSidebar } from "./MobileSidebarContext";
 
 type SubItem = { label: string; href: string; icon?: React.ReactNode };
@@ -110,9 +111,9 @@ export default function AdminSidebar({ lang, notifications }: Props) {
       key: "notifications",
       label: "Notificaciones",
       icon: <Bell size={ICON} />,
-      direct: true,
       items: [
-        { label: "Enviar notificación", href: `/${lang}/admin/notifications`, icon: <Bell size={SUB_ICON} /> },
+        { label: "Alertas", href: `/${lang}/admin/alerts`, icon: <Bell size={SUB_ICON} /> },
+        { label: "Enviar notificación", href: `/${lang}/admin/notifications`, icon: <Send size={SUB_ICON} /> },
       ],
     },
     {
@@ -261,7 +262,7 @@ export default function AdminSidebar({ lang, notifications }: Props) {
 
         {/* Notifications */}
         <div style={notifRow}>
-          <NotificationBell notifications={notifications} sidebarExpanded={isExpanded} />
+          <AdminAlertsBellLink lang={lang} count={notifications.length} sidebarExpanded={isExpanded} />
         </div>
 
         {/* Toggle button — bottom (desktop only; the mobile drawer closes via the backdrop) */}

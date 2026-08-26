@@ -285,7 +285,7 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
     <Link href={`/${lang}/developments/${d.slug ?? d.id}`} style={devCard}>
       <div style={devCover}>
         {d.images?.[0] ? (
-          <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover" }} />
+          <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 84vw, 300px" />
         ) : (
           <div style={devPlaceholder} />
         )}
@@ -407,7 +407,7 @@ function UnitCoverSlider({
   return (
     <div style={unitCover}>
       {list.length > 0 ? (
-        <Image src={list[index]} alt={identifier} fill style={{ objectFit: "cover" }} />
+        <Image src={list[index]} alt={identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 84vw, 300px" />
       ) : (
         <div style={unitPlaceholder}><Building2 size={28} style={{ opacity: 0.2 }} /></div>
       )}

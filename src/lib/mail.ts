@@ -49,3 +49,21 @@ export function getAppUrl(): string {
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return "http://localhost:3000";
 }
+
+// Shared header/footer used by every outgoing email so they carry consistent branding.
+export function renderEmail(bodyHtml: string): string {
+  const logoUrl = `${getAppUrl()}/iad-capital-logo-email.png`;
+  return `
+    <div style="font-family: Arial, Helvetica, sans-serif; max-width: 560px; margin: 0 auto; color: #1a1a1a;">
+      <div style="background-color: #f2f3f5; padding: 32px 24px; text-align: center;">
+        <img src="${logoUrl}" alt="IAD Capital" width="140" style="display: inline-block; height: auto;" />
+      </div>
+      <div style="padding: 32px 24px; font-size: 15px; line-height: 1.6;">
+        ${bodyHtml}
+      </div>
+      <div style="padding: 16px 24px; text-align: center; font-size: 12px; color: #888;">
+        IAD Capital
+      </div>
+    </div>
+  `;
+}

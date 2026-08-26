@@ -89,7 +89,7 @@ export default function BuyDrawer({
           <div style={drawerHeaderLeft}>
             {coverImg && (
               <div style={thumbWrap}>
-                <Image src={coverImg} alt={identifier} fill style={{ objectFit: "cover", borderRadius: 8 }} />
+                <Image src={coverImg} alt={identifier} fill style={{ objectFit: "cover", borderRadius: 8 }} sizes="48px" />
               </div>
             )}
             <div>

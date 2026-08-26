@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
-import { sendMail } from "@/lib/mail";
+import { sendMail, renderEmail } from "@/lib/mail";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,12 +27,12 @@ export async function POST(req: NextRequest) {
   await sendMail({
     to: email,
     subject: `Tu pregunta: ${row.question}`.slice(0, 80),
-    html: `
+    html: renderEmail(`
       <p>Hola,</p>
       <p>Acá tenés la respuesta que pediste:</p>
       <p><strong>${row.question}</strong></p>
       <p>${row.answer}</p>
-    `,
+    `),
   });
 
   return NextResponse.json({ ok: true });

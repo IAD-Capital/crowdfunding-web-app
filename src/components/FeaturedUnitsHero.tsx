@@ -47,6 +47,22 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
         dangerouslySetInnerHTML={{
           __html: `
         .featured-units-track::-webkit-scrollbar { display: none; }
+        @keyframes investPillIn {
+          0% { opacity: 0; transform: translateY(-14px) scale(0.9); }
+          60% { opacity: 1; transform: translateY(2px) scale(1.04); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes investPillPulse {
+          0%, 100% { box-shadow: 0 8px 20px -6px rgba(14,23,38,0.35), 0 0 0 0 rgba(14,159,110,0.28); }
+          50% { box-shadow: 0 8px 20px -6px rgba(14,23,38,0.35), 0 0 0 7px rgba(14,159,110,0); }
+        }
+        .invest-pill {
+          animation: investPillIn 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+                     investPillPulse 2.6s ease-in-out 0.9s infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .invest-pill { animation: none !important; }
+        }
         @media (max-width: 760px) {
           .featured-units-card { width: 78vw !important; }
           .featured-units-nav { display: none !important; }
@@ -110,17 +126,8 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
         </div>
 
         <div style={carouselCol}>
-          <div style={nav} className="featured-units-nav">
-            <button type="button" style={navBtn} onClick={() => scrollBy(-1)} aria-label="Anterior">
-              <ChevronLeft size={18} />
-            </button>
-            <button type="button" style={navBtn} onClick={() => scrollBy(1)} aria-label="Siguiente">
-              <ChevronRight size={18} />
-            </button>
-          </div>
-
           <div style={track} className="featured-units-track" ref={trackRef}>
-            {units.map((u) => (
+            {units.map((u, idx) => (
               <Link
                 key={u.id}
                 href={`/${lang}/developments/${u.development_slug ?? u.development_id}/units/${u.id}`}
@@ -129,13 +136,13 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
               >
                 <div style={imageWrap}>
                   {u.images[0] ? (
-                    <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 78vw, 340px" />
+                    <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 78vw, 340px" priority={idx === 0} />
                   ) : (
                     <div style={imagePlaceholder} />
                   )}
                   <div style={gradient} />
 
-                  <div style={investPill}>
+                  <div style={{ ...investPill, animationDelay: `${idx * 0.1}s, ${0.9 + idx * 0.1}s` }} className="invest-pill">
                     <span style={investPillLabel}>Invertí desde</span>
                     <span style={investPillValue}>{fmtUsd(u.price_usd * 0.05)}</span>
                   </div>
@@ -179,6 +186,15 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
                 </div>
               </Link>
             ))}
+          </div>
+
+          <div style={nav} className="featured-units-nav">
+            <button type="button" style={navBtn} onClick={() => scrollBy(-1)} aria-label="Anterior">
+              <ChevronLeft size={18} />
+            </button>
+            <button type="button" style={navBtn} onClick={() => scrollBy(1)} aria-label="Siguiente">
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
       </div>
@@ -228,7 +244,7 @@ const trustCheck: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center",
   color: "var(--c-positive)", fontSize: "0.65rem", fontWeight: 800,
 };
-const nav: React.CSSProperties = { display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginBottom: "0.85rem" };
+const nav: React.CSSProperties = { display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.85rem" };
 const navBtn: React.CSSProperties = {
   width: 40, height: 40, borderRadius: "50%", border: "1px solid var(--c-border)",
   background: "var(--c-surface)", color: "var(--c-ink)", display: "flex", alignItems: "center",
