@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const email = (body.email ?? "").trim();
   const questionId = Number(body.questionId);
+  const source = body.source === "faq" ? "faq" : "chatbot";
 
   if (!email || !EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "El email no es válido." }, { status: 400 });
@@ -16,10 +17,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Pregunta inválida." }, { status: 400 });
   }
 
-  const [row] = await db`
-    SELECT question, answer FROM chatbot_questions
-    WHERE id = ${questionId} AND is_active = true
-  `;
+  // FAQ-sourced questions are sent with a negated id (see /api/public/chatbot/questions).
+  const id = Math.abs(questionId);
+  const [row] = source === "faq"
+    ? await db`
+        SELECT question, answer FROM faqs
+        WHERE id = ${id} AND is_active = true AND available_in_chatbot = true
+      `
+    : await db`
+        SELECT question, answer FROM chatbot_questions
+        WHERE id = ${id} AND is_active = true
+      `;
   if (!row) {
     return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   }

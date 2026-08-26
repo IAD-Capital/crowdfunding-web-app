@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/requireAdmin";
 export const dynamic = "force-dynamic";
 
 // CSV columns (header row required):
-// name  slug  address  neighborhood  city  description  completion_date  status
+// name  slug  address  neighborhood  city  country  description  completion_date  status
 // developer_name  amenities  projected_value_usd  projected_gain_pct  zone_price_per_m2
 // featured  visible
 //
@@ -153,6 +153,7 @@ export async function POST(req: NextRequest) {
     address: string;
     neighborhood: string | null;
     city: string | null;
+    country: string | null;
     description: string | null;
     completion_date: string | null;
     status: string;
@@ -212,6 +213,7 @@ export async function POST(req: NextRequest) {
       address: r.address.trim(),
       neighborhood: r.neighborhood?.trim() || null,
       city: r.city?.trim() || null,
+      country: r.country?.trim() || null,
       description: r.description?.trim() || null,
       completion_date,
       status,
@@ -231,7 +233,7 @@ export async function POST(req: NextRequest) {
 
   const inserted = await db`
     INSERT INTO developments ${db(inserts, [
-      "name", "slug", "address", "neighborhood", "city", "description", "completion_date",
+      "name", "slug", "address", "neighborhood", "city", "country", "description", "completion_date",
       "status", "developer_id", "amenities", "projected_value_usd", "projected_gain_pct",
       "zone_price_per_m2", "featured", "visible",
     ])}

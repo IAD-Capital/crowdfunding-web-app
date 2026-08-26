@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS developments (
   address             TEXT        NOT NULL,
   neighborhood        TEXT,
   city                TEXT,
+  country             TEXT,
   description         TEXT,
   completion_date     DATE,
   status              TEXT        NOT NULL DEFAULT 'active',
@@ -127,6 +128,17 @@ CREATE TABLE IF NOT EXISTS chatbot_unanswered_questions (
   user_id    INTEGER     REFERENCES users(id) ON DELETE SET NULL,
   status     TEXT        NOT NULL DEFAULT 'pending',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS faqs (
+  id                    SERIAL PRIMARY KEY,
+  question              TEXT        NOT NULL,
+  answer                TEXT        NOT NULL,
+  is_active             BOOLEAN     NOT NULL DEFAULT TRUE,
+  available_in_chatbot  BOOLEAN     NOT NULL DEFAULT FALSE,
+  sort_order            INTEGER     NOT NULL DEFAULT 0,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS push_subscriptions (

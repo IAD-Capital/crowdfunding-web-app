@@ -8,15 +8,14 @@ type Props = { lang: string };
 
 type Result = {
   imported: number;
-  developments: { id: number; name: string; slug: string | null }[];
+  faqs: { id: number; question: string }[];
 };
 
-const TEMPLATE_HEADER =
-  "name,slug,address,neighborhood,city,country,description,completion_date,status,developer_name,amenities,projected_value_usd,projected_gain_pct,zone_price_per_m2,featured,visible";
+const TEMPLATE_HEADER = "question,answer,is_active,available_in_chatbot";
 const TEMPLATE_EXAMPLE =
-  "IAD Palermo Soho,iad-palermo-soho,Gorriti 4800,Palermo,CABA,Argentina,Edificio de categoría a metros de plaza Serrano.,2028-03-15,active,IAD Group,Piscina;Gimnasio;SUM,2500000,18.5,3200,true,true";
+  "¿Cuál es la inversión mínima?,Podés invertir desde el 5% del valor de una unidad.,true,true";
 
-export default function DevelopmentsCSVImportView({ lang }: Props) {
+export default function FaqsCSVImportView({ lang }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -42,7 +41,7 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
     const fd = new FormData();
     fd.append("file", file);
 
-    const res = await fetch("/api/admin/developments/import", { method: "POST", body: fd });
+    const res = await fetch("/api/admin/faqs/import", { method: "POST", body: fd });
     const data = await res.json();
     setLoading(false);
 
@@ -61,7 +60,7 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "template-emprendimientos.csv";
+    a.download = "template-faqs.csv";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -75,13 +74,10 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
           <button style={btnSecondary} onClick={downloadTemplate}>⬇ Descargar template</button>
         </div>
         <div style={codeBlock}>
-          <p style={codeLine}><strong>Obligatorias:</strong> name, address</p>
+          <p style={codeLine}><strong>Obligatorias:</strong> question, answer</p>
           <p style={codeLine}>
-            <strong>Opcionales:</strong> slug, neighborhood, city, country, description, completion_date (AAAA-MM-DD o MM/AAAA, ej: 07/2027 — se guarda como el día 1 de ese mes),
-            status (active / completed / cancelled), developer_name, amenities (separadas por “;”),
-            projected_value_usd, projected_gain_pct, zone_price_per_m2, featured (true/false), visible (true/false)
+            <strong>Opcionales:</strong> is_active (true/false, default true), available_in_chatbot (true/false, default false)
           </p>
-          <p style={codeLine}>Este importador no carga imágenes ni unidades — solo los datos del emprendimiento.</p>
           <p style={{ ...codeLine, marginTop: "0.75rem", fontFamily: "monospace", fontSize: "0.8rem", color: "#374151", wordBreak: "break-all" }}>
             {TEMPLATE_HEADER}
           </p>
@@ -133,15 +129,15 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
         {result && (
           <div style={successBox}>
             <p style={{ fontWeight: 700, margin: "0 0 0.35rem" }}>
-              ✓ {result.imported} emprendimiento{result.imported !== 1 ? "s" : ""} importado{result.imported !== 1 ? "s" : ""} correctamente
+              ✓ {result.imported} pregunta{result.imported !== 1 ? "s" : ""} importada{result.imported !== 1 ? "s" : ""} correctamente
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", marginTop: "0.5rem" }}>
-              {result.developments.map((d) => (
-                <span key={d.id} style={importedChip}>{d.name}</span>
+              {result.faqs.map((f) => (
+                <span key={f.id} style={importedChip}>{f.question.slice(0, 40)}</span>
               ))}
             </div>
-            <Link href={`/${lang}/admin/developments`} style={{ ...btnSecondary, display: "inline-block", marginTop: "1rem", textDecoration: "none" }}>
-              Ver todos los emprendimientos →
+            <Link href={`/${lang}/admin/faqs`} style={{ ...btnSecondary, display: "inline-block", marginTop: "1rem", textDecoration: "none" }}>
+              Ver todas las FAQs →
             </Link>
           </div>
         )}
@@ -152,7 +148,7 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
             onClick={handleImport}
             disabled={!file || loading}
           >
-            {loading ? "Importando…" : "Importar emprendimientos"}
+            {loading ? "Importando…" : "Importar FAQs"}
           </button>
         </div>
       </div>

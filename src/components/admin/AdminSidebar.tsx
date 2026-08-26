@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Building2, Home, Images, Users, TrendingUp, Settings,
   ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen,
-  Plus, List, GitFork, Star, MessageCircle, Bell, Send,
+  Plus, List, GitFork, Star, MessageCircle, Bell, Send, HelpCircle, Upload,
 } from "lucide-react";
 import type { Notification } from "@/components/NotificationBell";
 import AdminAlertsBellLink from "./AdminAlertsBellLink";
@@ -96,6 +96,16 @@ export default function AdminSidebar({ lang, notifications }: Props) {
         { label: "Crear nueva", href: `/${lang}/admin/chatbot/new`, icon: <Plus size={SUB_ICON} /> },
         { label: "Ver todas", href: `/${lang}/admin/chatbot`, icon: <List size={SUB_ICON} /> },
         { label: "Sin responder", href: `/${lang}/admin/chatbot/unanswered`, icon: <List size={SUB_ICON} /> },
+      ],
+    },
+    {
+      key: "faqs",
+      label: "FAQs",
+      icon: <HelpCircle size={ICON} />,
+      items: [
+        { label: "Crear nueva", href: `/${lang}/admin/faqs/new`, icon: <Plus size={SUB_ICON} /> },
+        { label: "Ver todas", href: `/${lang}/admin/faqs`, icon: <List size={SUB_ICON} /> },
+        { label: "Importar CSV", href: `/${lang}/admin/faqs/import`, icon: <Upload size={SUB_ICON} /> },
       ],
     },
     {
