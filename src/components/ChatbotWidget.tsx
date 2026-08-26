@@ -3,7 +3,13 @@
 import { useRef, useState } from "react";
 import { Bot, X, Send, Mail, ArrowLeft, Loader2 } from "lucide-react";
 
-type Question = { id: number; parent_id: number | null; question: string; answer: string | null };
+type Question = {
+  id: number;
+  parent_id: number | null;
+  question: string;
+  answer: string | null;
+  source?: "chatbot" | "faq";
+};
 type View = "list" | "node" | "other" | "other-sent";
 
 type Props = { userEmail: string | null };
@@ -97,7 +103,11 @@ export default function ChatbotWidget({ userEmail }: Props) {
       const res = await fetch("/api/public/chatbot/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionId: current.id, email: emailInput.trim() }),
+        body: JSON.stringify({
+          questionId: current.id,
+          email: emailInput.trim(),
+          source: current.source ?? "chatbot",
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
