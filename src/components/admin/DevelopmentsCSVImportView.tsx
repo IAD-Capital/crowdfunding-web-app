@@ -12,9 +12,9 @@ type Result = {
 };
 
 const TEMPLATE_HEADER =
-  "name,slug,address,neighborhood,city,description,completion_date,status,developer_name,amenities,projected_value_usd,projected_gain_pct,zone_price_per_m2,featured,visible";
+  "name,slug,address,neighborhood,city,country,description,completion_date,status,developer_name,amenities,projected_value_usd,projected_gain_pct,zone_price_per_m2,featured,visible";
 const TEMPLATE_EXAMPLE =
-  "IAD Palermo Soho,iad-palermo-soho,Gorriti 4800,Palermo,CABA,Edificio de categoría a metros de plaza Serrano.,2028-03-15,active,IAD Group,Piscina;Gimnasio;SUM,2500000,18.5,3200,true,true";
+  "IAD Palermo Soho,iad-palermo-soho,Gorriti 4800,Palermo,CABA,Argentina,Edificio de categoría a metros de plaza Serrano.,2028-03-15,active,IAD Group,Piscina;Gimnasio;SUM,2500000,18.5,3200,true,true";
 
 export default function DevelopmentsCSVImportView({ lang }: Props) {
   const router = useRouter();
@@ -77,7 +77,7 @@ export default function DevelopmentsCSVImportView({ lang }: Props) {
         <div style={codeBlock}>
           <p style={codeLine}><strong>Obligatorias:</strong> name, address</p>
           <p style={codeLine}>
-            <strong>Opcionales:</strong> slug, neighborhood, city, description, completion_date (AAAA-MM-DD o MM/AAAA, ej: 07/2027 — se guarda como el día 1 de ese mes),
+            <strong>Opcionales:</strong> slug, neighborhood, city, country, description, completion_date (AAAA-MM-DD o MM/AAAA, ej: 07/2027 — se guarda como el día 1 de ese mes),
             status (active / completed / cancelled), developer_name, amenities (separadas por “;”),
             projected_value_usd, projected_gain_pct, zone_price_per_m2, featured (true/false), visible (true/false)
           </p>

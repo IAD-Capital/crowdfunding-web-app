@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS developments (
   address             TEXT        NOT NULL,
   neighborhood        TEXT,
   city                TEXT,
+  country             TEXT,
   description         TEXT,
   completion_date     DATE,
   status              TEXT        NOT NULL DEFAULT 'active',
