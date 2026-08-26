@@ -15,6 +15,7 @@
   "dependencies": {
     "@next/third-parties": "^16.2.12",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "bcryptjs": "^2.4.3",
     "jose": "^5.9.3",
     "lucide-react": "^1.21.0",
