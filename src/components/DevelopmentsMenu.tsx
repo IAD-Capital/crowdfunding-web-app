@@ -63,7 +63,7 @@ export default function DevelopmentsMenu({
                   <Link key={d.id} href={`/${lang}/developments/${d.slug ?? d.id}`} className={s.megaItem}>
                     <div className={s.megaItemImage}>
                       {d.image ? (
-                        <Image src={d.image} alt={d.name} fill style={{ objectFit: "cover" }} className={s.megaItemImg} />
+                        <Image src={d.image} alt={d.name} fill style={{ objectFit: "cover" }} className={s.megaItemImg} sizes="(max-width: 640px) 90vw, 240px" />
                       ) : (
                         <div className={s.megaItemPlaceholder} />
                       )}

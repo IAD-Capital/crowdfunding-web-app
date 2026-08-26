@@ -136,7 +136,7 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
               >
                 <div style={imageWrap}>
                   {u.images[0] ? (
-                    <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 78vw, 340px" />
+                    <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 78vw, 340px" priority={idx === 0} />
                   ) : (
                     <div style={imagePlaceholder} />
                   )}
