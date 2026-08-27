@@ -5,6 +5,7 @@ import db from "@/lib/db";
 import PublicShell from "@/components/PublicShell";
 import ImageGallery from "@/components/admin/ImageGallery";
 import Link from "next/link";
+import TrackedLink from "@/components/TrackedLink";
 import Image from "next/image";
 import { getAmenityIcon } from "@/lib/icons";
 
@@ -108,7 +109,14 @@ export default async function PublicDevelopmentPage({
                   {units.map((u) => {
                     const sc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
                     return (
-                      <Link key={u.id} href={`/${lang}/developments/${dev.slug ?? dev.id}/units/${u.id}`} style={{ ...unitCard, textDecoration: "none", color: "inherit" }}>
+                      <TrackedLink
+                        key={u.id}
+                        href={`/${lang}/developments/${dev.slug ?? dev.id}/units/${u.id}`}
+                        style={{ ...unitCard, textDecoration: "none", color: "inherit" }}
+                        ctaId="development_page_unit_card"
+                        ctaLabel={u.identifier}
+                        ctaLocation="development_page"
+                      >
                         <div style={unitCover}>
                           {u.images?.[0] ? (
                             <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 600px) 90vw, 220px" />
@@ -138,7 +146,7 @@ export default async function PublicDevelopmentPage({
                           </p>
                           <span style={viewUnitLink}>Ver detalle →</span>
                         </div>
-                      </Link>
+                      </TrackedLink>
                     );
                   })}
                 </div>
@@ -165,12 +173,24 @@ export default async function PublicDevelopmentPage({
                 </p>
               ) : session ? null : (
                 <>
-                  <Link href={`/${lang}/signup`} style={sideBtnPrimary}>
+                  <TrackedLink
+                    href={`/${lang}/signup`}
+                    style={sideBtnPrimary}
+                    ctaId="development_page_signup"
+                    ctaLabel={dev.name}
+                    ctaLocation="development_page_sidebar"
+                  >
                     Empezar a invertir
-                  </Link>
-                  <Link href={`/${lang}/login`} style={sideBtnOutline}>
+                  </TrackedLink>
+                  <TrackedLink
+                    href={`/${lang}/login`}
+                    style={sideBtnOutline}
+                    ctaId="development_page_login"
+                    ctaLabel={dev.name}
+                    ctaLocation="development_page_sidebar"
+                  >
                     Ya tengo cuenta
-                  </Link>
+                  </TrackedLink>
                 </>
               )}
               <div style={sideFact}>

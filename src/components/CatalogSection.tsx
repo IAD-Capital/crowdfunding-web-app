@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { getTierDefs, unitQualifiesForTier, MIN_ENTRY_PCT, type TierThresholds, type TierKey } from "@/lib/investmentTiers";
 import { getAmenityIcon } from "@/lib/icons";
+import { trackCtaClick } from "@/lib/analytics";
 
 export type Development = {
   id: number;
@@ -282,7 +283,11 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
     : null;
 
   return (
-    <Link href={`/${lang}/developments/${d.slug ?? d.id}`} style={devCard}>
+    <Link
+      href={`/${lang}/developments/${d.slug ?? d.id}`}
+      style={devCard}
+      onClick={() => trackCtaClick("catalog_development_card", { label: d.name, location: "catalog" })}
+    >
       <div style={devCover}>
         {d.images?.[0] ? (
           <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 84vw, 300px" />
@@ -343,7 +348,11 @@ function UnitCard({
 
   return (
     <div style={unitCard}>
-      <Link href={`/${lang}/developments/${devSlug}/units/${u.id}`} style={unitLink}>
+      <Link
+        href={`/${lang}/developments/${devSlug}/units/${u.id}`}
+        style={unitLink}
+        onClick={() => trackCtaClick("catalog_unit_card", { label: u.identifier, location: "catalog" })}
+      >
         <UnitCoverSlider images={u.images} identifier={u.identifier} statusBadge={{ background: sc.bg, color: sc.fg, label: sc.label }} />
         <div style={unitBody}>
           <div style={unitTopRow}>
@@ -368,17 +377,33 @@ function UnitCard({
 
       {entryPrice != null && (
         <div style={unitPriceRow}>
-          <Link href={`/${lang}/developments/${devSlug}/units/${u.id}`} style={{ textDecoration: "none" }}>
+          <Link
+            href={`/${lang}/developments/${devSlug}/units/${u.id}`}
+            style={{ textDecoration: "none" }}
+            onClick={() => trackCtaClick("catalog_unit_price", { label: u.identifier, location: "catalog" })}
+          >
             <div style={priceSublabel}>Precio de entrada</div>
             <div style={priceEntry}>{fmtUsd(entryPrice)}</div>
             {minInvest != null && <div style={minInvestLabel}>Invertí desde {fmtUsd(minInvest)}</div>}
           </Link>
           {canBuy ? (
-            <button style={btnInvest} onClick={onInvest}>
+            <button
+              style={btnInvest}
+              onClick={() => {
+                trackCtaClick("catalog_invest_button", { label: u.identifier, location: "catalog" });
+                onInvest();
+              }}
+            >
               Invertir →
             </button>
           ) : alreadyInvested ? (
-            <a href={`/${lang}/wallet`} style={btnAlready}>Ya invertido →</a>
+            <a
+              href={`/${lang}/wallet`}
+              style={btnAlready}
+              onClick={() => trackCtaClick("catalog_already_invested", { label: u.identifier, location: "catalog" })}
+            >
+              Ya invertido →
+            </a>
           ) : null}
         </div>
       )}

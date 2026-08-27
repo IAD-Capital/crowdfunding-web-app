@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import PasswordInput from "./PasswordInput";
+import { trackCtaClick } from "@/lib/analytics";
 
 type Mode = "login" | "signup";
 
@@ -47,6 +48,8 @@ export default function AuthCTASection({ lang }: { lang: string }) {
       setError(data.error ?? "Ocurrió un error. Intentá de nuevo.");
       return;
     }
+
+    trackCtaClick(mode === "login" ? "auth_cta_login_submit" : "auth_cta_signup_submit", { location: "home_auth_cta" });
 
     const dest = data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
     router.push(dest);

@@ -8,6 +8,7 @@ import type { Dictionary } from "@/i18n";
 import type { AuthBackgroundImage } from "@/lib/authBackgroundImages";
 import PasswordInput from "./PasswordInput";
 import AuthBackgroundSlideshow from "./AuthBackgroundSlideshow";
+import { trackCtaClick } from "@/lib/analytics";
 
 type Props = {
   t: Dictionary["auth"]["signup"];
@@ -60,6 +61,7 @@ export default function SignupForm({ t, lang, next, backgroundImages = [] }: Pro
       return;
     }
 
+    trackCtaClick("signup_form_submit", { location: "signup_page" });
     router.push(next && next.startsWith("/") ? next : `/${lang}`);
     router.refresh();
   }
@@ -170,7 +172,13 @@ export default function SignupForm({ t, lang, next, backgroundImages = [] }: Pro
 
             <p style={footer}>
               {t.haveAccount}{" "}
-              <Link href={`/${lang}/login${next ? `?next=${encodeURIComponent(next)}` : ""}`} style={link}>{t.signIn}</Link>
+              <Link
+                href={`/${lang}/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}
+                style={link}
+                onClick={() => trackCtaClick("signup_page_login", { location: "signup_page" })}
+              >
+                {t.signIn}
+              </Link>
             </p>
           </div>
         </div>

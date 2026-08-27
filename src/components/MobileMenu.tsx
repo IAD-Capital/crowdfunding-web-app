@@ -11,6 +11,7 @@ import Link from "next/link";
 import NotificationBell, { type Notification } from "./NotificationBell";
 import MobileFeaturedCarousel, { type FeaturedProperty } from "./MobileFeaturedCarousel";
 import type { Locale } from "@/i18n";
+import { trackCtaClick } from "@/lib/analytics";
 import s from "./Header.module.scss";
 
 type Session = {
@@ -112,7 +113,7 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
                     href={`/${lang}#catalog`}
                     className={`${s.btnOutline} ${s.blockBtn}`}
                     style={{ marginTop: "0.75rem" }}
-                    onClick={close}
+                    onClick={() => { trackCtaClick("mobile_menu_view_properties", { location: "mobile_menu" }); close(); }}
                   >
                     Ver todas las propiedades
                   </Link>
@@ -123,7 +124,7 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
                 <Link
                   href={`/${lang}/como-invertir`}
                   className={`${s.btnCta} ${s.blockBtn}`}
-                  onClick={close}
+                  onClick={() => { trackCtaClick("mobile_menu_como_invertir", { location: "mobile_menu" }); close(); }}
                 >
                   Quiero invertir
                 </Link>
@@ -133,7 +134,11 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
                 <div className={s.mobileMenuSection}>
                   {session.role !== "superadmin" && (
                     <>
-                      <Link href={`/${lang}/wallet`} className={s.userMenuItem} onClick={close}>
+                      <Link
+                        href={`/${lang}/wallet`}
+                        className={s.userMenuItem}
+                        onClick={() => { trackCtaClick("mobile_menu_wallet", { location: "mobile_menu" }); close(); }}
+                      >
                         <Wallet size={16} /> Mi cartera
                       </Link>
                       <Link href={`/${lang}/profile`} className={s.userMenuItem} onClick={close}>
@@ -158,6 +163,7 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
                   target="_blank"
                   rel="noopener noreferrer"
                   className={s.userMenuItem}
+                  onClick={() => trackCtaClick("mobile_menu_instagram", { location: "mobile_menu" })}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
@@ -181,14 +187,18 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
                 </div>
               ) : (
                 <div className={s.mobileMenuSection} style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
-                  <Link href={`/${lang}/login`} className={s.userMenuItem} onClick={close}>
+                  <Link
+                    href={`/${lang}/login`}
+                    className={s.userMenuItem}
+                    onClick={() => { trackCtaClick("mobile_menu_login", { location: "mobile_menu" }); close(); }}
+                  >
                     <LogIn size={16} /> {labels.signIn}
                   </Link>
                   <Link
                     href={`/${lang}/signup`}
                     className={`${s.btnOutline} ${s.blockBtn}`}
                     style={{ marginTop: "0.4rem", gap: "0.5rem" }}
-                    onClick={close}
+                    onClick={() => { trackCtaClick("mobile_menu_signup", { location: "mobile_menu" }); close(); }}
                   >
                     <UserPlus size={16} /> {labels.signUp}
                   </Link>

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRightLeft } from "lucide-react";
 import { MIN_ENTRY_PCT } from "@/lib/investmentTiers";
+import { trackCtaClick } from "@/lib/analytics";
 
 type SimUnit = {
   id: number;
@@ -167,6 +168,7 @@ export default function InvestmentSimulator({ developments, units, lang }: Props
             <Link
               href={`/${lang}/developments/${developments.find(d => d.id === selectedUnit.development_id)?.slug ?? selectedUnit.development_id}/units/${selectedUnit.id}`}
               style={{ ...ctaBtn, ...(outOfRange ? ctaBtnDisabled : {}) }}
+              onClick={() => trackCtaClick("simulator_view_unit", { label: selectedUnit.identifier, location: "investment_simulator" })}
             >
               Ver unidad e invertir →
             </Link>

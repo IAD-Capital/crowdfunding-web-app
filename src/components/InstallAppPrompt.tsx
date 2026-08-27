@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X, Share, SquarePlus, Bell } from "lucide-react";
+import { trackCtaClick } from "@/lib/analytics";
 import s from "./InstallAppPrompt.module.scss";
 
 const INSTALL_DISMISS_KEY = "pwa-install-dismissed-at";
@@ -127,6 +128,7 @@ export default function InstallAppPrompt() {
 
   async function handleInstallClick() {
     if (!deferredEvent) return;
+    trackCtaClick("install_app_prompt", { location: "install_banner" });
     await deferredEvent.prompt();
     await deferredEvent.userChoice;
     setDeferredEvent(null);
@@ -139,6 +141,7 @@ export default function InstallAppPrompt() {
       setStage(null);
       return;
     }
+    trackCtaClick("enable_notifications_prompt", { location: "notifications_banner" });
     setSubscribing(true);
     try {
       const permission = await Notification.requestPermission();

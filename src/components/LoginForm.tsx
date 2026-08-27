@@ -8,6 +8,7 @@ import type { Dictionary } from "@/i18n";
 import type { AuthBackgroundImage } from "@/lib/authBackgroundImages";
 import PasswordInput from "./PasswordInput";
 import AuthBackgroundSlideshow from "./AuthBackgroundSlideshow";
+import { trackCtaClick } from "@/lib/analytics";
 
 type Props = {
   t: Dictionary["auth"]["login"];
@@ -42,6 +43,8 @@ export default function LoginForm({ t, lang, next, backgroundImages = [] }: Prop
       setError(data.error ?? t.error.generic);
       return;
     }
+
+    trackCtaClick("login_form_submit", { location: "login_page" });
 
     setRedirecting(true);
     const dest =
@@ -135,7 +138,13 @@ export default function LoginForm({ t, lang, next, backgroundImages = [] }: Prop
 
             <p style={footer}>
               {t.noAccount}{" "}
-              <Link href={`/${lang}/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`} style={link}>{t.createOne}</Link>
+              <Link
+                href={`/${lang}/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`}
+                style={link}
+                onClick={() => trackCtaClick("login_page_create_account", { location: "login_page" })}
+              >
+                {t.createOne}
+              </Link>
             </p>
           </div>
         </div>

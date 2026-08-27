@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { trackCtaClick } from "@/lib/analytics";
 
 type Props = {
   investmentId: number;
@@ -24,6 +25,7 @@ export default function RemovalRequestButton({ investmentId, hasPendingRequest }
       setError(d.error ?? "Error al solicitar remoción.");
       return;
     }
+    trackCtaClick("wallet_removal_request", { location: "wallet" });
     startTransition(() => router.refresh());
   }
 

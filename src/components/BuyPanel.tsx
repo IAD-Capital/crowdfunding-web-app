@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PhoneRequiredNotice from "./PhoneRequiredNotice";
+import { trackCtaClick } from "@/lib/analytics";
 
 type Props = {
   unitId: number;
@@ -57,6 +58,7 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
     const data = await res.json();
     setLoading(false);
     if (!res.ok) { setError(data.error ?? "Error al procesar."); return; }
+    trackCtaClick("buy_panel_confirm", { label: identifier, location: "unit_page", percentage: effectivePct, amount_usd: amount });
     setDone(true);
     router.refresh();
   }
@@ -84,8 +86,19 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "center" }}>
-          <button style={reinvestBtn} onClick={reset}>Invertir de nuevo</button>
-          <a href={`/${lang}/wallet`} style={walletLink}>Ver mi cartera →</a>
+          <button
+            style={reinvestBtn}
+            onClick={() => { trackCtaClick("buy_panel_reinvest", { label: identifier, location: "unit_page" }); reset(); }}
+          >
+            Invertir de nuevo
+          </button>
+          <a
+            href={`/${lang}/wallet`}
+            style={walletLink}
+            onClick={() => trackCtaClick("buy_panel_view_wallet", { label: identifier, location: "unit_page" })}
+          >
+            Ver mi cartera →
+          </a>
         </div>
       </div>
     );
@@ -214,7 +227,10 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
 
       <button
         style={{ ...btnBuy, opacity: loading || !canSubmit ? 0.5 : 1, cursor: canSubmit ? "pointer" : "not-allowed" }}
-        onClick={handleBuy}
+        onClick={() => {
+          trackCtaClick("buy_panel_submit", { label: identifier, location: "unit_page", percentage: effectivePct });
+          handleBuy();
+        }}
         disabled={loading || !canSubmit}
       >
         {loading ? "Procesando…" : `Confirmar inversión · ${

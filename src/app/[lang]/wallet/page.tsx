@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import db from "@/lib/db";
 import PublicShell from "@/components/PublicShell";
 import Image from "next/image";
-import Link from "next/link";
+import TrackedLink from "@/components/TrackedLink";
 import RemovalRequestButton from "@/components/RemovalRequestButton";
 
 type InvestmentRow = {
@@ -132,7 +132,14 @@ export default async function WalletPage({ params }: { params: { lang: string } 
             <p style={{ color: "#9ca3af", fontSize: "0.9rem", margin: 0 }}>
               Explorá los emprendimientos disponibles y empezá a invertir.
             </p>
-            <Link href={`/${lang}#catalog`} style={btnExplore}>Ver emprendimientos</Link>
+            <TrackedLink
+              href={`/${lang}#catalog`}
+              style={btnExplore}
+              ctaId="wallet_explore_developments"
+              ctaLocation="wallet_empty_state"
+            >
+              Ver emprendimientos
+            </TrackedLink>
           </div>
         ) : (
           <div style={cards}>
@@ -209,12 +216,15 @@ export default async function WalletPage({ params }: { params: { lang: string } 
 
                     <div style={cardFooter}>
                       <span style={dateLabel}>{fmtDate(inv.created_at)}</span>
-                      <Link
+                      <TrackedLink
                         href={`/${lang}/developments/${inv.development_slug ?? inv.development_id}`}
                         style={viewLink}
+                        ctaId="wallet_view_development"
+                        ctaLabel={inv.identifier}
+                        ctaLocation="wallet"
                       >
                         Ver emprendimiento →
-                      </Link>
+                      </TrackedLink>
                     </div>
 
                     {inv.status === "approved" && session.role === "investor" && (

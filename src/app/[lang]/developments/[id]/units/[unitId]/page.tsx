@@ -9,7 +9,7 @@ import PublicShell from "@/components/PublicShell";
 import UnitHeroGallery from "@/components/UnitHeroGallery";
 import ImageGallery from "@/components/admin/ImageGallery";
 import BuyPanel from "@/components/BuyPanel";
-import Link from "next/link";
+import TrackedLink from "@/components/TrackedLink";
 import Image from "next/image";
 import {
   Layers, Maximize, Home, Trees, BedDouble, Bed, Bath, Compass, ChevronRight, MapPin,
@@ -215,10 +215,16 @@ export default async function PublicUnitPage({
           <div style={leftCol}>
             {/* Top info block */}
             <div style={topInfoBlock}>
-              <Link href={`/${lang}/developments/${dev.slug ?? dev.id}`} style={devLinkRow}>
+              <TrackedLink
+                href={`/${lang}/developments/${dev.slug ?? dev.id}`}
+                style={devLinkRow}
+                ctaId="unit_page_breadcrumb"
+                ctaLabel={dev.name}
+                ctaLocation="unit_page"
+              >
                 <span>{dev.name} · {dev.address}</span>
                 <ChevronRight size={16} />
-              </Link>
+              </TrackedLink>
 
               <div style={priceFactsRow}>
                 <div style={priceCol}>
@@ -256,7 +262,15 @@ export default async function PublicUnitPage({
               </div>
 
               {showInvestHeadline && (
-                <a href="#invertir" style={estCta}>Empezar a invertir →</a>
+                <TrackedLink
+                  href="#invertir"
+                  style={estCta}
+                  ctaId="unit_page_start_investing"
+                  ctaLabel={unit.identifier}
+                  ctaLocation="unit_page_header"
+                >
+                  Empezar a invertir →
+                </TrackedLink>
               )}
             </div>
 
@@ -373,10 +387,13 @@ export default async function PublicUnitPage({
                   {relatedUnits.map((u) => {
                     const rsc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
                     return (
-                      <Link
+                      <TrackedLink
                         key={u.id}
                         href={`/${lang}/developments/${dev.slug ?? dev.id}/units/${u.id}`}
                         style={relatedCard}
+                        ctaId="unit_page_related_unit"
+                        ctaLabel={u.identifier}
+                        ctaLocation="unit_page_related_units"
                       >
                         <div style={relatedImageWrap}>
                           {u.images?.[0] ? (
@@ -400,7 +417,7 @@ export default async function PublicUnitPage({
                             )}
                           </div>
                         </div>
-                      </Link>
+                      </TrackedLink>
                     );
                   })}
                 </div>
@@ -422,9 +439,15 @@ export default async function PublicUnitPage({
                   <span>{dev.neighborhood ? `${dev.neighborhood}, ` : ""}{dev.city ?? dev.address}</span>
                 </div>
               </div>
-              <Link href={`/${lang}/developments/${dev.slug ?? dev.id}`} style={devMiniLink}>
+              <TrackedLink
+                href={`/${lang}/developments/${dev.slug ?? dev.id}`}
+                style={devMiniLink}
+                ctaId="unit_page_dev_mini_card"
+                ctaLabel={dev.name}
+                ctaLocation="unit_page"
+              >
                 Ver emprendimiento <ChevronRight size={14} />
-              </Link>
+              </TrackedLink>
             </div>
           </div>
 
@@ -472,7 +495,15 @@ export default async function PublicUnitPage({
                   <p style={{ margin: "0.15rem 0 0", fontSize: "0.82rem", color: myInvestment.status === "pending" ? "#92400e" : "#166534" }}>
                     USD {Number(myInvestment.amount_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })}
                   </p>
-                  <a href={`/${lang}/wallet`} style={walletBtn}>Ver mi cartera →</a>
+                  <TrackedLink
+                    href={`/${lang}/wallet`}
+                    style={walletBtn}
+                    ctaId="unit_page_view_wallet"
+                    ctaLabel={unit.identifier}
+                    ctaLocation="unit_page_sidebar"
+                  >
+                    Ver mi cartera →
+                  </TrackedLink>
                 </div>
               ) : canInvest && unit.status !== "sold" && unit.price_usd != null && !groupExpired ? (
                 <BuyPanel
@@ -489,14 +520,26 @@ export default async function PublicUnitPage({
                 <p style={soldNote}>Esta unidad ya fue vendida en su totalidad.</p>
               ) : !isAuthenticated ? (
                 <>
-                  <Link href={`/${lang}/signup?next=${encodeURIComponent(unitPath)}`} style={sideBtnPrimary}>
+                  <TrackedLink
+                    href={`/${lang}/signup?next=${encodeURIComponent(unitPath)}`}
+                    style={sideBtnPrimary}
+                    ctaId="unit_page_signup"
+                    ctaLabel={unit.identifier}
+                    ctaLocation="unit_page_sidebar"
+                  >
                     Invertir en esta unidad
-                  </Link>
+                  </TrackedLink>
                   <p style={loginHint}>
                     ¿Ya tenés cuenta?{" "}
-                    <Link href={`/${lang}/login?next=${encodeURIComponent(unitPath)}`} style={loginHintLink}>
+                    <TrackedLink
+                      href={`/${lang}/login?next=${encodeURIComponent(unitPath)}`}
+                      style={loginHintLink}
+                      ctaId="unit_page_login"
+                      ctaLabel={unit.identifier}
+                      ctaLocation="unit_page_sidebar"
+                    >
                       Iniciá sesión
-                    </Link>
+                    </TrackedLink>
                   </p>
                 </>
               ) : (

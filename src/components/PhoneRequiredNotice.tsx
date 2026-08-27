@@ -1,3 +1,5 @@
+import TrackedLink from "./TrackedLink";
+
 type Props = { lang: string };
 
 export default function PhoneRequiredNotice({ lang }: Props) {
@@ -7,7 +9,14 @@ export default function PhoneRequiredNotice({ lang }: Props) {
       <p style={text}>
         Para invertir necesitamos confirmar tu identidad por WhatsApp. Agregá tu número de teléfono en tu perfil para continuar.
       </p>
-      <a href={`/${lang}/profile`} style={link}>Completar mi perfil →</a>
+      <TrackedLink
+        href={`/${lang}/profile`}
+        style={link}
+        ctaId="phone_required_complete_profile"
+        ctaLocation="phone_required_notice"
+      >
+        Completar mi perfil →
+      </TrackedLink>
     </div>
   );
 }
