@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Share2, Link as LinkIcon, Check } from "lucide-react";
+import { Share, Link as LinkIcon, Check } from "lucide-react";
 
 type Props = {
   url: string;
@@ -51,7 +51,7 @@ export default function ShareButton({ url, title, variant = "inline" }: Props) {
         aria-label="Compartir"
         aria-expanded={open}
       >
-        <Share2 size={variant === "hero" ? 18 : 16} />
+        <Share size={variant === "hero" ? 18 : 16} />
         {variant === "inline" && <span>Compartir</span>}
       </button>
 

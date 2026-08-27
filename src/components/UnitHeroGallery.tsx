@@ -45,7 +45,7 @@ export default function UnitHeroGallery({ images, alt, backHref, backLabel, shar
     return (
       <div style={{ ...mainImageArea, background: "#111" }} className="unit-hero-main">
         <Link href={backHref} style={backBtn}><ArrowLeft size={18} /></Link>
-        <div style={shareBtnWrap}>
+        <div style={heroActionsWrap}>
           <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
         </div>
       </div>
@@ -61,7 +61,7 @@ export default function UnitHeroGallery({ images, alt, backHref, backLabel, shar
           <ArrowLeft size={18} />
         </Link>
 
-        <div style={shareBtnWrap}>
+        <div style={heroActionsWrap}>
           <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
         </div>
 
@@ -145,8 +145,10 @@ const backBtn: React.CSSProperties = {
   textDecoration: "none", backdropFilter: "blur(2px)",
 };
 
-const shareBtnWrap: React.CSSProperties = {
+// Row of floating circular actions (share, and later favorites) mirroring the back button on the opposite corner.
+const heroActionsWrap: React.CSSProperties = {
   position: "absolute", top: 16, right: 16, zIndex: 5,
+  display: "flex", alignItems: "center", gap: "0.5rem",
 };
 
 const navBtn: React.CSSProperties = {
