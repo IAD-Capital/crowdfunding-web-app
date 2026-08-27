@@ -64,13 +64,22 @@ export default function InstallAppPrompt() {
   const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
-    if (isStandalone() || isDismissedRecently(INSTALL_DISMISS_KEY)) {
-      if (canOfferNotifications()) setStage("notifications");
+    // iOS has no native install prompt — "add to home screen" is the only
+    // way to unlock notifications there, so it can't be subject to the same
+    // 14-day dismiss suppression as the Android/desktop install banner below
+    // (otherwise closing it once means neither it nor the notifications
+    // opt-in can appear again for 2 weeks).
+    if (isIos()) {
+      if (isStandalone()) {
+        if (canOfferNotifications()) setStage("notifications");
+      } else {
+        setStage("install-ios");
+      }
       return;
     }
 
-    if (isIos()) {
-      setStage("install-ios");
+    if (isStandalone() || isDismissedRecently(INSTALL_DISMISS_KEY)) {
+      if (canOfferNotifications()) setStage("notifications");
       return;
     }
 
