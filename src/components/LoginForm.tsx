@@ -5,15 +5,18 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import type { Dictionary } from "@/i18n";
+import type { AuthBackgroundImage } from "@/lib/authBackgroundImages";
 import PasswordInput from "./PasswordInput";
+import AuthBackgroundSlideshow from "./AuthBackgroundSlideshow";
 
 type Props = {
   t: Dictionary["auth"]["login"];
   lang: string;
   next?: string;
+  backgroundImages?: AuthBackgroundImage[];
 };
 
-export default function LoginForm({ t, lang, next }: Props) {
+export default function LoginForm({ t, lang, next, backgroundImages = [] }: Props) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -69,7 +72,16 @@ export default function LoginForm({ t, lang, next }: Props) {
             min-height: 200px !important;
             background: transparent !important;
           }
-          .login-right-content { padding: 2rem 1.5rem 1.5rem !important; }
+          .login-right-content {
+            padding: 2rem 1.5rem 1.5rem !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+          }
+          .login-right-logo {
+            height: 108px !important;
+          }
           .login-left {
             flex: 1 1 auto !important;
             padding: 0 !important;
@@ -128,19 +140,24 @@ export default function LoginForm({ t, lang, next }: Props) {
 
       {/* Right — brand / background */}
       <div style={rightPane} className="login-right">
+        <AuthBackgroundSlideshow images={backgroundImages} />
+        <div style={rightPhotoTint} />
         <div style={rightSkylineBack} />
         <div style={rightSkylineFront} />
         <div style={rightGlow} />
 
         <div style={rightContent} className="login-right-content">
-          <Image
-            src="/iad-capital-logo.svg"
-            alt="IAD Capital"
-            width={415}
-            height={297}
-            style={rightLogo}
-            priority
-          />
+          <Link href={`/${lang}`} style={{ display: "inline-block" }}>
+            <Image
+              src="/iad-capital-logo.svg"
+              alt="IAD Capital"
+              width={415}
+              height={297}
+              style={rightLogo}
+              className="login-right-logo"
+              priority
+            />
+          </Link>
           <h2 style={rightHeadline}>Disfrutá del nuevo crowdfunding inmobiliario</h2>
         </div>
       </div>
@@ -148,7 +165,7 @@ export default function LoginForm({ t, lang, next }: Props) {
   );
 }
 
-const brandGradient = "linear-gradient(155deg, #14276b 0%, #1b4de0 42%, #12327e 72%, #0e1726 100%)";
+const brandGradient = "#1F4458";
 
 const splitWrap: React.CSSProperties = {
   position: "fixed",
@@ -209,6 +226,11 @@ const rightPane: React.CSSProperties = {
   justifyContent: "center",
   background: brandGradient,
 };
+const rightPhotoTint: React.CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  background: "linear-gradient(155deg, rgba(31,68,88,0.62) 0%, rgba(31,68,88,0.74) 100%)",
+};
 const rightGlow: React.CSSProperties = {
   position: "absolute",
   inset: 0,
@@ -244,10 +266,10 @@ const rightContent: React.CSSProperties = {
   textAlign: "left",
 };
 const rightLogo: React.CSSProperties = {
-  height: 108,
+  height: 132,
   width: "auto",
-  marginBottom: "1.25rem",
-  filter: "drop-shadow(0 2px 10px rgba(0,0,0,0.25))",
+  marginBottom: "2.25rem",
+  filter: "brightness(0) invert(1) drop-shadow(0 2px 10px rgba(0,0,0,0.25))",
 };
 const rightHeadline: React.CSSProperties = {
   fontFamily: "var(--font-display), system-ui, sans-serif",

@@ -1,4 +1,5 @@
 import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
+import { getAuthBackgroundImages } from "@/lib/authBackgroundImages";
 import SignupForm from "@/components/SignupForm";
 
 export default async function SignupPage({
@@ -9,7 +10,10 @@ export default async function SignupPage({
   searchParams: { next?: string };
 }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
-  const t = await getDictionary(lang);
+  const [t, backgroundImages] = await Promise.all([
+    getDictionary(lang),
+    getAuthBackgroundImages(),
+  ]);
 
-  return <SignupForm t={t.auth.signup} lang={lang} next={searchParams.next} />;
+  return <SignupForm t={t.auth.signup} lang={lang} next={searchParams.next} backgroundImages={backgroundImages} />;
 }
