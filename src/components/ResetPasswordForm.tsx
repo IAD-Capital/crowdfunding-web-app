@@ -172,9 +172,11 @@ export default function ResetPasswordForm({ t, lang, token, backgroundImages = [
               </form>
             )}
 
-            <p style={footer}>
-              <Link href={`/${lang}/login`} style={link}>{t.goToLogin}</Link>
-            </p>
+            {!done && (
+              <p style={footer}>
+                <Link href={`/${lang}/login`} style={link}>{t.goToLogin}</Link>
+              </p>
+            )}
           </div>
         </div>
       </div>
