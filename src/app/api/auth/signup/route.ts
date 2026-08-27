@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
     email: user.email,
     role: "investor",
     fullName: user.full_name,
+    tokenVersion: 0,
   });
 
   await sendMail({

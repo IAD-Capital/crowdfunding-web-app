@@ -25,12 +25,8 @@
 
 .headerScrolled {
   top: 10px;
-  background: rgba(255, 255, 255, 0.97);
+  background: rgba(255, 255, 255, 0.75);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
-
-  .inner {
-    height: 52px;
-  }
 }
 
 .inner {
@@ -39,7 +35,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .brand {
@@ -189,7 +184,7 @@
 .megaItemOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.75) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0.58) 58%, rgba(0, 0, 0, 0.9) 100%);
 }
 
 .megaItemBody {
@@ -201,6 +196,7 @@
   flex-direction: column;
   gap: 0.15rem;
   padding: 1rem 1.1rem;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
 }
 
 .megaItemName {
@@ -213,6 +209,22 @@
 .megaItemAddr {
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.75);
+}
+
+.megaItemPrice {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  width: fit-content;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--c-positive-bright);
+  background: rgba(14, 159, 110, 0.22);
+  border: 1px solid rgba(70, 211, 154, 0.4);
+  border-radius: 0.3em;
+  padding: 0.05em 0.4em;
+  margin-top: 0.3rem;
 }
 
 .megaItemCta {
@@ -266,6 +278,118 @@
   color: #6b7280;
 }
 
+.btnCta {
+  padding: 0.5rem 1.1rem;
+  border: none;
+  border-radius: 8px;
+  background: #1b4de0;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #1539a8;
+  }
+}
+
+/* User menu (desktop) */
+.userMenu {
+  position: relative;
+}
+
+.userMenuTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.5rem 0.3rem 0.3rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.12s ease, border-color 0.12s ease;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+}
+
+.userAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1b4de0;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.userMenuName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111;
+}
+
+.userMenuPanel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.2s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.2s;
+  z-index: 110;
+}
+
+.userMenuPanelOpen {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.userMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #111;
+  }
+}
+
+.userMenuItemDanger:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
 /* Mobile hamburger menu */
 .hamburgerBtn {
   display: none;
@@ -287,49 +411,224 @@
   }
 }
 
-.mobileMenuBackdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.25);
-  z-index: 90;
-}
-
 .mobileMenuPanel {
   position: fixed;
-  top: 92px;
-  right: 16px;
-  width: min(280px, calc(100vw - 32px));
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background: #fff;
-  border-radius: 16px;
-  border: 1px solid rgba(17, 17, 17, 0.08);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.16);
-  padding: 1.1rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  opacity: 0;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 150;
   visibility: hidden;
-  transform: translateY(-8px);
-  transition: opacity 0.25s cubic-bezier(0.22, 1, 0.36, 1), transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.25s;
-  z-index: 95;
 }
 
 .mobileMenuPanelOpen {
-  opacity: 1;
+  transform: translateX(0);
   visibility: visible;
-  transform: translateY(0);
+}
+
+.mobileMenuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
+}
+
+.mobileMenuCloseBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mobileMenuContent {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.5rem 1.1rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mobileUserRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 0.3rem;
+}
+
+.mobileUserAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #1b4de0;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.mobileUserName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.mobileUserEmail {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin: 0.1rem 0 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blockBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
 }
 
 .mobileMenuSection {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding-bottom: 1rem;
+  align-items: stretch;
+  gap: 0.15rem;
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.3rem;
   border-bottom: 1px solid #f3f4f6;
 
   &:last-child {
     padding-bottom: 0;
+    margin-bottom: 0;
     border-bottom: none;
   }
+}
+
+/* Featured properties carousel (mobile menu) */
+.carouselTrack {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0.5rem 0 0.25rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.carouselCard {
+  flex-shrink: 0;
+  width: 200px;
+  scroll-snap-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+}
+
+.carouselImageWrap {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.carouselImagePlaceholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+}
+
+.carouselCardBody {
+  padding: 0.55rem 0.1rem 0;
+}
+
+.carouselCardName {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.carouselCardAddr {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.carouselCardPrice {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-family: var(--font-display);
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--c-positive);
+  background: rgba(14, 159, 110, 0.08);
+  border: 1px solid rgba(14, 159, 110, 0.18);
+  border-radius: 0.3em;
+  padding: 0.05em 0.4em;
+}
+
+.carouselDots {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+.carouselDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  transition: background 0.2s ease, width 0.2s ease;
+}
+
+.carouselDotActive {
+  background: #1b4de0;
+  width: 16px;
+  border-radius: 3px;
 }

@@ -25,9 +25,10 @@ type Props = {
   notifications: Notification[];
   dark?: boolean;
   sidebarExpanded?: boolean;
+  fullWidth?: boolean;
 };
 
-export default function NotificationBell({ notifications: initial, dark = false, sidebarExpanded }: Props) {
+export default function NotificationBell({ notifications: initial, dark = false, sidebarExpanded, fullWidth = false }: Props) {
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -86,9 +87,10 @@ export default function NotificationBell({ notifications: initial, dark = false,
   };
 
   const inSidebar = sidebarExpanded !== undefined;
+  const showLabel = sidebarExpanded || fullWidth;
 
   return (
-    <div ref={ref} style={{ position: "relative" }}>
+    <div ref={ref} style={{ position: "relative", ...(fullWidth ? { width: "100%" } : {}) }}>
       {/* Bell */}
       <button
         onClick={() => setOpen((v) => !v)}
@@ -96,9 +98,9 @@ export default function NotificationBell({ notifications: initial, dark = false,
           position: "relative", background: "none", border: "none",
           cursor: "pointer", padding: "0.55rem 0.75rem", borderRadius: 8,
           display: "flex", alignItems: "center",
-          gap: inSidebar ? "0.7rem" : 0,
-          justifyContent: sidebarExpanded ? "flex-start" : "center",
-          width: inSidebar ? "100%" : "auto",
+          gap: inSidebar || fullWidth ? "0.7rem" : 0,
+          justifyContent: sidebarExpanded || fullWidth ? "flex-start" : "center",
+          width: inSidebar || fullWidth ? "100%" : "auto",
           color: dark ? "#d1d5db" : "#6b7280",
           transition: "background 0.12s, color 0.12s",
         }}
@@ -124,7 +126,7 @@ export default function NotificationBell({ notifications: initial, dark = false,
             </span>
           )}
         </span>
-        {sidebarExpanded && (
+        {showLabel && (
           <span style={{ fontSize: "0.875rem", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden" }}>
             Notificaciones
           </span>
@@ -133,7 +135,13 @@ export default function NotificationBell({ notifications: initial, dark = false,
 
       {/* Dropdown */}
       {open && (
-        <div style={{ ...dropdown, ...(inSidebar ? dropdownSidebar : {}) }}>
+        <div
+          style={{
+            ...dropdown,
+            ...(inSidebar ? dropdownSidebar : {}),
+            ...(fullWidth ? { width: "auto", left: 0, right: 0 } : {}),
+          }}
+        >
           <div style={dropHeader}>
             <span style={dropTitle}>Notificaciones</span>
             {count > 0 && (

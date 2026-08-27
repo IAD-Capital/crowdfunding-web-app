@@ -1,13 +1,13 @@
 import { getDictionary, isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import { getAuthBackgroundImages } from "@/lib/authBackgroundImages";
-import LoginForm from "@/components/LoginForm";
+import ResetPasswordForm from "@/components/ResetPasswordForm";
 
-export default async function LoginPage({
+export default async function ResetPasswordPage({
   params,
   searchParams,
 }: {
   params: { lang: string };
-  searchParams: { next?: string };
+  searchParams: { token?: string };
 }) {
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
   const [t, backgroundImages] = await Promise.all([
@@ -15,5 +15,5 @@ export default async function LoginPage({
     getAuthBackgroundImages(),
   ]);
 
-  return <LoginForm t={t.auth.login} lang={lang} next={searchParams.next} backgroundImages={backgroundImages} />;
+  return <ResetPasswordForm t={t.auth.resetPassword} lang={lang} token={searchParams.token} backgroundImages={backgroundImages} />;
 }

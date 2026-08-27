@@ -17,8 +17,22 @@ CREATE TABLE IF NOT EXISTS users (
   avatar           TEXT,
   phone            TEXT,
   alternate_email  TEXT,
+  token_version    INTEGER     NOT NULL DEFAULT 0,
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Bumping a user's token_version invalidates every JWT issued before the bump
+-- (checked in getSession()), which is how a password reset logs out all
+-- existing sessions without needing a server-side session store.
+CREATE TABLE IF NOT EXISTS password_resets (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT        NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at    TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_password_resets_user_id ON password_resets(user_id);
 
 CREATE TABLE IF NOT EXISTS developers (
   id         SERIAL PRIMARY KEY,

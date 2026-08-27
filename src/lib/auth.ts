@@ -13,6 +13,7 @@ export type SessionPayload = {
   role: "superadmin" | "investor";
   fullName: string;
   avatar?: string | null;
+  tokenVersion: number;
 };
 
 export async function signToken(payload: SessionPayload) {

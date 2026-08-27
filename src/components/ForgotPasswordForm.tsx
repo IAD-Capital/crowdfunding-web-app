@@ -1,64 +1,53 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import type { Dictionary } from "@/i18n";
 import type { AuthBackgroundImage } from "@/lib/authBackgroundImages";
-import PasswordInput from "./PasswordInput";
 import AuthBackgroundSlideshow from "./AuthBackgroundSlideshow";
 
 type Props = {
-  t: Dictionary["auth"]["login"];
+  t: Dictionary["auth"]["forgotPassword"];
   lang: string;
-  next?: string;
   backgroundImages?: AuthBackgroundImage[];
 };
 
-export default function LoginForm({ t, lang, next, backgroundImages = [] }: Props) {
-  const router = useRouter();
+export default function ForgotPasswordForm({ t, lang, backgroundImages = [] }: Props) {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch("/api/auth/forgot-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, lang }),
     });
 
-    const data = await res.json();
+    setLoading(false);
 
     if (!res.ok) {
-      setLoading(false);
+      const data = await res.json().catch(() => ({}));
       setError(data.error ?? t.error.generic);
       return;
     }
 
-    setRedirecting(true);
-    const dest =
-      next && next.startsWith("/")
-        ? next
-        : data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
-    router.push(dest);
-    router.refresh();
+    setSent(true);
   }
 
   return (
-    <div style={splitWrap} className="login-wrap">
+    <div style={splitWrap} className="forgot-wrap">
       <style
         dangerouslySetInnerHTML={{
           __html: `
         @media (max-width: 900px) {
-          .login-wrap {
+          .forgot-wrap {
             position: relative !important;
             height: auto !important;
             min-height: 100vh !important;
@@ -66,29 +55,29 @@ export default function LoginForm({ t, lang, next, backgroundImages = [] }: Prop
             overflow: visible !important;
             background: ${brandGradient} !important;
           }
-          .login-right {
+          .forgot-right {
             display: flex !important;
             flex: 0 0 auto !important;
             min-height: 200px !important;
             background: transparent !important;
           }
-          .login-right-content {
+          .forgot-right-content {
             padding: 2rem 1.5rem 1.5rem !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
             text-align: center !important;
           }
-          .login-right-logo {
+          .forgot-right-logo {
             height: 108px !important;
           }
-          .login-left {
+          .forgot-left {
             flex: 1 1 auto !important;
             padding: 0 !important;
             align-items: stretch !important;
             justify-content: flex-end !important;
           }
-          .login-form-card {
+          .forgot-form-card {
             background: #fff !important;
             border-radius: 24px 24px 0 0 !important;
             padding: 2rem 1.5rem 2.25rem !important;
@@ -100,56 +89,57 @@ export default function LoginForm({ t, lang, next, backgroundImages = [] }: Prop
       />
 
       {/* Left — form */}
-      <div style={leftPane} className="login-left">
-        <div style={leftCard} className="login-form-card">
+      <div style={leftPane} className="forgot-left">
+        <div style={leftCard} className="forgot-form-card">
           <div style={leftInner}>
-            <form onSubmit={handleSubmit} style={form}>
-              <label style={label}>{t.email}</label>
-              <input
-                style={input}
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+            <h1 style={title}>{t.title}</h1>
 
-              <div style={passwordLabelRow}>
-                <label style={{ ...label, marginTop: 0 }}>{t.password}</label>
-                <Link href={`/${lang}/forgot-password`} style={forgotLink}>{t.forgotPassword}</Link>
-              </div>
-              <PasswordInput
-                style={input}
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+            {sent ? (
+              <>
+                <p style={description}>{t.success}</p>
+                <p style={footer}>
+                  <Link href={`/${lang}/login`} style={link}>{t.backToLogin}</Link>
+                </p>
+              </>
+            ) : (
+              <>
+                <p style={description}>{t.description}</p>
+                <form onSubmit={handleSubmit} style={form}>
+                  <label style={label}>{t.email}</label>
+                  <input
+                    style={input}
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
 
-              {error && <p style={errorStyle}>{error}</p>}
+                  {error && <p style={errorStyle}>{error}</p>}
 
-              <button style={btn} type="submit" disabled={loading || redirecting}>
-                {redirecting ? t.redirecting : loading ? t.loading : t.submit}
-              </button>
-            </form>
+                  <button style={btn} type="submit" disabled={loading}>
+                    {loading ? t.loading : t.submit}
+                  </button>
+                </form>
 
-            <p style={footer}>
-              {t.noAccount}{" "}
-              <Link href={`/${lang}/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`} style={link}>{t.createOne}</Link>
-            </p>
+                <p style={footer}>
+                  <Link href={`/${lang}/login`} style={link}>{t.backToLogin}</Link>
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>
 
       {/* Right — brand / background */}
-      <div style={rightPane} className="login-right">
+      <div style={rightPane} className="forgot-right">
         <AuthBackgroundSlideshow images={backgroundImages} />
         <div style={rightPhotoTint} />
         <div style={rightSkylineBack} />
         <div style={rightSkylineFront} />
         <div style={rightGlow} />
 
-        <div style={rightContent} className="login-right-content">
+        <div style={rightContent} className="forgot-right-content">
           <Link href={`/${lang}`} style={{ display: "inline-block" }}>
             <Image
               src="/iad-capital-logo.svg"
@@ -157,7 +147,7 @@ export default function LoginForm({ t, lang, next, backgroundImages = [] }: Prop
               width={415}
               height={297}
               style={rightLogo}
-              className="login-right-logo"
+              className="forgot-right-logo"
               priority
             />
           </Link>
@@ -193,6 +183,8 @@ const leftCard: React.CSSProperties = {
   justifyContent: "center",
 };
 const leftInner: React.CSSProperties = { width: "100%", maxWidth: 380 };
+const title: React.CSSProperties = { fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem", color: "var(--c-ink, #0e1726)" };
+const description: React.CSSProperties = { fontSize: "0.9rem", color: "var(--c-text-secondary, #6b7280)", marginBottom: "1rem", lineHeight: 1.5 };
 const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.5rem" };
 const label: React.CSSProperties = { fontSize: "0.875rem", fontWeight: 500, marginTop: "0.75rem", color: "var(--c-ink, #0e1726)" };
 const input: React.CSSProperties = {
@@ -204,8 +196,6 @@ const input: React.CSSProperties = {
   width: "100%",
   background: "var(--c-field-bg, #f6f8fc)",
 };
-const passwordLabelRow: React.CSSProperties = { display: "flex", alignItems: "baseline", justifyContent: "space-between", marginTop: "0.75rem" };
-const forgotLink: React.CSSProperties = { fontSize: "0.8125rem", color: "var(--c-accent, #1b4de0)", fontWeight: 500 };
 const errorStyle: React.CSSProperties = { color: "#dc2626", fontSize: "0.875rem", marginTop: "0.25rem" };
 const btn: React.CSSProperties = {
   marginTop: "1.25rem",
