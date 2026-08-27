@@ -38,6 +38,8 @@ export async function PUT(req: NextRequest) {
     let user;
     if (password) {
       const password_hash = await hashPassword(password);
+      // Changing the password here invalidates other sessions the same way
+      // a forgot-password reset does — bump token_version.
       [user] = await db`
         UPDATE users SET
           full_name = ${full_name.trim()},
@@ -45,9 +47,10 @@ export async function PUT(req: NextRequest) {
           password_hash = ${password_hash},
           avatar = ${avatar ?? null},
           phone = ${phone?.trim() || null},
-          alternate_email = ${alternate_email?.toLowerCase().trim() || null}
+          alternate_email = ${alternate_email?.toLowerCase().trim() || null},
+          token_version = token_version + 1
         WHERE id = ${session!.sub}
-        RETURNING id, full_name, email, role, avatar, phone, alternate_email
+        RETURNING id, full_name, email, role, avatar, phone, alternate_email, token_version
       `;
     } else {
       [user] = await db`
@@ -58,7 +61,7 @@ export async function PUT(req: NextRequest) {
           phone = ${phone?.trim() || null},
           alternate_email = ${alternate_email?.toLowerCase().trim() || null}
         WHERE id = ${session!.sub}
-        RETURNING id, full_name, email, role, avatar, phone, alternate_email
+        RETURNING id, full_name, email, role, avatar, phone, alternate_email, token_version
       `;
     }
     if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -74,6 +77,7 @@ export async function PUT(req: NextRequest) {
       role: user.role as "superadmin" | "investor",
       fullName: String(user.full_name),
       avatar: user.avatar ? String(user.avatar) : null,
+      tokenVersion: user.token_version,
     });
     cookies().set(COOKIE_NAME, newToken, {
       httpOnly: true,

@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   }
 
   const [user] = await db`
-    SELECT id, email, full_name, password_hash, role, avatar
+    SELECT id, email, full_name, password_hash, role, avatar, token_version
     FROM users
     WHERE email = ${email.toLowerCase()}
   `;
@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
     role: user.role as "superadmin" | "investor",
     fullName: user.full_name,
     avatar: user.avatar ?? null,
+    tokenVersion: user.token_version,
   });
 
   const res = NextResponse.json({ ok: true, role: user.role });

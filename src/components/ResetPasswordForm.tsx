@@ -10,55 +10,71 @@ import PasswordInput from "./PasswordInput";
 import AuthBackgroundSlideshow from "./AuthBackgroundSlideshow";
 
 type Props = {
-  t: Dictionary["auth"]["login"];
+  t: Dictionary["auth"]["resetPassword"];
   lang: string;
-  next?: string;
+  token?: string;
   backgroundImages?: AuthBackgroundImage[];
 };
 
-export default function LoginForm({ t, lang, next, backgroundImages = [] }: Props) {
+const PASSWORD_CHECKS = (t: Props["t"]) => [
+  { label: t.checks.length,    test: (p: string) => p.length >= 8 },
+  { label: t.checks.uppercase, test: (p: string) => /[A-Z]/.test(p) },
+  { label: t.checks.lowercase, test: (p: string) => /[a-z]/.test(p) },
+  { label: t.checks.number,    test: (p: string) => /\d/.test(p) },
+  { label: t.checks.special,   test: (p: string) => /[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]/.test(p) },
+];
+
+export default function ResetPasswordForm({ t, lang, token, backgroundImages = [] }: Props) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
+  const [showChecks, setShowChecks] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const checks = PASSWORD_CHECKS(t);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      setLoading(false);
-      setError(data.error ?? t.error.generic);
+    const failing = checks.find((c) => !c.test(password));
+    if (failing) {
+      setError(t.error.passwordRules);
       return;
     }
 
-    setRedirecting(true);
-    const dest =
-      next && next.startsWith("/")
-        ? next
-        : data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
-    router.push(dest);
-    router.refresh();
+    if (password !== confirmPassword) {
+      setError(t.error.mismatch);
+      return;
+    }
+
+    setLoading(true);
+    const res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    setLoading(false);
+
+    if (!res.ok) {
+      setError(data.error === "This reset link is invalid or has expired." ? t.error.invalidToken : t.error.generic);
+      return;
+    }
+
+    setDone(true);
   }
 
   return (
-    <div style={splitWrap} className="login-wrap">
+    <div style={splitWrap} className="reset-wrap">
       <style
         dangerouslySetInnerHTML={{
           __html: `
         @media (max-width: 900px) {
-          .login-wrap {
+          .reset-wrap {
             position: relative !important;
             height: auto !important;
             min-height: 100vh !important;
@@ -66,29 +82,29 @@ export default function LoginForm({ t, lang, next, backgroundImages = [] }: Prop
             overflow: visible !important;
             background: ${brandGradient} !important;
           }
-          .login-right {
+          .reset-right {
             display: flex !important;
             flex: 0 0 auto !important;
             min-height: 200px !important;
             background: transparent !important;
           }
-          .login-right-content {
+          .reset-right-content {
             padding: 2rem 1.5rem 1.5rem !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
             text-align: center !important;
           }
-          .login-right-logo {
+          .reset-right-logo {
             height: 108px !important;
           }
-          .login-left {
+          .reset-left {
             flex: 1 1 auto !important;
             padding: 0 !important;
             align-items: stretch !important;
             justify-content: flex-end !important;
           }
-          .login-form-card {
+          .reset-form-card {
             background: #fff !important;
             border-radius: 24px 24px 0 0 !important;
             padding: 2rem 1.5rem 2.25rem !important;
@@ -100,56 +116,78 @@ export default function LoginForm({ t, lang, next, backgroundImages = [] }: Prop
       />
 
       {/* Left — form */}
-      <div style={leftPane} className="login-left">
-        <div style={leftCard} className="login-form-card">
+      <div style={leftPane} className="reset-left">
+        <div style={leftCard} className="reset-form-card">
           <div style={leftInner}>
-            <form onSubmit={handleSubmit} style={form}>
-              <label style={label}>{t.email}</label>
-              <input
-                style={input}
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+            <h1 style={title}>{t.title}</h1>
 
-              <div style={passwordLabelRow}>
-                <label style={{ ...label, marginTop: 0 }}>{t.password}</label>
-                <Link href={`/${lang}/forgot-password`} style={forgotLink}>{t.forgotPassword}</Link>
-              </div>
-              <PasswordInput
-                style={input}
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+            {done ? (
+              <>
+                <p style={description}>{t.success}</p>
+                <button style={btn} type="button" onClick={() => router.push(`/${lang}/login`)}>
+                  {t.goToLogin}
+                </button>
+              </>
+            ) : !token ? (
+              <p style={errorStyle}>{t.error.invalidToken}</p>
+            ) : (
+              <form onSubmit={handleSubmit} style={form}>
+                <label style={label}>{t.password}</label>
+                <PasswordInput
+                  style={input}
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setShowChecks(true)}
+                  required
+                />
 
-              {error && <p style={errorStyle}>{error}</p>}
+                {showChecks && (
+                  <ul style={checkList}>
+                    {checks.map((c) => {
+                      const ok = c.test(password);
+                      return (
+                        <li key={c.label} style={{ color: ok ? "#16a34a" : "var(--c-text-secondary, #6b7280)" }}>
+                          {ok ? "✓" : "○"} {c.label}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
 
-              <button style={btn} type="submit" disabled={loading || redirecting}>
-                {redirecting ? t.redirecting : loading ? t.loading : t.submit}
-              </button>
-            </form>
+                <label style={label}>{t.confirmPassword}</label>
+                <PasswordInput
+                  style={input}
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+
+                {error && <p style={errorStyle}>{error}</p>}
+
+                <button style={btn} type="submit" disabled={loading}>
+                  {loading ? t.loading : t.submit}
+                </button>
+              </form>
+            )}
 
             <p style={footer}>
-              {t.noAccount}{" "}
-              <Link href={`/${lang}/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`} style={link}>{t.createOne}</Link>
+              <Link href={`/${lang}/login`} style={link}>{t.goToLogin}</Link>
             </p>
           </div>
         </div>
       </div>
 
       {/* Right — brand / background */}
-      <div style={rightPane} className="login-right">
+      <div style={rightPane} className="reset-right">
         <AuthBackgroundSlideshow images={backgroundImages} />
         <div style={rightPhotoTint} />
         <div style={rightSkylineBack} />
         <div style={rightSkylineFront} />
         <div style={rightGlow} />
 
-        <div style={rightContent} className="login-right-content">
+        <div style={rightContent} className="reset-right-content">
           <Link href={`/${lang}`} style={{ display: "inline-block" }}>
             <Image
               src="/iad-capital-logo.svg"
@@ -157,7 +195,7 @@ export default function LoginForm({ t, lang, next, backgroundImages = [] }: Prop
               width={415}
               height={297}
               style={rightLogo}
-              className="login-right-logo"
+              className="reset-right-logo"
               priority
             />
           </Link>
@@ -193,6 +231,8 @@ const leftCard: React.CSSProperties = {
   justifyContent: "center",
 };
 const leftInner: React.CSSProperties = { width: "100%", maxWidth: 380 };
+const title: React.CSSProperties = { fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.75rem", color: "var(--c-ink, #0e1726)" };
+const description: React.CSSProperties = { fontSize: "0.9rem", color: "var(--c-text-secondary, #6b7280)", marginBottom: "1rem", lineHeight: 1.5 };
 const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.5rem" };
 const label: React.CSSProperties = { fontSize: "0.875rem", fontWeight: 500, marginTop: "0.75rem", color: "var(--c-ink, #0e1726)" };
 const input: React.CSSProperties = {
@@ -204,8 +244,10 @@ const input: React.CSSProperties = {
   width: "100%",
   background: "var(--c-field-bg, #f6f8fc)",
 };
-const passwordLabelRow: React.CSSProperties = { display: "flex", alignItems: "baseline", justifyContent: "space-between", marginTop: "0.75rem" };
-const forgotLink: React.CSSProperties = { fontSize: "0.8125rem", color: "var(--c-accent, #1b4de0)", fontWeight: 500 };
+const checkList: React.CSSProperties = {
+  listStyle: "none", fontSize: "0.8rem", padding: 0,
+  display: "flex", flexDirection: "column", gap: "0.2rem", marginTop: "0.35rem",
+};
 const errorStyle: React.CSSProperties = { color: "#dc2626", fontSize: "0.875rem", marginTop: "0.25rem" };
 const btn: React.CSSProperties = {
   marginTop: "1.25rem",
@@ -217,6 +259,7 @@ const btn: React.CSSProperties = {
   fontSize: "1rem",
   fontWeight: 600,
   cursor: "pointer",
+  width: "100%",
 };
 const footer: React.CSSProperties = { marginTop: "1.5rem", fontSize: "0.875rem", textAlign: "center", color: "var(--c-text-secondary, #6b7280)" };
 const link: React.CSSProperties = { color: "var(--c-accent, #1b4de0)", fontWeight: 600 };
