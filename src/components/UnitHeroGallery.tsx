@@ -4,15 +4,18 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
+import ShareButton from "./ShareButton";
 
 type Props = {
   images: string[];
   alt: string;
   backHref: string;
   backLabel: string;
+  shareUrl: string;
+  shareTitle: string;
 };
 
-export default function UnitHeroGallery({ images, alt, backHref, backLabel }: Props) {
+export default function UnitHeroGallery({ images, alt, backHref, backLabel, shareUrl, shareTitle }: Props) {
   const [index, setIndex] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const count = images.length;
@@ -42,6 +45,9 @@ export default function UnitHeroGallery({ images, alt, backHref, backLabel }: Pr
     return (
       <div style={{ ...mainImageArea, background: "#111" }} className="unit-hero-main">
         <Link href={backHref} style={backBtn}><ArrowLeft size={18} /></Link>
+        <div style={shareBtnWrap}>
+          <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
+        </div>
       </div>
     );
   }
@@ -54,6 +60,10 @@ export default function UnitHeroGallery({ images, alt, backHref, backLabel }: Pr
         <Link href={backHref} style={backBtn} aria-label={backLabel}>
           <ArrowLeft size={18} />
         </Link>
+
+        <div style={shareBtnWrap}>
+          <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
+        </div>
 
         {count > 1 && (
           <>
@@ -133,6 +143,10 @@ const backBtn: React.CSSProperties = {
   background: "rgba(17,17,17,0.55)", color: "#fff",
   display: "flex", alignItems: "center", justifyContent: "center",
   textDecoration: "none", backdropFilter: "blur(2px)",
+};
+
+const shareBtnWrap: React.CSSProperties = {
+  position: "absolute", top: 16, right: 16, zIndex: 5,
 };
 
 const navBtn: React.CSSProperties = {

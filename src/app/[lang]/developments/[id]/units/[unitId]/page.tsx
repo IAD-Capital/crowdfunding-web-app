@@ -1,7 +1,10 @@
 import { getSession } from "@/lib/session";
 import { isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import { notFound } from "next/navigation";
+import { cache } from "react";
+import type { Metadata } from "next";
 import db from "@/lib/db";
+import { getAppUrl } from "@/lib/mail";
 import PublicShell from "@/components/PublicShell";
 import UnitHeroGallery from "@/components/UnitHeroGallery";
 import ImageGallery from "@/components/admin/ImageGallery";
@@ -38,23 +41,14 @@ function getAmenityIcon(name: string): React.ReactNode {
   return match ? match.icon : <CheckCircle2 size={18} />;
 }
 
-export default async function PublicUnitPage({
-  params,
-}: {
-  params: { lang: string; id: string; unitId: string };
-}) {
-  const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
-  const session = await getSession();
-  // Only investors (not superadmin) can invest
-  const canInvest = session?.role === "investor";
-  const isAuthenticated = !!session;
-
-  const isNumeric = /^\d+$/.test(params.id);
+// Shared by generateMetadata and the page component so the dev/unit lookup only runs once per request.
+const getDevAndUnit = cache(async (idParam: string, unitIdParam: string, role: string | undefined) => {
+  const isNumeric = /^\d+$/.test(idParam);
   const [dev] = isNumeric
-    ? await db`SELECT id, name, address, neighborhood, city, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE id = ${params.id}`
-    : await db`SELECT id, name, address, neighborhood, city, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE slug = ${params.id}`;
-  if (!dev) notFound();
-  if (!dev.visible && session?.role !== "superadmin") notFound();
+    ? await db`SELECT id, name, address, neighborhood, city, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE id = ${idParam}`
+    : await db`SELECT id, name, address, neighborhood, city, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE slug = ${idParam}`;
+  if (!dev) return null;
+  if (!dev.visible && role !== "superadmin") return null;
 
   const [unit] = await db`
     SELECT u.*,
@@ -67,9 +61,72 @@ export default async function PublicUnitPage({
          FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'approved')
       ELSE NULL END AS group_expires_at
     FROM units u
-    WHERE u.id = ${params.unitId} AND u.development_id = ${dev.id}
+    WHERE u.id = ${unitIdParam} AND u.development_id = ${dev.id}
   `;
-  if (!unit) notFound();
+  if (!unit) return null;
+
+  return { dev, unit };
+});
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { lang: string; id: string; unitId: string };
+}): Promise<Metadata> {
+  const session = await getSession();
+  const data = await getDevAndUnit(params.id, params.unitId, session?.role);
+  if (!data) return {};
+  const { dev, unit } = data;
+  const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
+
+  const title = `Unidad ${unit.identifier} · ${dev.name} | IAD Capital`;
+  const priceLabel = unit.price_usd != null
+    ? `USD ${Number(unit.price_usd).toLocaleString("es-AR")}`
+    : "Consultar precio";
+  const description =
+    `${dev.address ?? dev.name} · ${priceLabel}` +
+    (unit.total_m2 != null ? ` · ${unit.total_m2} m²` : "") +
+    (unit.rooms != null ? ` · ${unit.rooms} amb.` : "") +
+    `. Invertí desde el 5% con IAD Capital.`;
+  const image: string | undefined = unit.images?.[0] ?? dev.images?.[0];
+  const url = `${getAppUrl()}/${lang}/developments/${dev.slug ?? dev.id}/units/${unit.id}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "IAD Capital",
+      locale: lang === "es" ? "es_AR" : "en_US",
+      type: "website",
+      images: image ? [{ url: image, width: 1200, height: 800, alt: unit.identifier }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
+
+export default async function PublicUnitPage({
+  params,
+}: {
+  params: { lang: string; id: string; unitId: string };
+}) {
+  const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
+  const session = await getSession();
+  // Only investors (not superadmin) can invest
+  const canInvest = session?.role === "investor";
+  const isAuthenticated = !!session;
+
+  const data = await getDevAndUnit(params.id, params.unitId, session?.role);
+  if (!data) notFound();
+  const { dev, unit } = data;
 
   // Check if this investor already has a pending request or approved position in this unit
   const [myInvestment] = canInvest
@@ -146,6 +203,8 @@ export default async function PublicUnitPage({
         alt={unit.identifier}
         backHref={`/${lang}/developments/${dev.slug ?? dev.id}`}
         backLabel={dev.name}
+        shareUrl={`${getAppUrl()}${unitPath}`}
+        shareTitle={`Unidad ${unit.identifier} en ${dev.name}`}
       />
 
       {/* Body */}
