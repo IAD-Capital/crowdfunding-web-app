@@ -24,11 +24,15 @@ function getDb(): ReturnType<typeof postgres> {
     });
   }
 
-  const client = postgres(connectionString);
-
-  if (process.env.NODE_ENV !== "production") {
-    globalThis._db = client;
-  }
+  // DB_HOST/DB_PORT point at Supabase's Supavisor pooler in transaction mode,
+  // which already multiplexes connections upstream — each serverless
+  // function instance only needs a handful of its own, not postgres.js's
+  // default of 10. Cached on globalThis in every environment (not just dev)
+  // so a warm Vercel lambda reuses one client/pool across invocations
+  // instead of opening a fresh pool per query, which is what was exhausting
+  // the pooler's connection cap.
+  const client = postgres(connectionString, { max: 5 });
+  globalThis._db = client;
 
   return client;
 }

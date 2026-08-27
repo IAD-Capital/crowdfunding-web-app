@@ -37,6 +37,7 @@ export default function UserMenu({ lang, session, adminLabel, logoutLabel }: Pro
   async function logout() {
     setLoggingOut(true);
     await fetch("/api/auth/logout", { method: "POST" });
+    router.push(`/${lang}`);
     router.refresh();
   }
 

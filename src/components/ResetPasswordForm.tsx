@@ -172,9 +172,11 @@ export default function ResetPasswordForm({ t, lang, token, backgroundImages = [
               </form>
             )}
 
-            <p style={footer}>
-              <Link href={`/${lang}/login`} style={link}>{t.goToLogin}</Link>
-            </p>
+            {!done && (
+              <p style={footer}>
+                <Link href={`/${lang}/login`} style={link}>{t.goToLogin}</Link>
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -317,7 +319,7 @@ const rightLogo: React.CSSProperties = {
   height: 132,
   width: "auto",
   marginBottom: "2.25rem",
-  filter: "brightness(0) invert(1) drop-shadow(0 2px 10px rgba(0,0,0,0.25))",
+  filter: "brightness(0) invert(1) drop-shadow(0px 2px 2px rgba(0,0,0,0.25))",
 };
 const rightHeadline: React.CSSProperties = {
   fontFamily: "var(--font-display), system-ui, sans-serif",
@@ -327,4 +329,5 @@ const rightHeadline: React.CSSProperties = {
   color: "#fff",
   margin: 0,
   letterSpacing: "-0.01em",
+  textShadow: "0px 2px 2px rgba(0,0,0,0.25)",
 };

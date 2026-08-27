@@ -138,7 +138,7 @@ export default async function AdminHeader({ lang }: Props) {
           {session && (
             <>
               <span className={s.userLabel}>{session.email}</span>
-              <LogoutButton label={t.auth.logout} />
+              <LogoutButton label={t.auth.logout} lang={lang} />
             </>
           )}
         </div>

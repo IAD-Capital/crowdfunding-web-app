@@ -115,7 +115,7 @@ export default function AdminTopbar({ lang, userEmail, userName, userAvatar }: P
           </div>
         </div>
 
-        <LogoutButton label="Salir" />
+        <LogoutButton label="Salir" lang={lang} />
       </div>
     </header>
   );
