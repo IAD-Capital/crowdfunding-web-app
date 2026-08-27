@@ -4,14 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
+import type { FeaturedProperty } from "./MobileFeaturedCarousel";
 import s from "./Header.module.scss";
 
-type NavDevelopment = { id: number; name: string; address: string; image: string | null; slug?: string | null };
+const fmtUsd = (n: number) => `USD ${Math.round(n).toLocaleString("es-AR")}`;
 
 export default function DevelopmentsMenu({
-  developments, lang,
+  properties, lang,
 }: {
-  developments: NavDevelopment[];
+  properties: FeaturedProperty[];
   lang: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -30,7 +31,7 @@ export default function DevelopmentsMenu({
     closeTimer.current = setTimeout(() => setOpen(false), 150);
   }
 
-  if (developments.length === 0) return null;
+  if (properties.length === 0) return null;
 
   return (
     <div className={s.navItem} onMouseEnter={show} onMouseLeave={hide}>
@@ -40,7 +41,7 @@ export default function DevelopmentsMenu({
         onFocus={show}
         onBlur={hide}
       >
-        Emprendimientos
+        Propiedades
         <svg
           className={`${s.chevron} ${open ? s.chevronOpen : ""}`}
           width="12" height="12" viewBox="0 0 24 24" fill="none"
@@ -59,21 +60,26 @@ export default function DevelopmentsMenu({
           >
             <div className={s.megaMenuInner}>
               <div className={s.megaMenuGrid}>
-                {developments.map((d) => (
-                  <Link key={d.id} href={`/${lang}/developments/${d.slug ?? d.id}`} className={s.megaItem}>
+                {properties.map((p) => (
+                  <Link
+                    key={p.id}
+                    href={`/${lang}/developments/${p.development_slug ?? p.development_id}/units/${p.id}`}
+                    className={s.megaItem}
+                  >
                     <div className={s.megaItemImage}>
-                      {d.image ? (
-                        <Image src={d.image} alt={d.name} fill style={{ objectFit: "cover" }} className={s.megaItemImg} sizes="(max-width: 640px) 90vw, 240px" />
+                      {p.image ? (
+                        <Image src={p.image} alt={p.development_name} fill style={{ objectFit: "cover" }} className={s.megaItemImg} sizes="(max-width: 640px) 90vw, 240px" />
                       ) : (
                         <div className={s.megaItemPlaceholder} />
                       )}
                       <div className={s.megaItemOverlay} />
                     </div>
                     <div className={s.megaItemBody}>
-                      <span className={s.megaItemName}>{d.name}</span>
-                      <span className={s.megaItemAddr}>{d.address}</span>
+                      <span className={s.megaItemName}>{p.development_name}</span>
+                      <span className={s.megaItemAddr}>{p.development_address}</span>
+                      <span className={s.megaItemPrice}>Desde {fmtUsd(p.price_usd)}</span>
                       <span className={s.megaItemCta}>
-                        Ver emprendimiento
+                        Ver propiedad
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <line x1="5" y1="12" x2="19" y2="12" />
                           <polyline points="12 5 19 12 12 19" />
@@ -84,7 +90,7 @@ export default function DevelopmentsMenu({
                 ))}
               </div>
               <Link href={`/${lang}#catalog`} className={s.megaFooterLink}>
-                Ver todos los emprendimientos →
+                Ver todas las propiedades →
               </Link>
             </div>
           </div>,

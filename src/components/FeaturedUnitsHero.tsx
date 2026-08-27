@@ -265,6 +265,7 @@ const card: React.CSSProperties = {
 const imageWrap: React.CSSProperties = {
   position: "relative", width: "100%", aspectRatio: "3 / 4.3", borderRadius: 20, overflow: "hidden",
   background: "linear-gradient(135deg, #e8eef7, #dfe7f2)",
+  border: "1px solid var(--c-border)",
   boxShadow: "0 20px 40px -20px rgba(14,23,38,0.35)",
 };
 const imagePlaceholder: React.CSSProperties = { position: "absolute", inset: 0 };

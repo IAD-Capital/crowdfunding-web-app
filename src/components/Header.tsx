@@ -2,36 +2,45 @@ import Link from "next/link";
 import Image from "next/image";
 import { getSession } from "@/lib/session";
 import { getDictionary, type Locale } from "@/i18n";
-import LogoutButton from "./LogoutButton";
+import UserMenu from "./UserMenu";
 import NotificationBell, { type Notification } from "./NotificationBell";
 import ScrollHeader from "./ScrollHeader";
 import DevelopmentsMenu from "./DevelopmentsMenu";
 import MobileMenu from "./MobileMenu";
+import type { FeaturedProperty } from "./MobileFeaturedCarousel";
 import db from "@/lib/db";
 import s from "./Header.module.scss";
 
 type Props = { lang: Locale };
 
-type NavDevelopment = { id: number; name: string; address: string; image: string | null; slug?: string | null };
-
 export default async function Header({ lang }: Props) {
-  const [session, t, devRows] = await Promise.all([
+  const [session, t, featuredUnitRows] = await Promise.all([
     getSession(),
     getDictionary(lang),
-    db<{ id: number; name: string; address: string; images: string[]; slug?: string | null }[]>`
-      SELECT id, name, address, images, slug FROM developments
-      WHERE status = 'active' AND visible = true
-      ORDER BY updated_at DESC
+    db<{
+      id: number; images: string[]; price_usd: string | number;
+      development_name: string; development_address: string;
+      development_slug: string | null; development_id: number;
+    }[]>`
+      SELECT u.id, u.images, u.price_usd,
+        d.name AS development_name, d.address AS development_address,
+        d.slug AS development_slug, d.id AS development_id
+      FROM units u
+      JOIN developments d ON d.id = u.development_id
+      WHERE u.featured = true AND d.status = 'active' AND d.visible = true AND u.status != 'sold'
+      ORDER BY u.featured_order
       LIMIT 8
     `,
   ]);
 
-  const navDevelopments: NavDevelopment[] = devRows.map((d) => ({
-    id: d.id,
-    name: d.name,
-    address: d.address,
-    image: d.images?.[0] ?? null,
-    slug: d.slug ?? null,
+  const featuredProperties: FeaturedProperty[] = featuredUnitRows.map((u) => ({
+    id: u.id,
+    image: u.images?.[0] ?? null,
+    price_usd: Number(u.price_usd),
+    development_name: u.development_name,
+    development_address: u.development_address,
+    development_slug: u.development_slug,
+    development_id: u.development_id,
   }));
 
   let notifications: Notification[] = [];
@@ -73,27 +82,19 @@ export default async function Header({ lang }: Props) {
         </Link>
 
         <nav className={s.centerNav}>
-          <DevelopmentsMenu developments={navDevelopments} lang={lang} />
+          <DevelopmentsMenu properties={featuredProperties} lang={lang} />
         </nav>
 
         <div className={s.right}>
+          <Link href={`/${lang}/como-invertir`} className={s.btnCta}>
+            Quiero invertir
+          </Link>
           {session ? (
             <>
-              {session.role !== "superadmin" && (
-                <Link href={`/${lang}/wallet`} className={s.navLink}>
-                  Mi cartera
-                </Link>
-              )}
-              {session.role === "superadmin" && (
-                <Link href={`/${lang}/admin`} className={s.navLink}>
-                  {t.header.admin}
-                </Link>
-              )}
               {session.role === "investor" && (
                 <NotificationBell notifications={notifications} dark={false} />
               )}
-              <span className={s.userLabel}>{session.fullName}</span>
-              <LogoutButton label={t.auth.logout} />
+              <UserMenu lang={lang} session={session} adminLabel={t.header.admin} logoutLabel={t.auth.logout} />
             </>
           ) : (
             <>
@@ -107,6 +108,7 @@ export default async function Header({ lang }: Props) {
           lang={lang}
           session={session}
           notifications={notifications}
+          featuredProperties={featuredProperties}
           labels={{ admin: t.header.admin, signIn: t.header.signIn, signUp: t.header.signUp, logout: t.auth.logout }}
         />
       </div>
