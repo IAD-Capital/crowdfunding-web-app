@@ -40,7 +40,12 @@ export default function ShareButton({ url, title, variant = "inline" }: Props) {
     }
   }
 
-  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`;
+  // Copy Link keeps the clean canonical URL; WhatsApp gets UTM tags so that channel is attributable in analytics.
+  const whatsappUrl = new URL(url);
+  whatsappUrl.searchParams.set("utm_source", "whatsapp");
+  whatsappUrl.searchParams.set("utm_medium", "social");
+  whatsappUrl.searchParams.set("utm_campaign", "share_property");
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(`${title} ${whatsappUrl.toString()}`)}`;
 
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>

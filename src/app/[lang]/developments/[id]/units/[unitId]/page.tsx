@@ -79,15 +79,11 @@ export async function generateMetadata({
   const { dev, unit } = data;
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
 
-  const title = `Unidad ${unit.identifier} · ${dev.name} | IAD Capital`;
-  const priceLabel = unit.price_usd != null
-    ? `USD ${Number(unit.price_usd).toLocaleString("es-AR")}`
-    : "Consultar precio";
-  const description =
-    `${dev.address ?? dev.name} · ${priceLabel}` +
-    (unit.total_m2 != null ? ` · ${unit.total_m2} m²` : "") +
-    (unit.rooms != null ? ` · ${unit.rooms} amb.` : "") +
-    `. Invertí desde el 5% con IAD Capital.`;
+  const title = `Unidad ${unit.identifier} - ${dev.address ?? dev.name} - IAD Capital`;
+  const minInvestUsd = unit.price_usd != null ? Math.ceil(Number(unit.price_usd) * 0.05) : null;
+  const description = minInvestUsd != null
+    ? `Encontré esta propiedad en IAD Capital para invertir desde USD ${minInvestUsd.toLocaleString("es-AR")}. ${dev.address ?? dev.name}${unit.total_m2 != null ? ` · ${unit.total_m2} m²` : ""}${unit.rooms != null ? ` · ${unit.rooms} amb.` : ""}.`
+    : `Encontré esta propiedad en IAD Capital. ${dev.address ?? dev.name}${unit.total_m2 != null ? ` · ${unit.total_m2} m²` : ""}.`;
   const image: string | undefined = unit.images?.[0] ?? dev.images?.[0];
   const url = `${getAppUrl()}/${lang}/developments/${dev.slug ?? dev.id}/units/${unit.id}`;
 
@@ -204,7 +200,12 @@ export default async function PublicUnitPage({
         backHref={`/${lang}/developments/${dev.slug ?? dev.id}`}
         backLabel={dev.name}
         shareUrl={`${getAppUrl()}${unitPath}`}
-        shareTitle={`Unidad ${unit.identifier} en ${dev.name}`}
+        shareTitle={
+          (minInvestUsd != null
+            ? `Encontré esta propiedad en IAD Capital para invertir desde USD ${minInvestUsd.toLocaleString("es-AR")}: `
+            : "Encontré esta propiedad en IAD Capital: ") +
+          `Unidad ${unit.identifier} - ${dev.address} - IAD Capital`
+        }
       />
 
       {/* Body */}
