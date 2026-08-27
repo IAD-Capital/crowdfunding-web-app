@@ -66,6 +66,7 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
     setLoggingOut(true);
     await fetch("/api/auth/logout", { method: "POST" });
     setOpen(false);
+    router.push(`/${lang}`);
     router.refresh();
   }
 

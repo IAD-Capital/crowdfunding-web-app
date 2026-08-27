@@ -2,11 +2,12 @@
 
 import { useRouter } from "next/navigation";
 
-export default function LogoutButton({ label }: { label?: string }) {
+export default function LogoutButton({ label, lang }: { label?: string; lang: string }) {
   const router = useRouter();
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
+    router.push(`/${lang}/login`);
     router.refresh();
   }
 
