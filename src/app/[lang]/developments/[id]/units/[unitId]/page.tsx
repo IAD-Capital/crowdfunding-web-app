@@ -217,6 +217,12 @@ export default async function PublicUnitPage({
         lang={lang}
       />
 
+      <div style={imagesDisclaimerWrap}>
+        <p style={imagesDisclaimer}>
+          Las imágenes son ilustrativas y pueden no representar el estado real de la propiedad.
+        </p>
+      </div>
+
       {/* Body */}
       <div style={body}>
         <div style={bodyInner} className="unit-body-inner">
@@ -224,38 +230,14 @@ export default async function PublicUnitPage({
           <div style={leftCol}>
             {/* Top info block */}
             <div style={topInfoBlock}>
-              <TrackedLink
-                href={`/${lang}/developments/${dev.slug ?? dev.id}`}
-                style={devLinkRow}
-                ctaId="unit_page_breadcrumb"
-                ctaLabel={dev.name}
-                ctaLocation="unit_page"
-              >
-                <span>{dev.name} · {dev.address}</span>
-                <ChevronRight size={16} />
-              </TrackedLink>
-
               <div style={priceFactsRow}>
                 <div style={priceCol}>
                   <span style={{ ...statusPillInline, background: sc.bg, color: sc.fg }}>{sc.label}</span>
-                  {showInvestHeadline ? (
-                    <>
-                      <p style={investFromLabel}>Invertí desde</p>
-                      <p style={bigPrice}>
-                        USD {minInvestUsd!.toLocaleString("es-AR")}
-                        <span style={bigPricePct}> (5%)</span>
-                      </p>
-                      <p style={unitValueNote}>
-                        Valor total de la unidad: USD {Number(unit.price_usd).toLocaleString("es-AR")}
-                      </p>
-                    </>
-                  ) : (
-                    <p style={bigPrice}>
-                      {unit.price_usd != null
-                        ? `USD ${Number(unit.price_usd).toLocaleString("es-AR")}`
-                        : "Consultar"}
-                    </p>
-                  )}
+                  <p style={bigPrice}>
+                    {unit.price_usd != null
+                      ? `USD ${Number(unit.price_usd).toLocaleString("es-AR")}`
+                      : "Consultar"}
+                  </p>
                   <p style={addressLine}>{dev.address} · Unidad {unit.identifier}</p>
                 </div>
 
@@ -331,21 +313,21 @@ export default async function PublicUnitPage({
             {/* Development media, split by category so plans/interior/photos don't get mixed */}
             {dev.images?.length > 0 && (
               <div>
-                <h2 style={sectionTitle}>Fotos del emprendimiento</h2>
+                <h2 style={sectionTitle}>Exterior</h2>
                 <ImageGallery images={dev.images} />
               </div>
             )}
 
             {dev.plan_images?.length > 0 && (
               <div>
-                <h2 style={sectionTitle}>Planos del emprendimiento</h2>
+                <h2 style={sectionTitle}>Planos</h2>
                 <ImageGallery images={dev.plan_images} />
               </div>
             )}
 
             {dev.interior_images?.length > 0 && (
               <div>
-                <h2 style={sectionTitle}>Interior del emprendimiento</h2>
+                <h2 style={sectionTitle}>Interior</h2>
                 <ImageGallery images={dev.interior_images} />
               </div>
             )}
@@ -491,6 +473,12 @@ export default async function PublicUnitPage({
                 </p>
               )}
 
+              {(!isAuthenticated || (canInvest && !myInvestment)) && (
+                <p style={noPaymentNote}>
+                  No se paga nada ahora. Tu solicitud sirve para coordinar una reunión y avanzar con la inversión.
+                </p>
+              )}
+
               <div style={sideDivider} />
 
               {canInvest && myInvestment ? (
@@ -584,25 +572,21 @@ function QuickFact({ value, label }: { value: number; label: string }) {
 }
 
 const body: React.CSSProperties = { background: "#f9fafb", padding: "2rem 1.5rem 3rem" };
-const bodyInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: "2.5rem", alignItems: "start" };
+const bodyInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: "2.5rem", alignItems: "start" };
 const leftCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "2rem" };
+
+const imagesDisclaimerWrap: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "0.75rem 1.5rem 0" };
+const imagesDisclaimer: React.CSSProperties = { fontSize: "0.78rem", color: "#9ca3af", margin: 0, fontStyle: "italic" };
 
 /* Top info block */
 const topInfoBlock: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1rem" };
-const devLinkRow: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", gap: "0.25rem", width: "fit-content",
-  color: "#6b7280", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none",
-};
 const priceFactsRow: React.CSSProperties = {
   display: "flex", justifyContent: "space-between", alignItems: "flex-start",
   flexWrap: "wrap", gap: "1rem",
 };
 const priceCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.3rem" };
 const statusPillInline: React.CSSProperties = { display: "inline-block", width: "fit-content", borderRadius: 999, padding: "0.2rem 0.75rem", fontSize: "0.75rem", fontWeight: 700 };
-const investFromLabel: React.CSSProperties = { fontSize: "0.8rem", color: "#6b7280", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0.15rem 0 0" };
 const bigPrice: React.CSSProperties = { fontSize: "2.25rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.04em" };
-const bigPricePct: React.CSSProperties = { fontSize: "1.2rem", fontWeight: 700, color: "#6b7280" };
-const unitValueNote: React.CSSProperties = { fontSize: "0.82rem", color: "#9ca3af", margin: 0 };
 const addressLine: React.CSSProperties = { color: "#6b7280", fontSize: "0.9rem", margin: 0 };
 const quickFacts: React.CSSProperties = { display: "flex", gap: "1.5rem", flexShrink: 0 };
 const quickFactItem: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.1rem" };
@@ -665,6 +649,7 @@ const sidePrice: React.CSSProperties = { fontSize: "2rem", fontWeight: 900, colo
 const sideFromPct: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, color: "#6b7280" };
 const sideUnitValueNote: React.CSSProperties = { fontSize: "0.8rem", color: "#9ca3af", margin: 0 };
 const availableNote: React.CSSProperties = { fontSize: "0.78rem", color: "#d97706", fontWeight: 600, margin: 0, background: "#fffbeb", borderRadius: 8, padding: "0.4rem 0.75rem" };
+const noPaymentNote: React.CSSProperties = { fontSize: "0.78rem", color: "#1e40af", margin: 0, background: "#eff6ff", borderRadius: 8, padding: "0.5rem 0.75rem", lineHeight: 1.4 };
 const soldNote: React.CSSProperties = { fontSize: "0.85rem", color: "#991b1b", background: "#fee2e2", borderRadius: 8, padding: "0.75rem", textAlign: "center", margin: 0 };
 const sideDivider: React.CSSProperties = { height: 1, background: "#e5e7eb" };
 const sideBtnPrimary: React.CSSProperties = { display: "block", textAlign: "center", padding: "0.85rem", background: "#111", color: "#fff", borderRadius: 10, textDecoration: "none", fontWeight: 700, fontSize: "0.95rem" };

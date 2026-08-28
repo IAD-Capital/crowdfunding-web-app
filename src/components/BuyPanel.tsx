@@ -14,38 +14,25 @@ type Props = {
   hasPhone?: boolean;
 };
 
-type Mode = "slider" | "fixed" | "full";
+type Mode = "pct" | "full";
 
 export default function BuyPanel({ unitId, priceUsd, identifier, lang, availablePct = 100, hasPhone = true }: Props) {
   const router = useRouter();
   const maxSlider = Math.min(50, availablePct);
   const hasOtherInvestors = availablePct < 100;
 
-  const [mode, setMode] = useState<Mode>("slider");
+  const quickPcts = Array.from(new Set([5, 10, 25, 50, maxSlider]))
+    .filter((p) => p >= 5 && p <= maxSlider)
+    .sort((a, b) => a - b);
+
+  const [mode, setMode] = useState<Mode>("pct");
   const [pct, setPct] = useState(Math.min(5, maxSlider));
-  const [fixedAmountStr, setFixedAmountStr] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fixedAmount = Number(fixedAmountStr);
-  const fixedPct = priceUsd > 0 && Number.isFinite(fixedAmount) && fixedAmount > 0
-    ? (fixedAmount / priceUsd) * 100
-    : null;
-
-  const effectivePct =
-    mode === "full" ? 100
-    : mode === "fixed" ? (fixedPct ?? 0)
-    : pct;
-  const amount =
-    mode === "fixed" && Number.isFinite(fixedAmount) && fixedAmount > 0
-      ? fixedAmount
-      : (priceUsd * effectivePct) / 100;
-
-  const fixedError =
-    mode === "fixed" && fixedAmount > 0 && fixedPct != null && fixedPct < 5
-      ? `El monto mínimo es USD ${Math.ceil(priceUsd * 0.05).toLocaleString("es-AR")} (5%).`
-      : null;
+  const effectivePct = mode === "full" ? 100 : pct;
+  const amount = (priceUsd * effectivePct) / 100;
 
   async function handleBuy() {
     setError(null);
@@ -65,9 +52,8 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
 
   function reset() {
     setDone(false);
-    setMode("slider");
+    setMode("pct");
     setPct(Math.min(5, maxSlider));
-    setFixedAmountStr("");
     setError(null);
   }
 
@@ -104,11 +90,7 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
     );
   }
 
-  const canSubmit = !fixedError && (
-    (mode === "slider" && pct >= 5 && pct <= maxSlider) ||
-    (mode === "fixed" && fixedPct != null && fixedPct >= 5) ||
-    mode === "full"
-  );
+  const canSubmit = (mode === "pct" && pct >= 5 && pct <= maxSlider) || mode === "full";
 
   return (
     <div style={panel}>
@@ -116,65 +98,31 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
 
       {/* Mode selector */}
       <div style={modeTabs}>
-        <button style={{ ...modeTab, ...(mode === "slider" ? modeTabActive : {}) }} onClick={() => setMode("slider")}>
+        <button style={{ ...modeTab, ...(mode === "pct" ? modeTabActive : {}) }} onClick={() => setMode("pct")}>
           % Participación
-        </button>
-        <button style={{ ...modeTab, ...(mode === "fixed" ? modeTabActive : {}) }} onClick={() => setMode("fixed")}>
-          Monto fijo
         </button>
         <button style={{ ...modeTab, ...(mode === "full" ? modeTabActive : {}) }} onClick={() => setMode("full")}>
           100% · Platino
         </button>
       </div>
 
-      {/* Slider mode */}
-      {mode === "slider" && (
-        <div style={sliderWrap}>
-          <div style={sliderLabels}>
-            <span>5%</span>
-            <span>50%</span>
+      {/* Percentage mode: quick-select buttons */}
+      {mode === "pct" && (
+        quickPcts.length > 0 ? (
+          <div style={pctButtonsWrap}>
+            {quickPcts.map((p) => (
+              <button
+                key={p}
+                style={{ ...pctButton, ...(pct === p ? pctButtonActive : {}) }}
+                onClick={() => setPct(p)}
+              >
+                {p === maxSlider && p !== 50 ? `Disponible · ${p}%` : `${p}%`}
+              </button>
+            ))}
           </div>
-          <style>{`
-            input[type=range].buy-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 999px; accent-color: #111; cursor: pointer; }
-            input[type=range].buy-slider::-webkit-slider-thumb {
-              -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
-              background: #111; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.25); cursor: pointer;
-            }
-            input[type=range].buy-slider::-moz-range-thumb {
-              width: 22px; height: 22px; border-radius: 50%;
-              background: #111; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.25); cursor: pointer;
-            }
-          `}</style>
-          <input
-            type="range" min={5} max={maxSlider} step={5} value={pct}
-            onChange={(e) => setPct(Number(e.target.value))}
-            className="buy-slider"
-            disabled={maxSlider < 5}
-          />
-        </div>
-      )}
-
-      {/* Fixed amount mode */}
-      {mode === "fixed" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-          <label style={inputLabel}>Monto en USD</label>
-          <div style={usdInputWrap}>
-            <span style={usdPrefix}>USD</span>
-            <input
-              style={usdInput}
-              type="number"
-              min={0}
-              step={100}
-              placeholder="ej. 75000"
-              value={fixedAmountStr}
-              onChange={(e) => setFixedAmountStr(e.target.value)}
-            />
-          </div>
-          {fixedPct != null && fixedAmount > 0 && !fixedError && (
-            <p style={fixedHint}>Equivale al {fixedPct.toFixed(2).replace(/\.?0+$/, "")}% de la unidad</p>
-          )}
-          {fixedError && <p style={errorMsg}>{fixedError}</p>}
-        </div>
+        ) : (
+          <p style={errorMsg}>No hay porcentaje disponible para invertir en esta unidad.</p>
+        )
       )}
 
       {/* Platinum warning */}
@@ -187,9 +135,7 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
       {/* Percentage display */}
       <div style={pctDisplay}>
         <span style={pctBig}>
-          {mode === "fixed" && fixedPct != null && fixedAmount > 0
-            ? fixedPct.toFixed(1).replace(/\.0$/, "")
-            : effectivePct}
+          {effectivePct}
           <span style={pctSymbol}>%</span>
         </span>
         <span style={pctLabel}>de participación</span>
@@ -233,11 +179,7 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
         }}
         disabled={loading || !canSubmit}
       >
-        {loading ? "Procesando…" : `Confirmar inversión · ${
-          mode === "full" ? "100%" :
-          mode === "fixed" && fixedPct != null && fixedAmount > 0 ? `${fixedPct.toFixed(1).replace(/\.0$/, "")}%` :
-          `${pct}%`
-        }`}
+        {loading ? "Procesando…" : `Confirmar inversión · ${mode === "full" ? "100%" : `${pct}%`}`}
       </button>
     </div>
   );
@@ -259,14 +201,15 @@ const modeTabActive: React.CSSProperties = {
   border: "1.5px solid #111", background: "#111", color: "#fff",
 };
 
-const sliderWrap: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.4rem" };
-const sliderLabels: React.CSSProperties = { display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#9ca3af" };
-
-const inputLabel: React.CSSProperties = { fontSize: "0.78rem", fontWeight: 600, color: "#374151" };
-const usdInputWrap: React.CSSProperties = { display: "flex", alignItems: "center", border: "1px solid #d1d5db", borderRadius: 8, overflow: "hidden" };
-const usdPrefix: React.CSSProperties = { padding: "0.6rem 0.75rem", background: "#f3f4f6", fontSize: "0.85rem", fontWeight: 600, color: "#6b7280", borderRight: "1px solid #d1d5db" };
-const usdInput: React.CSSProperties = { flex: 1, padding: "0.6rem 0.75rem", border: "none", outline: "none", fontSize: "0.95rem", fontWeight: 600, color: "#111" };
-const fixedHint: React.CSSProperties = { fontSize: "0.75rem", color: "#6b7280", margin: 0 };
+const pctButtonsWrap: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.5rem" };
+const pctButton: React.CSSProperties = {
+  flex: "1 1 auto", padding: "0.6rem 0.75rem", borderRadius: 10, fontSize: "0.85rem", fontWeight: 700,
+  cursor: "pointer", border: "1.5px solid #d1d5db", background: "#fff", color: "#374151",
+  transition: "all 0.15s", textAlign: "center", whiteSpace: "nowrap",
+};
+const pctButtonActive: React.CSSProperties = {
+  border: "1.5px solid #111", background: "#111", color: "#fff",
+};
 
 const platinumWarning: React.CSSProperties = {
   fontSize: "0.78rem", color: "#92400e", background: "#fffbeb",
