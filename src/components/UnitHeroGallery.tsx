@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 import ShareButton from "./ShareButton";
+import FavoriteButton from "./FavoriteButton";
 
 type Props = {
   images: string[];
@@ -13,9 +14,16 @@ type Props = {
   backLabel: string;
   shareUrl: string;
   shareTitle: string;
+  unitId: number;
+  initialFavorited: boolean;
+  isAuthenticated: boolean;
+  lang: string;
 };
 
-export default function UnitHeroGallery({ images, alt, backHref, backLabel, shareUrl, shareTitle }: Props) {
+export default function UnitHeroGallery({
+  images, alt, backHref, backLabel, shareUrl, shareTitle,
+  unitId, initialFavorited, isAuthenticated, lang,
+}: Props) {
   const [index, setIndex] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const count = images.length;
@@ -46,6 +54,15 @@ export default function UnitHeroGallery({ images, alt, backHref, backLabel, shar
       <div style={{ ...mainImageArea, background: "#111" }} className="unit-hero-main">
         <Link href={backHref} style={backBtn}><ArrowLeft size={18} /></Link>
         <div style={heroActionsWrap}>
+          <FavoriteButton
+            unitId={unitId}
+            initialFavorited={initialFavorited}
+            isAuthenticated={isAuthenticated}
+            lang={lang}
+            label={alt}
+            location="unit_page_hero"
+            variant="hero"
+          />
           <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
         </div>
       </div>
@@ -62,6 +79,15 @@ export default function UnitHeroGallery({ images, alt, backHref, backLabel, shar
         </Link>
 
         <div style={heroActionsWrap}>
+          <FavoriteButton
+            unitId={unitId}
+            initialFavorited={initialFavorited}
+            isAuthenticated={isAuthenticated}
+            lang={lang}
+            label={alt}
+            location="unit_page_hero"
+            variant="hero"
+          />
           <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
         </div>
 

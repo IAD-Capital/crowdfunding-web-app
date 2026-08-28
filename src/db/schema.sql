@@ -110,6 +110,15 @@ CREATE TABLE IF NOT EXISTS investments (
   created_at           TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS favorites (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  unit_id    INTEGER     NOT NULL REFERENCES units(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, unit_id)
+);
+CREATE INDEX IF NOT EXISTS idx_favorites_user_id ON favorites(user_id);
+
 CREATE TABLE IF NOT EXISTS app_settings (
   id                     SMALLINT      PRIMARY KEY DEFAULT 1,
   bronze_from            NUMERIC(14,2) NOT NULL DEFAULT 5000,

@@ -137,6 +137,11 @@ export default async function PublicUnitPage({
     : [null];
   const hasPhone = !!phoneRow?.phone?.trim();
 
+  const [favoriteRow] = isAuthenticated
+    ? await db`SELECT id FROM favorites WHERE user_id = ${Number(session!.sub)} AND unit_id = ${unit.id}`
+    : [null];
+  const isFavorited = !!favoriteRow;
+
   // Co-investors: visible to investors only — anonymous, just the aggregate
   const [coInvestorAgg] = canInvest
     ? await db`
@@ -206,6 +211,10 @@ export default async function PublicUnitPage({
             : "Encontré esta propiedad en IAD Capital: ") +
           `Unidad ${unit.identifier} - ${dev.address} - IAD Capital`
         }
+        unitId={unit.id}
+        initialFavorited={isFavorited}
+        isAuthenticated={isAuthenticated}
+        lang={lang}
       />
 
       {/* Body */}

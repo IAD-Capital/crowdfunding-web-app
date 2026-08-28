@@ -11,6 +11,7 @@ import {
 import { getTierDefs, unitQualifiesForTier, MIN_ENTRY_PCT, type TierThresholds, type TierKey } from "@/lib/investmentTiers";
 import { getAmenityIcon } from "@/lib/icons";
 import { trackCtaClick } from "@/lib/analytics";
+import FavoriteButton from "./FavoriteButton";
 
 export type Development = {
   id: number;
@@ -52,6 +53,8 @@ type Props = {
   isInvestor: boolean;
   hasPhone?: boolean;
   myInvestedUnitIds?: number[];
+  isAuthenticated?: boolean;
+  myFavoriteUnitIds?: number[];
   lang: string;
   tierThresholds: TierThresholds;
 };
@@ -62,7 +65,7 @@ const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
   sold:      { bg: "#991b1b", fg: "#fff", label: "Vendida" },
 };
 
-export default function CatalogSection({ developments, units, isInvestor, hasPhone = true, myInvestedUnitIds = [], lang, tierThresholds }: Props) {
+export default function CatalogSection({ developments, units, isInvestor, hasPhone = true, myInvestedUnitIds = [], isAuthenticated = false, myFavoriteUnitIds = [], lang, tierThresholds }: Props) {
   const [devFilter, setDevFilter] = useState<number | "all">("all");
   const [developerFilter, setDeveloperFilter] = useState<number | "all">("all");
   const [tierFilter, setTierFilter] = useState<TierKey | "all">("all");
@@ -251,6 +254,8 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
                   alreadyInvested={myInvestedUnitIds.includes(u.id)}
                   onInvest={() => setDrawerUnit(u)}
                   lang={lang}
+                  isAuthenticated={isAuthenticated}
+                  isFavorited={myFavoriteUnitIds.includes(u.id)}
                 />
               </div>
             ))}
@@ -329,10 +334,11 @@ function DevCard({ d, lang }: { d: Development; lang: string }) {
 
 /* ─── Unit card ─────────────────────────────────── */
 function UnitCard({
-  u, devName, devAddress, devSlug, isInvestor, alreadyInvested, onInvest, lang,
+  u, devName, devAddress, devSlug, isInvestor, alreadyInvested, onInvest, lang, isAuthenticated, isFavorited,
 }: {
   u: Unit; devName: string; devAddress: string; devSlug: string | number; isInvestor: boolean;
   alreadyInvested: boolean; onInvest: () => void; lang: string;
+  isAuthenticated: boolean; isFavorited: boolean;
 }) {
   const sc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
   const canBuy = isInvestor && u.status !== "sold" && !alreadyInvested;
@@ -353,7 +359,15 @@ function UnitCard({
         style={unitLink}
         onClick={() => trackCtaClick("catalog_unit_card", { label: u.identifier, location: "catalog" })}
       >
-        <UnitCoverSlider images={u.images} identifier={u.identifier} statusBadge={{ background: sc.bg, color: sc.fg, label: sc.label }} />
+        <UnitCoverSlider
+          images={u.images}
+          identifier={u.identifier}
+          statusBadge={{ background: sc.bg, color: sc.fg, label: sc.label }}
+          unitId={u.id}
+          isFavorited={isFavorited}
+          isAuthenticated={isAuthenticated}
+          lang={lang}
+        />
         <div style={unitBody}>
           <div style={unitTopRow}>
             <h3 style={unitId}>{u.identifier}</h3>
@@ -413,11 +427,15 @@ function UnitCard({
 
 /* ─── Unit cover slider ──────────────────────────── */
 function UnitCoverSlider({
-  images, identifier, statusBadge,
+  images, identifier, statusBadge, unitId, isFavorited, isAuthenticated, lang,
 }: {
   images: string[] | undefined;
   identifier: string;
   statusBadge: { background: string; color: string; label: string };
+  unitId: number;
+  isFavorited: boolean;
+  isAuthenticated: boolean;
+  lang: string;
 }) {
   const [index, setIndex] = useState(0);
   const list = images ?? [];
@@ -439,6 +457,15 @@ function UnitCoverSlider({
       <span style={{ ...badge, background: statusBadge.background, color: statusBadge.color }}>
         {statusBadge.label}
       </span>
+
+      <FavoriteButton
+        unitId={unitId}
+        initialFavorited={isFavorited}
+        isAuthenticated={isAuthenticated}
+        lang={lang}
+        label={identifier}
+        location="catalog"
+      />
 
       {hasMultiple && (
         <>

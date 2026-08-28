@@ -130,6 +130,10 @@ export default async function Home({ params }: { params: { lang: string } }) {
       `).map((r) => Number(r.unit_id))
     : [];
 
+  const myFavoriteUnitIds: number[] = session
+    ? (await db`SELECT unit_id FROM favorites WHERE user_id = ${Number(session.sub)}`).map((r) => Number(r.unit_id))
+    : [];
+
   const fmtMonthYear = (d: string | Date | null) =>
     d ? new Date(d).toLocaleDateString("es-AR", { month: "long", year: "numeric", timeZone: "UTC" }) : null;
 
@@ -263,6 +267,8 @@ export default async function Home({ params }: { params: { lang: string } }) {
           isInvestor={isInvestor}
           hasPhone={hasPhone}
           myInvestedUnitIds={myInvestedUnitIds}
+          isAuthenticated={!!session}
+          myFavoriteUnitIds={myFavoriteUnitIds}
           lang={lang}
           tierThresholds={tierThresholds}
         />

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, Wallet, UserRound, Settings, LogOut } from "lucide-react";
+import { ChevronDown, Wallet, Heart, UserRound, Settings, LogOut } from "lucide-react";
 import s from "./Header.module.scss";
 
 type Session = {
@@ -61,6 +61,9 @@ export default function UserMenu({ lang, session, adminLabel, logoutLabel }: Pro
           <>
             <Link href={`/${lang}/wallet`} className={s.userMenuItem} onClick={() => setOpen(false)}>
               <Wallet size={16} /> Mi cartera
+            </Link>
+            <Link href={`/${lang}/favorites`} className={s.userMenuItem} onClick={() => setOpen(false)}>
+              <Heart size={16} /> Mis favoritos
             </Link>
             <Link href={`/${lang}/profile`} className={s.userMenuItem} onClick={() => setOpen(false)}>
               <UserRound size={16} /> Mi perfil

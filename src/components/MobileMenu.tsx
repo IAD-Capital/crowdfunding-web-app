@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
-  Menu, X, Wallet, UserRound, Settings, LogOut, LogIn, UserPlus,
+  Menu, X, Wallet, Heart, UserRound, Settings, LogOut, LogIn, UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import NotificationBell, { type Notification } from "./NotificationBell";
@@ -140,6 +140,13 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
                         onClick={() => { trackCtaClick("mobile_menu_wallet", { location: "mobile_menu" }); close(); }}
                       >
                         <Wallet size={16} /> Mi cartera
+                      </Link>
+                      <Link
+                        href={`/${lang}/favorites`}
+                        className={s.userMenuItem}
+                        onClick={() => { trackCtaClick("mobile_menu_favorites", { location: "mobile_menu" }); close(); }}
+                      >
+                        <Heart size={16} /> Mis favoritos
                       </Link>
                       <Link href={`/${lang}/profile`} className={s.userMenuItem} onClick={close}>
                         <UserRound size={16} /> Mi perfil
