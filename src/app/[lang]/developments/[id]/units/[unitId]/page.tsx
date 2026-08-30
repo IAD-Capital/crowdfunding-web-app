@@ -230,26 +230,14 @@ export default async function PublicUnitPage({
           <div style={leftCol}>
             {/* Top info block */}
             <div style={topInfoBlock}>
-              <div style={priceFactsRow}>
-                <div style={priceCol}>
-                  <span style={{ ...statusPillInline, background: sc.bg, color: sc.fg }}>{sc.label}</span>
-                  <p style={bigPrice}>
-                    {unit.price_usd != null
-                      ? `USD ${Number(unit.price_usd).toLocaleString("es-AR")}`
-                      : "Consultar"}
-                  </p>
-                  <p style={addressLine}>{dev.address} · Unidad {unit.identifier}</p>
-                </div>
-
-                <div style={quickFacts}>
-                  {unit.rooms != null && (
-                    <QuickFact value={unit.rooms} label={unit.rooms === 1 ? "ambiente" : "ambientes"} />
-                  )}
-                  {unit.bathrooms != null && (
-                    <QuickFact value={unit.bathrooms} label={unit.bathrooms === 1 ? "baño" : "baños"} />
-                  )}
-                  {unit.total_m2 != null && <QuickFact value={Number(unit.total_m2)} label="m²" />}
-                </div>
+              <div style={priceCol}>
+                <span style={{ ...statusPillInline, background: sc.bg, color: sc.fg }}>{sc.label}</span>
+                <p style={bigPrice}>
+                  {unit.price_usd != null
+                    ? `USD ${Number(unit.price_usd).toLocaleString("es-AR")}`
+                    : "Consultar"}
+                </p>
+                <p style={addressLine}>{dev.address} · Unidad {unit.identifier}</p>
               </div>
 
               {showInvestHeadline && (
@@ -486,7 +474,7 @@ export default async function PublicUnitPage({
                   <p style={{ fontWeight: 700, margin: 0, fontSize: "0.88rem" }}>
                     {myInvestment.status === "pending" ? "Solicitud pendiente de aprobación" : "Tu participación"}
                   </p>
-                  <p style={{ margin: "0.25rem 0 0", fontSize: "1.5rem", fontWeight: 900, letterSpacing: "-0.04em" }}>
+                  <p style={{ margin: "0.25rem 0 0", fontSize: "1.5rem", fontWeight: 900 }}>
                     {Number(myInvestment.percentage)}%
                   </p>
                   <p style={{ margin: "0.15rem 0 0", fontSize: "0.82rem", color: myInvestment.status === "pending" ? "#92400e" : "#166534" }}>
@@ -562,15 +550,6 @@ function FactCell({ icon, text }: { icon: React.ReactNode; text: string }) {
   );
 }
 
-function QuickFact({ value, label }: { value: number; label: string }) {
-  return (
-    <div style={quickFactItem}>
-      <span style={quickFactNum}>{value}</span>
-      <span style={quickFactLabel}>{label}</span>
-    </div>
-  );
-}
-
 const body: React.CSSProperties = { background: "#f9fafb", padding: "2rem 1.5rem 3rem" };
 const bodyInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: "2.5rem", alignItems: "start" };
 const leftCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "2rem" };
@@ -580,18 +559,10 @@ const imagesDisclaimer: React.CSSProperties = { fontSize: "0.78rem", color: "#9c
 
 /* Top info block */
 const topInfoBlock: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1rem" };
-const priceFactsRow: React.CSSProperties = {
-  display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-  flexWrap: "wrap", gap: "1rem",
-};
 const priceCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.3rem" };
 const statusPillInline: React.CSSProperties = { display: "inline-block", width: "fit-content", borderRadius: 999, padding: "0.2rem 0.75rem", fontSize: "0.75rem", fontWeight: 700 };
 const bigPrice: React.CSSProperties = { fontSize: "2.25rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.04em" };
 const addressLine: React.CSSProperties = { color: "#6b7280", fontSize: "0.9rem", margin: 0 };
-const quickFacts: React.CSSProperties = { display: "flex", gap: "1.5rem", flexShrink: 0 };
-const quickFactItem: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.1rem" };
-const quickFactNum: React.CSSProperties = { fontSize: "1.4rem", fontWeight: 800, color: "#111" };
-const quickFactLabel: React.CSSProperties = { fontSize: "0.78rem", color: "#6b7280" };
 const estCta: React.CSSProperties = { color: "#1b4de0", fontWeight: 700, textDecoration: "none", fontSize: "0.85rem", width: "fit-content" };
 
 /* Facts grid */
@@ -646,7 +617,7 @@ const sidebar: React.CSSProperties = { position: "sticky", top: 80 };
 const sideCard: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" };
 const sidePriceLabel: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", margin: 0, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" };
 const sidePrice: React.CSSProperties = { fontSize: "2rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.04em" };
-const sideFromPct: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, color: "#6b7280" };
+const sideFromPct: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, color: "#6b7280", letterSpacing: "normal" };
 const sideUnitValueNote: React.CSSProperties = { fontSize: "0.8rem", color: "#9ca3af", margin: 0 };
 const availableNote: React.CSSProperties = { fontSize: "0.78rem", color: "#d97706", fontWeight: 600, margin: 0, background: "#fffbeb", borderRadius: 8, padding: "0.4rem 0.75rem" };
 const noPaymentNote: React.CSSProperties = { fontSize: "0.78rem", color: "#1e40af", margin: 0, background: "#eff6ff", borderRadius: 8, padding: "0.5rem 0.75rem", lineHeight: 1.4 };

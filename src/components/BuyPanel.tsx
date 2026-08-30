@@ -217,7 +217,7 @@ const platinumWarning: React.CSSProperties = {
 };
 
 const pctDisplay: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.1rem", padding: "0.5rem 0" };
-const pctBig: React.CSSProperties = { fontSize: "3.5rem", fontWeight: 900, color: "#111", lineHeight: 1, letterSpacing: "-0.05em" };
+const pctBig: React.CSSProperties = { fontSize: "3.5rem", fontWeight: 900, color: "#111", lineHeight: 1 };
 const pctSymbol: React.CSSProperties = { fontSize: "2rem", fontWeight: 700, color: "#6b7280" };
 const pctLabel: React.CSSProperties = { fontSize: "0.78rem", color: "#9ca3af", fontWeight: 500 };
 
