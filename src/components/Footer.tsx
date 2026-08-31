@@ -42,7 +42,7 @@ export default async function Footer({ lang }: Props) {
         <div className={s.linkCols}>
           <div className={s.linkCol}>
             <div className={s.linkColTitle}>Plataforma</div>
-            <a href={`/${lang}#developments`} className={s.linkColLink}>Emprendimientos</a>
+            <a href={`/${lang}#catalog`} className={s.linkColLink}>Departamentos</a>
             <a href={`/${lang}#how-it-works`} className={s.linkColLink}>Cómo funciona</a>
             <Link href={`/${lang}/como-invertir`} className={s.linkColLink}>Cómo invertir</Link>
             <a href={`/${lang}#simulator`} className={s.linkColLink}>Simulador</a>

@@ -170,7 +170,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
         }}
       />
       {/* ─── Featured units ──────────────────────────── */}
-      <div id="developments">
+      <div id="featured">
         <FeaturedUnitsHero
           units={featuredUnits8}
           lang={lang}
@@ -186,23 +186,19 @@ export default async function Home({ params }: { params: { lang: string } }) {
       <section style={statsSection}>
         <div style={statsCard} className="stats-strip">
           <div style={statCell}>
-            <div style={statNum}><CountUpNumber value={developments.length} delay={0} /></div>
-            <div style={statLabel}>Emprendimientos activos</div>
-          </div>
-          <div style={statCell}>
-            <div style={statNum}><CountUpNumber value={units.length} delay={100} /></div>
+            <div style={statNum}><CountUpNumber value={units.length} delay={0} /></div>
             <div style={statLabel}>Unidades disponibles</div>
           </div>
           <div style={statCell}>
             <div style={{ ...statNum, color: "var(--c-accent)" }}>
-              <CountUpNumber value={5} delay={200} suffix="%" />
+              <CountUpNumber value={5} delay={100} suffix="%" />
             </div>
             <div style={statLabel}>Mínimo de inversión</div>
           </div>
           <div style={{ ...statCell, borderRight: "none" }}>
             <div style={{ ...statNum, color: "var(--c-positive)" }}>
               {overallPricePerM2 != null ? (
-                <CountUpNumber value={overallPricePerM2} delay={300} prefix="USD " suffix="/m²" locale="es-AR" />
+                <CountUpNumber value={overallPricePerM2} delay={200} prefix="USD " suffix="/m²" locale="es-AR" />
               ) : (
                 "—"
               )}
@@ -244,7 +240,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
           </div>
           <div style={howGrid} className="how-grid">
             {[
-              { n: "01", title: "Elegí tu unidad", desc: "Explorá nuestro catálogo de departamentos en emprendimientos seleccionados." },
+              { n: "01", title: "Elegí tu unidad", desc: "Explorá nuestro catálogo de departamentos disponibles para invertir." },
               { n: "02", title: "Definí tu porcentaje", desc: "Invertí desde el 5% hasta el 100% del valor de la unidad funcional." },
               { n: "03", title: "Formalizá tu inversión", desc: "Completá el proceso de manera segura y comenzá a generar rendimientos." },
             ].map((s) => (
@@ -294,7 +290,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
 const statsSection: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "1.5rem 1.5rem 3.5rem" };
 const statsCard: React.CSSProperties = {
   background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 18,
-  padding: "0.4rem", display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+  padding: "0.4rem", display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
 };
 const statCell: React.CSSProperties = { padding: "1.4rem 1.6rem", borderRight: "1px solid var(--c-border-soft)" };
 const statNum: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "2.1rem", fontWeight: 800, color: "var(--c-ink)", letterSpacing: "-0.03em" };

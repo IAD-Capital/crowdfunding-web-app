@@ -130,7 +130,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
           <div style={empty}>
             <p style={{ fontWeight: 600, margin: "0.5rem 0 0.25rem" }}>No tenés inversiones todavía</p>
             <p style={{ color: "#9ca3af", fontSize: "0.9rem", margin: 0 }}>
-              Explorá los emprendimientos disponibles y empezá a invertir.
+              Explorá los departamentos disponibles y empezá a invertir.
             </p>
             <TrackedLink
               href={`/${lang}#catalog`}
@@ -138,7 +138,7 @@ export default async function WalletPage({ params }: { params: { lang: string } 
               ctaId="wallet_explore_developments"
               ctaLocation="wallet_empty_state"
             >
-              Ver emprendimientos
+              Ver departamentos
             </TrackedLink>
           </div>
         ) : (
