@@ -45,8 +45,8 @@ function getAmenityIcon(name: string): React.ReactNode {
 const getDevAndUnit = cache(async (idParam: string, unitIdParam: string, role: string | undefined) => {
   const isNumeric = /^\d+$/.test(idParam);
   const [dev] = isNumeric
-    ? await db`SELECT id, name, address, neighborhood, city, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE id = ${idParam}`
-    : await db`SELECT id, name, address, neighborhood, city, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE slug = ${idParam}`;
+    ? await db`SELECT id, name, address, neighborhood, city, country, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE id = ${idParam}`
+    : await db`SELECT id, name, address, neighborhood, city, country, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE slug = ${idParam}`;
   if (!dev) return null;
   if (!dev.visible && role !== "superadmin") return null;
 
@@ -183,6 +183,10 @@ export default async function PublicUnitPage({
   const showInvestHeadline = minInvestUsd != null && !alreadyHasPosition && unit.status !== "sold" && !groupExpired;
 
   const galleryImages: string[] = unit.images?.length > 0 ? unit.images : (dev.images ?? []);
+
+  const fullAddress = [dev.address, dev.neighborhood, dev.city, dev.country].filter(Boolean).join(", ");
+  const mapEmbedSrc = `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`;
+  const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
 
   return (
     <PublicShell lang={lang}>
@@ -418,6 +422,39 @@ export default async function PublicUnitPage({
               </div>
             )}
 
+            {/* Location — built from the development's address, no lat/lng stored so this uses Google's query-based embed */}
+            {dev.address && (
+              <div>
+                <h2 style={sectionTitle}>Ubicación</h2>
+                <div style={mapWrap}>
+                  <iframe
+                    src={mapEmbedSrc}
+                    style={mapIframe}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title={`Mapa de ${fullAddress}`}
+                  />
+                </div>
+                <div style={mapFooter}>
+                  <span style={mapAddress}>
+                    <MapPin size={14} />
+                    {fullAddress}
+                  </span>
+                  <TrackedLink
+                    href={mapSearchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={mapLink}
+                    ctaId="unit_page_open_maps"
+                    ctaLabel={unit.identifier}
+                    ctaLocation="unit_page_location"
+                  >
+                    Ver en Google Maps →
+                  </TrackedLink>
+                </div>
+              </div>
+            )}
+
             {/* Compact development pointer — units stay the focus, this is just context */}
             <div style={devMiniCard}>
               {dev.images?.[0] && (
@@ -609,6 +646,13 @@ const devMiniLink: React.CSSProperties = { display: "inline-flex", alignItems: "
 
 const sectionTitle: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem", letterSpacing: "-0.02em" };
 const descText: React.CSSProperties = { color: "#374151", lineHeight: 1.7, margin: 0 };
+
+/* Location map */
+const mapWrap: React.CSSProperties = { position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 14, overflow: "hidden", border: "1px solid #e5e7eb", background: "#f3f4f6" };
+const mapIframe: React.CSSProperties = { position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 };
+const mapFooter: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem" };
+const mapAddress: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.35rem", fontSize: "0.85rem", color: "#6b7280" };
+const mapLink: React.CSSProperties = { fontSize: "0.85rem", fontWeight: 700, color: "#1b4de0", textDecoration: "none", whiteSpace: "nowrap" };
 
 /* Legal aspects */
 const legalTitleRow: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.5rem" };
