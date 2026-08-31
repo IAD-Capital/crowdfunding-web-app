@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import Header from "./Header";
+import HeaderFallback from "./HeaderFallback";
 import Footer from "./Footer";
 import ComingSoon from "./ComingSoon";
 import ChatbotWidget from "./ChatbotWidget";
@@ -37,7 +39,9 @@ export default async function PublicShell({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <Header lang={lang} />
+      <Suspense fallback={<HeaderFallback lang={lang} />}>
+        <Header lang={lang} />
+      </Suspense>
       <main style={{ flex: 1 }}>{children}</main>
       <Footer lang={lang} />
       {(settings?.chatbot_enabled ?? true) && <ChatbotWidget userEmail={session?.email ?? null} />}

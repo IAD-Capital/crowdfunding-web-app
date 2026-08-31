@@ -31,7 +31,15 @@ function getDb(): ReturnType<typeof postgres> {
   // so a warm Vercel lambda reuses one client/pool across invocations
   // instead of opening a fresh pool per query, which is what was exhausting
   // the pooler's connection cap.
-  const client = postgres(connectionString, { max: 5 });
+  //
+  // prepare: false is required in transaction mode — the pooler can route
+  // each query from the same client connection to a different backend
+  // Postgres connection, so a prepared statement cached from one query may
+  // not exist on the connection the next one lands on ("prepared statement
+  // ... does not exist"). This surfaced under concurrent queries once
+  // requests started fanning out more (Promise.all, cached session lookups
+  // shared across components) — see Supabase's postgres.js pooler docs.
+  const client = postgres(connectionString, { max: 5, prepare: false });
   globalThis._db = client;
 
   return client;
