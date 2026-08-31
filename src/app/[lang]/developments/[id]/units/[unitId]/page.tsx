@@ -14,7 +14,7 @@ import Image from "next/image";
 import {
   Layers, Maximize, Home, Trees, BedDouble, Bed, Bath, Compass, ChevronRight, MapPin,
   Waves, Dumbbell, PartyPopper, ShieldCheck, Flame, SquareParking, WashingMachine,
-  Laptop, Sparkles, Baby, Sun, Wifi, Utensils, ConciergeBell, CheckCircle2,
+  Laptop, Sparkles, Baby, Sun, Wifi, Utensils, ConciergeBell, CheckCircle2, Scale,
 } from "lucide-react";
 
 const AMENITY_ICON_RULES: { keywords: string[]; icon: React.ReactNode }[] = [
@@ -287,6 +287,21 @@ export default async function PublicUnitPage({
               <div>
                 <h2 style={sectionTitle}>Descripción</h2>
                 <p style={descText}>{unit.description}</p>
+              </div>
+            )}
+
+            {/* Legal aspects post-investment — filled in per unit from the admin, hidden until set */}
+            {unit.legal_terms && (
+              <div>
+                <h2 style={sectionTitle}>
+                  <span style={legalTitleRow}>
+                    <Scale size={18} />
+                    Aspectos legales
+                  </span>
+                </h2>
+                <div style={legalBox}>
+                  <p style={legalText}>{unit.legal_terms}</p>
+                </div>
               </div>
             )}
 
@@ -594,6 +609,11 @@ const devMiniLink: React.CSSProperties = { display: "inline-flex", alignItems: "
 
 const sectionTitle: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem", letterSpacing: "-0.02em" };
 const descText: React.CSSProperties = { color: "#374151", lineHeight: 1.7, margin: 0 };
+
+/* Legal aspects */
+const legalTitleRow: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.5rem" };
+const legalBox: React.CSSProperties = { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, padding: "1.1rem 1.25rem" };
+const legalText: React.CSSProperties = { color: "#374151", lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" };
 
 /* Group / co-investors */
 const groupBanner: React.CSSProperties = {

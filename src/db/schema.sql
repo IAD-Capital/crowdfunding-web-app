@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS units (
   current_price_usd     NUMERIC(14,2),
   status                TEXT          NOT NULL DEFAULT 'available',
   description           TEXT,
+  legal_terms           TEXT,
   images                TEXT[]        NOT NULL DEFAULT '{}',
   plan_images           TEXT[]        NOT NULL DEFAULT '{}',
   featured              BOOLEAN       NOT NULL DEFAULT FALSE,
