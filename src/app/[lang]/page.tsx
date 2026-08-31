@@ -34,14 +34,74 @@ export default async function Home({ params }: { params: { lang: string } }) {
 
   const isInvestor = session?.role === "investor";
 
-  const [phoneRow] = isInvestor
-    ? await db<{ phone: string | null }[]>`SELECT phone FROM users WHERE id = ${Number(session!.sub)}`
-    : [null];
-  const hasPhone = !!phoneRow?.phone?.trim();
+  // All independent of each other (and only depend on session/isInvestor above),
+  // so fire them concurrently instead of paying a DB round trip each in sequence.
+  const [
+    [phoneRow],
+    [tierRow],
+    developments,
+    units,
+    featuredUnitRows,
+    investedRows,
+    favoriteRows,
+  ] = await Promise.all([
+    isInvestor
+      ? db<{ phone: string | null }[]>`SELECT phone FROM users WHERE id = ${Number(session!.sub)}`
+      : Promise.resolve([null]),
+    db<TierThresholds[]>`
+      SELECT bronze_from, silver_from, gold_from, platinum_from FROM app_settings WHERE id = 1
+    `,
+    db<DevRow[]>`
+      SELECT d.id, d.name, d.address, d.description, d.status,
+             d.completion_date, d.amenities, d.images, d.slug,
+             d.developer_id, dv.name AS developer_name,
+             COUNT(u.id)::int AS unit_count
+      FROM developments d
+      LEFT JOIN units u ON u.development_id = d.id
+      LEFT JOIN developers dv ON dv.id = d.developer_id
+      WHERE d.status = 'active' AND d.visible = true
+      GROUP BY d.id, dv.name
+      ORDER BY d.updated_at DESC
+    `,
+    db<UnitRow[]>`
+      SELECT u.id, u.development_id, u.identifier, u.floor,
+             u.total_m2, u.covered_m2, u.rooms, u.bedrooms,
+             u.orientation, u.price_usd, u.current_price_usd, u.status, u.images, u.description,
+             100 - COALESCE((
+               SELECT SUM(percentage) FROM investments
+               WHERE unit_id = u.id AND status = 'approved'
+             ), 0) AS available_pct,
+             CASE WHEN u.group_duration_months IS NOT NULL THEN
+               (SELECT MIN(i2.created_at) + (u.group_duration_months || ' months')::interval
+                FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'approved')
+             ELSE NULL END AS group_expires_at
+      FROM units u
+      JOIN developments d ON d.id = u.development_id
+      WHERE d.status = 'active' AND d.visible = true
+      ORDER BY u.updated_at DESC
+    `,
+    db<(FeaturedUnit & { price_usd: string | number })[]>`
+      SELECT u.id, u.identifier, u.images, u.price_usd, u.total_m2, u.rooms,
+             d.id AS development_id, d.name AS development_name, d.address AS development_address,
+             d.slug AS development_slug, d.amenities
+      FROM units u
+      JOIN developments d ON d.id = u.development_id
+      WHERE u.featured = true AND d.status = 'active' AND d.visible = true AND u.status != 'sold'
+      ORDER BY u.featured_order
+      LIMIT 8
+    `,
+    isInvestor
+      ? db`
+          SELECT DISTINCT unit_id FROM investments
+          WHERE user_id = ${Number(session!.sub)} AND status IN ('pending', 'approved')
+        `
+      : Promise.resolve([]),
+    session
+      ? db`SELECT unit_id FROM favorites WHERE user_id = ${Number(session.sub)}`
+      : Promise.resolve([]),
+  ]);
 
-  const [tierRow] = await db<TierThresholds[]>`
-    SELECT bronze_from, silver_from, gold_from, platinum_from FROM app_settings WHERE id = 1
-  `;
+  const hasPhone = !!phoneRow?.phone?.trim();
   const tierThresholds: TierThresholds = tierRow
     ? {
         bronze_from: Number(tierRow.bronze_from),
@@ -50,49 +110,9 @@ export default async function Home({ params }: { params: { lang: string } }) {
         platinum_from: Number(tierRow.platinum_from),
       }
     : { bronze_from: 5000, silver_from: 10000, gold_from: 25000, platinum_from: 150000 };
-
-  const developments = await db<DevRow[]>`
-    SELECT d.id, d.name, d.address, d.description, d.status,
-           d.completion_date, d.amenities, d.images, d.slug,
-           d.developer_id, dv.name AS developer_name,
-           COUNT(u.id)::int AS unit_count
-    FROM developments d
-    LEFT JOIN units u ON u.development_id = d.id
-    LEFT JOIN developers dv ON dv.id = d.developer_id
-    WHERE d.status = 'active' AND d.visible = true
-    GROUP BY d.id, dv.name
-    ORDER BY d.updated_at DESC
-  `;
-
-  const units = await db<UnitRow[]>`
-    SELECT u.id, u.development_id, u.identifier, u.floor,
-           u.total_m2, u.covered_m2, u.rooms, u.bedrooms,
-           u.orientation, u.price_usd, u.current_price_usd, u.status, u.images, u.description,
-           100 - COALESCE((
-             SELECT SUM(percentage) FROM investments
-             WHERE unit_id = u.id AND status = 'approved'
-           ), 0) AS available_pct,
-           CASE WHEN u.group_duration_months IS NOT NULL THEN
-             (SELECT MIN(i2.created_at) + (u.group_duration_months || ' months')::interval
-              FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'approved')
-           ELSE NULL END AS group_expires_at
-    FROM units u
-    JOIN developments d ON d.id = u.development_id
-    WHERE d.status = 'active' AND d.visible = true
-    ORDER BY u.updated_at DESC
-  `;
-
-  const featuredUnitRows = await db<(FeaturedUnit & { price_usd: string | number })[]>`
-    SELECT u.id, u.identifier, u.images, u.price_usd, u.total_m2, u.rooms,
-           d.id AS development_id, d.name AS development_name, d.address AS development_address,
-           d.slug AS development_slug, d.amenities
-    FROM units u
-    JOIN developments d ON d.id = u.development_id
-    WHERE u.featured = true AND d.status = 'active' AND d.visible = true AND u.status != 'sold'
-    ORDER BY u.featured_order
-    LIMIT 8
-  `;
   const featuredUnits8: FeaturedUnit[] = featuredUnitRows.map((u) => ({ ...u, price_usd: Number(u.price_usd) }));
+  const myInvestedUnitIds: number[] = investedRows.map((r) => Number(r.unit_id));
+  const myFavoriteUnitIds: number[] = favoriteRows.map((r) => Number(r.unit_id));
 
   const investableUnits = units.filter((u) => u.status !== "sold");
   const minInvestUsd = investableUnits.length > 0
@@ -121,18 +141,6 @@ export default async function Home({ params }: { params: { lang: string } }) {
       group_expires_at: u.group_expires_at ? new Date(u.group_expires_at as string).toISOString() : null,
     })),
   };
-
-  // Unit IDs the current investor already invested in (to block re-investment)
-  const myInvestedUnitIds: number[] = isInvestor
-    ? (await db`
-        SELECT DISTINCT unit_id FROM investments
-        WHERE user_id = ${Number(session!.sub)} AND status IN ('pending', 'approved')
-      `).map((r) => Number(r.unit_id))
-    : [];
-
-  const myFavoriteUnitIds: number[] = session
-    ? (await db`SELECT unit_id FROM favorites WHERE user_id = ${Number(session.sub)}`).map((r) => Number(r.unit_id))
-    : [];
 
   const fmtMonthYear = (d: string | Date | null) =>
     d ? new Date(d).toLocaleDateString("es-AR", { month: "long", year: "numeric", timeZone: "UTC" }) : null;
