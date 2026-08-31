@@ -32,6 +32,11 @@ export default function UnitHeroGallery({
     setIndex((i) => (i + dir + count) % count);
   }, [count]);
 
+  const openAt = useCallback((i: number) => {
+    setIndex(i);
+    setLightbox(true);
+  }, []);
+
   const handleKey = useCallback((e: KeyboardEvent) => {
     if (!lightbox) return;
     if (e.key === "Escape") setLightbox(false);
@@ -51,77 +56,158 @@ export default function UnitHeroGallery({
 
   if (count === 0) {
     return (
-      <div style={{ ...mainImageArea, background: "#111" }} className="unit-hero-main">
-        <Link href={backHref} style={backBtn}><ArrowLeft size={18} /></Link>
-        <div style={heroActionsWrap}>
-          <FavoriteButton
-            unitId={unitId}
-            initialFavorited={initialFavorited}
-            isAuthenticated={isAuthenticated}
-            lang={lang}
-            label={alt}
-            location="unit_page_hero"
-            variant="hero"
-          />
-          <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
+      <div style={wrap} className="unit-hero-wrap">
+        <style>{`
+          @media (min-width: 1200px) {
+            .unit-hero-wrap { padding-left: 0 !important; padding-right: 0 !important; }
+          }
+        `}</style>
+        <div style={mainImageArea} className="unit-hero-main">
+          <Link href={backHref} style={backBtn}><ArrowLeft size={18} /></Link>
+          <div style={heroActionsWrap}>
+            <FavoriteButton
+              unitId={unitId}
+              initialFavorited={initialFavorited}
+              isAuthenticated={isAuthenticated}
+              lang={lang}
+              label={alt}
+              location="unit_page_hero"
+              variant="hero"
+            />
+            <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
+          </div>
         </div>
       </div>
     );
   }
 
+  const gridExtras = images.slice(1, 5);
+  const hiddenCount = images.length - 5;
+
   return (
-    <div style={wrap}>
-      <div style={mainImageArea} className="unit-hero-main">
-        <Image key={images[index]} src={images[index]} alt={alt} fill style={{ objectFit: "cover" }} priority sizes="100vw" />
+    <div style={wrap} className="unit-hero-wrap">
+      <style>{`
+        @media (min-width: 1200px) {
+          .unit-hero-wrap { padding-left: 0 !important; padding-right: 0 !important; }
+        }
+      `}</style>
+      {count > 1 && (
+        <style>{`
+          .unit-hero-collage { display: none; }
+          @media (min-width: 768px) {
+            .unit-hero-carousel { display: none !important; }
+            .unit-hero-collage { display: grid !important; }
+          }
+        `}</style>
+      )}
 
-        <Link href={backHref} style={backBtn} aria-label={backLabel}>
-          <ArrowLeft size={18} />
-        </Link>
+      {/* Desktop / tablet — collage: one large image plus up to four smaller ones */}
+      {count > 1 && (
+        <div style={collageWrap} className="unit-hero-collage">
+          <button type="button" style={collageMain} onClick={() => openAt(0)} aria-label="Ver foto 1">
+            <Image src={images[0]} alt={alt} fill style={{ objectFit: "cover" }} priority sizes="50vw" />
+          </button>
+          <div style={collageGrid}>
+            {gridExtras.map((src, i) => {
+              const realIndex = i + 1;
+              const showMoreOverlay = i === gridExtras.length - 1 && hiddenCount > 0;
+              return (
+                <button
+                  key={src}
+                  type="button"
+                  style={collageCell}
+                  onClick={() => openAt(realIndex)}
+                  aria-label={`Ver foto ${realIndex + 1}`}
+                >
+                  <Image src={src} alt="" fill style={{ objectFit: "cover" }} sizes="25vw" />
+                  {showMoreOverlay && (
+                    <span style={moreOverlay}>
+                      <Expand size={18} />
+                      +{hiddenCount} fotos
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-        <div style={heroActionsWrap}>
-          <FavoriteButton
-            unitId={unitId}
-            initialFavorited={initialFavorited}
-            isAuthenticated={isAuthenticated}
-            lang={lang}
-            label={alt}
-            location="unit_page_hero"
-            variant="hero"
-          />
-          <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
+          <Link href={backHref} style={backBtn} aria-label={backLabel}>
+            <ArrowLeft size={18} />
+          </Link>
+          <div style={heroActionsWrap}>
+            <FavoriteButton
+              unitId={unitId}
+              initialFavorited={initialFavorited}
+              isAuthenticated={isAuthenticated}
+              lang={lang}
+              label={alt}
+              location="unit_page_hero"
+              variant="hero"
+            />
+            <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
+          </div>
+          {hiddenCount <= 0 && (
+            <button type="button" style={expandBtn} onClick={() => setLightbox(true)} aria-label="Ver todas las fotos">
+              <Expand size={16} /> Ver fotos
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Mobile — swipeable single-image carousel (and the fallback for a single photo) */}
+      <div className="unit-hero-carousel">
+        <div style={mainImageArea} className="unit-hero-main">
+          <Image key={images[index]} src={images[index]} alt={alt} fill style={{ objectFit: "cover" }} priority sizes="100vw" />
+
+          <Link href={backHref} style={backBtn} aria-label={backLabel}>
+            <ArrowLeft size={18} />
+          </Link>
+
+          <div style={heroActionsWrap}>
+            <FavoriteButton
+              unitId={unitId}
+              initialFavorited={initialFavorited}
+              isAuthenticated={isAuthenticated}
+              lang={lang}
+              label={alt}
+              location="unit_page_hero"
+              variant="hero"
+            />
+            <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
+          </div>
+
+          {count > 1 && (
+            <>
+              <button type="button" style={{ ...navBtn, left: 16 }} onClick={() => go(-1)} aria-label="Anterior">
+                <ChevronLeft size={20} />
+              </button>
+              <button type="button" style={{ ...navBtn, right: 16 }} onClick={() => go(1)} aria-label="Siguiente">
+                <ChevronRight size={20} />
+              </button>
+              <span style={counterPill}>{index + 1} / {count}</span>
+            </>
+          )}
+
+          <button type="button" style={expandBtn} onClick={() => setLightbox(true)} aria-label="Ver todas las fotos">
+            <Expand size={16} /> Ver fotos
+          </button>
         </div>
 
         {count > 1 && (
-          <>
-            <button type="button" style={{ ...navBtn, left: 16 }} onClick={() => go(-1)} aria-label="Anterior">
-              <ChevronLeft size={20} />
-            </button>
-            <button type="button" style={{ ...navBtn, right: 16 }} onClick={() => go(1)} aria-label="Siguiente">
-              <ChevronRight size={20} />
-            </button>
-            <span style={counterPill}>{index + 1} / {count}</span>
-          </>
+          <div style={thumbStrip}>
+            {images.map((src, i) => (
+              <button
+                key={src}
+                type="button"
+                onClick={() => setIndex(i)}
+                style={{ ...thumbBtn, outline: i === index ? "2px solid #111" : "none", opacity: i === index ? 1 : 0.7 }}
+              >
+                <Image src={src} alt="" fill style={{ objectFit: "cover" }} sizes="120px" />
+              </button>
+            ))}
+          </div>
         )}
-
-        <button type="button" style={expandBtn} onClick={() => setLightbox(true)} aria-label="Ver todas las fotos">
-          <Expand size={16} /> Ver fotos
-        </button>
       </div>
-
-      {count > 1 && (
-        <div style={thumbStrip}>
-          {images.map((src, i) => (
-            <button
-              key={src}
-              type="button"
-              onClick={() => setIndex(i)}
-              style={{ ...thumbBtn, outline: i === index ? "2px solid #111" : "none", opacity: i === index ? 1 : 0.7 }}
-            >
-              <Image src={src} alt="" fill style={{ objectFit: "cover" }} sizes="120px" />
-            </button>
-          ))}
-        </div>
-      )}
 
       {lightbox && (
         <div style={overlay} onClick={() => setLightbox(false)}>
@@ -160,8 +246,30 @@ export default function UnitHeroGallery({
   );
 }
 
-const wrap: React.CSSProperties = { background: "#f3f4f6" };
-const mainImageArea: React.CSSProperties = { position: "relative", width: "100%", height: 440, background: "#111", overflow: "hidden" };
+const wrap: React.CSSProperties = { maxWidth: "calc(1200px + 10vw)", margin: "0 auto", padding: "0 1.5rem", background: "#f3f4f6" };
+const mainImageArea: React.CSSProperties = { position: "relative", width: "100%", height: 440, background: "#e5e7eb", overflow: "hidden", borderRadius: 16 };
+
+/* Collage (desktop/tablet) — one large photo plus up to four smaller ones, Airbnb-style */
+const collageWrap: React.CSSProperties = {
+  position: "relative", gridTemplateColumns: "1fr 1fr", gap: 8, height: 480,
+  borderRadius: 16, overflow: "hidden", background: "#e5e7eb",
+};
+const collageMain: React.CSSProperties = {
+  position: "relative", border: "none", padding: 0, margin: 0, cursor: "pointer",
+  background: "#e5e7eb", overflow: "hidden", height: "100%", display: "block",
+};
+const collageGrid: React.CSSProperties = {
+  display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 8, height: "100%",
+};
+const collageCell: React.CSSProperties = {
+  position: "relative", border: "none", padding: 0, margin: 0, cursor: "pointer",
+  background: "#e5e7eb", overflow: "hidden", display: "block",
+};
+const moreOverlay: React.CSSProperties = {
+  position: "absolute", inset: 0, background: "rgba(17,17,17,0.6)", color: "#fff",
+  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+  gap: "0.35rem", fontSize: "0.85rem", fontWeight: 700,
+};
 
 const backBtn: React.CSSProperties = {
   position: "absolute", top: 16, left: 16, zIndex: 5,
