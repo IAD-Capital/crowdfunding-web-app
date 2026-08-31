@@ -207,7 +207,6 @@ export default async function PublicUnitPage({
         images={galleryImages}
         alt={unit.identifier}
         backHref={`/${lang}/developments/${dev.slug ?? dev.id}`}
-        backLabel={dev.name}
         shareUrl={`${getAppUrl()}${unitPath}`}
         shareTitle={
           (minInvestUsd != null
@@ -235,12 +234,29 @@ export default async function PublicUnitPage({
             {/* Top info block */}
             <div style={topInfoBlock}>
               <div style={priceCol}>
-                <span style={{ ...statusPillInline, background: sc.bg, color: sc.fg }}>{sc.label}</span>
-                <p style={bigPrice}>
-                  {unit.price_usd != null
-                    ? `USD ${Number(unit.price_usd).toLocaleString("es-AR")}`
-                    : "Consultar"}
-                </p>
+                {unit.status !== "partial" && (
+                  <span style={{ ...statusPillInline, background: sc.bg, color: sc.fg }}>{sc.label}</span>
+                )}
+                {showInvestHeadline ? (
+                  <>
+                    <p style={unitValueLine}>
+                      Valor de la unidad: USD {Number(unit.price_usd).toLocaleString("es-AR")}
+                    </p>
+                    <p style={bigPrice}>
+                      Invertí desde{" "}
+                      <span style={bigPriceHighlight}>
+                        USD {minInvestUsd!.toLocaleString("es-AR")}
+                        <span style={bigPricePct}> (5%)</span>
+                      </span>
+                    </p>
+                  </>
+                ) : (
+                  <p style={bigPrice}>
+                    {unit.price_usd != null
+                      ? `USD ${Number(unit.price_usd).toLocaleString("es-AR")}`
+                      : "Consultar"}
+                  </p>
+                )}
                 <p style={addressLine}>{dev.address} · Unidad {unit.identifier}</p>
               </div>
 
@@ -399,7 +415,9 @@ export default async function PublicUnitPage({
                           ) : (
                             <div style={relatedImagePlaceholder} />
                           )}
-                          <span style={{ ...relatedStatusPill, background: rsc.bg, color: rsc.fg }}>{rsc.label}</span>
+                          {u.status !== "partial" && (
+                            <span style={{ ...relatedStatusPill, background: rsc.bg, color: rsc.fg }}>{rsc.label}</span>
+                          )}
                         </div>
                         <div style={relatedInfo}>
                           <p style={relatedIdentifier}>Unidad {u.identifier}</p>
@@ -614,6 +632,13 @@ const topInfoBlock: React.CSSProperties = { display: "flex", flexDirection: "col
 const priceCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.3rem" };
 const statusPillInline: React.CSSProperties = { display: "inline-block", width: "fit-content", borderRadius: 999, padding: "0.2rem 0.75rem", fontSize: "0.75rem", fontWeight: 700 };
 const bigPrice: React.CSSProperties = { fontSize: "2.25rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.04em" };
+const unitValueLine: React.CSSProperties = { color: "#6b7280", fontSize: "0.95rem", fontWeight: 600, margin: 0 };
+const bigPriceHighlight: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", fontFamily: "var(--font-display)",
+  background: "rgba(27,77,224,0.08)", border: "1px solid rgba(27,77,224,0.16)",
+  borderRadius: "0.22em", padding: "0 0.22em", color: "#1b4de0",
+};
+const bigPricePct: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, color: "#6b7280" };
 const addressLine: React.CSSProperties = { color: "#6b7280", fontSize: "0.9rem", margin: 0 };
 const estCta: React.CSSProperties = { color: "#1b4de0", fontWeight: 700, textDecoration: "none", fontSize: "0.85rem", width: "fit-content" };
 
@@ -677,7 +702,7 @@ const coListNote: React.CSSProperties = { fontSize: "0.82rem", color: "#374151",
 const coPctBar: React.CSSProperties = { height: 6, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" };
 const coPctFill: React.CSSProperties = { height: "100%", background: "linear-gradient(90deg, #4ade80, #22c55e)", borderRadius: 999 };
 
-const sidebar: React.CSSProperties = { position: "sticky", top: 80 };
+const sidebar: React.CSSProperties = { position: "sticky", top: 80, marginTop: "1.5rem" };
 const sideCard: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" };
 const sidePriceLabel: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", margin: 0, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" };
 const sidePrice: React.CSSProperties = { fontSize: "2rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.04em" };

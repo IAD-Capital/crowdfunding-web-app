@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 import ShareButton from "./ShareButton";
 import FavoriteButton from "./FavoriteButton";
@@ -11,7 +11,6 @@ type Props = {
   images: string[];
   alt: string;
   backHref: string;
-  backLabel: string;
   shareUrl: string;
   shareTitle: string;
   unitId: number;
@@ -21,12 +20,25 @@ type Props = {
 };
 
 export default function UnitHeroGallery({
-  images, alt, backHref, backLabel, shareUrl, shareTitle,
+  images, alt, backHref, shareUrl, shareTitle,
   unitId, initialFavorited, isAuthenticated, lang,
 }: Props) {
+  const router = useRouter();
   const [index, setIndex] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const count = images.length;
+
+  // Prefer returning to wherever the user actually came from (catalog, home,
+  // another unit's related-units row, etc.) over always sending them to this
+  // unit's development page — only fall back to backHref when there's no
+  // in-app history to go back to (e.g. a shared link opened directly).
+  const handleBack = useCallback(() => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(backHref);
+    }
+  }, [router, backHref]);
 
   const go = useCallback((dir: 1 | -1) => {
     setIndex((i) => (i + dir + count) % count);
@@ -63,7 +75,7 @@ export default function UnitHeroGallery({
           }
         `}</style>
         <div style={mainImageArea} className="unit-hero-main">
-          <Link href={backHref} style={backBtn}><ArrowLeft size={18} /></Link>
+          <button type="button" onClick={handleBack} style={backBtn} aria-label="Volver"><ArrowLeft size={18} /></button>
           <div style={heroActionsWrap}>
             <FavoriteButton
               unitId={unitId}
@@ -131,9 +143,9 @@ export default function UnitHeroGallery({
             })}
           </div>
 
-          <Link href={backHref} style={backBtn} aria-label={backLabel}>
+          <button type="button" onClick={handleBack} style={backBtn} aria-label="Volver">
             <ArrowLeft size={18} />
-          </Link>
+          </button>
           <div style={heroActionsWrap}>
             <FavoriteButton
               unitId={unitId}
@@ -159,9 +171,9 @@ export default function UnitHeroGallery({
         <div style={mainImageArea} className="unit-hero-main">
           <Image key={images[index]} src={images[index]} alt={alt} fill style={{ objectFit: "cover" }} priority sizes="100vw" />
 
-          <Link href={backHref} style={backBtn} aria-label={backLabel}>
+          <button type="button" onClick={handleBack} style={backBtn} aria-label="Volver">
             <ArrowLeft size={18} />
-          </Link>
+          </button>
 
           <div style={heroActionsWrap}>
             <FavoriteButton
@@ -246,7 +258,7 @@ export default function UnitHeroGallery({
   );
 }
 
-const wrap: React.CSSProperties = { maxWidth: "calc(1200px + 10vw)", margin: "0 auto", padding: "0 1.5rem", background: "#f3f4f6" };
+const wrap: React.CSSProperties = { maxWidth: "calc(1200px + 10vw)", margin: "0 auto", padding: "0 1.5rem", background: "transparent" };
 const mainImageArea: React.CSSProperties = { position: "relative", width: "100%", height: 440, background: "#e5e7eb", overflow: "hidden", borderRadius: 16 };
 
 /* Collage (desktop/tablet) — one large photo plus up to four smaller ones, Airbnb-style */
