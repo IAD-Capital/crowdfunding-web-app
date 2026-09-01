@@ -34,7 +34,7 @@ export default async function PublicShell({
     new Date(settings.coming_soon_expires_at) > new Date();
 
   if (gated) {
-    return <ComingSoon expiresAt={settings!.coming_soon_expires_at!} />;
+    return <ComingSoon expiresAt={settings!.coming_soon_expires_at!} lang={lang} />;
   }
 
   return (

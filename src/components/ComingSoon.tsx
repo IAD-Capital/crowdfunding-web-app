@@ -1,7 +1,9 @@
 import Image from "next/image";
 import ComingSoonCountdown from "./ComingSoonCountdown";
+import TrackedLink from "./TrackedLink";
+import type { Locale } from "@/i18n";
 
-export default function ComingSoon({ expiresAt }: { expiresAt: string }) {
+export default function ComingSoon({ expiresAt, lang }: { expiresAt: string; lang: Locale }) {
   return (
     <div style={wrap}>
       <div style={content}>
@@ -18,6 +20,15 @@ export default function ComingSoon({ expiresAt }: { expiresAt: string }) {
         <p style={message}>
           Falta muy poco para que puedas disfrutar de una nueva forma de invertir en bienes raíces.
         </p>
+        <TrackedLink
+          href={`/${lang}/signup`}
+          style={ctaButton}
+          ctaId="coming_soon_signup"
+          ctaLabel="Regístrate para obtener las últimas novedades"
+          ctaLocation="coming_soon"
+        >
+          Regístrate para obtener las últimas novedades
+        </TrackedLink>
       </div>
     </div>
   );
@@ -47,4 +58,15 @@ const message: React.CSSProperties = {
   fontSize: "clamp(1.25rem, 2.4vw + 1rem, 1.75rem)", fontWeight: 500, color: "#fff",
   lineHeight: 1.4, margin: "0.5rem 0 0", letterSpacing: "-0.01em",
   textShadow: dropShadow,
+};
+const ctaButton: React.CSSProperties = {
+  marginTop: "0.5rem",
+  padding: "0.9rem 1.75rem",
+  background: "#fff",
+  color: "#1b4de0",
+  borderRadius: 999,
+  fontSize: "1rem",
+  fontWeight: 700,
+  textDecoration: "none",
+  boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
 };
