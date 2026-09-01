@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
   id               SERIAL PRIMARY KEY,
   full_name        TEXT        NOT NULL,
   email            TEXT        NOT NULL UNIQUE,
-  password_hash    TEXT        NOT NULL,
+  password_hash    TEXT,
+  google_id        TEXT        UNIQUE,
   role             TEXT        NOT NULL DEFAULT 'investor' REFERENCES roles(role_id),
   avatar           TEXT,
   phone            TEXT,
@@ -89,6 +90,7 @@ CREATE TABLE IF NOT EXISTS units (
   current_price_usd     NUMERIC(14,2),
   status                TEXT          NOT NULL DEFAULT 'available',
   description           TEXT,
+  legal_terms           TEXT,
   images                TEXT[]        NOT NULL DEFAULT '{}',
   plan_images           TEXT[]        NOT NULL DEFAULT '{}',
   featured              BOOLEAN       NOT NULL DEFAULT FALSE,
@@ -109,6 +111,15 @@ CREATE TABLE IF NOT EXISTS investments (
   removal_ack_at       TIMESTAMPTZ,
   created_at           TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS favorites (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER     NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  unit_id    INTEGER     NOT NULL REFERENCES units(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, unit_id)
+);
+CREATE INDEX IF NOT EXISTS idx_favorites_user_id ON favorites(user_id);
 
 CREATE TABLE IF NOT EXISTS app_settings (
   id                     SMALLINT      PRIMARY KEY DEFAULT 1,

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { Schibsted_Grotesk, Hanken_Grotesk } from "next/font/google";
 import { DEFAULT_LOCALE } from "@/i18n";
+import { getAppUrl } from "@/lib/mail";
 import "./globals.css";
 
 const schibstedGrotesk = Schibsted_Grotesk({
@@ -16,6 +17,7 @@ const hankenGrotesk = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getAppUrl()),
   title: "IAD Capital - el nuevo crowdfunding inmobiliario",
   description: "Crowdfunding web app",
   appleWebApp: {

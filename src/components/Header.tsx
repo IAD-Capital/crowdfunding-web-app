@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import TrackedLink from "./TrackedLink";
 import { getSession } from "@/lib/session";
 import { getDictionary, type Locale } from "@/i18n";
 import UserMenu from "./UserMenu";
@@ -86,9 +87,15 @@ export default async function Header({ lang }: Props) {
         </nav>
 
         <div className={s.right}>
-          <Link href={`/${lang}/como-invertir`} className={s.btnCta}>
+          <TrackedLink
+            href={`/${lang}/como-invertir`}
+            className={s.btnCta}
+            ctaId="header_como_invertir"
+            ctaLabel="Quiero invertir"
+            ctaLocation="header"
+          >
             Quiero invertir
-          </Link>
+          </TrackedLink>
           {session ? (
             <>
               {session.role === "investor" && (
@@ -98,8 +105,24 @@ export default async function Header({ lang }: Props) {
             </>
           ) : (
             <>
-              <Link href={`/${lang}/login`} className={s.navLink}>{t.header.signIn}</Link>
-              <Link href={`/${lang}/signup`} className={s.btnOutline}>{t.header.signUp}</Link>
+              <TrackedLink
+                href={`/${lang}/login`}
+                className={s.navLink}
+                ctaId="header_login"
+                ctaLabel={t.header.signIn}
+                ctaLocation="header"
+              >
+                {t.header.signIn}
+              </TrackedLink>
+              <TrackedLink
+                href={`/${lang}/signup`}
+                className={s.btnOutline}
+                ctaId="header_signup"
+                ctaLabel={t.header.signUp}
+                ctaLocation="header"
+              >
+                {t.header.signUp}
+              </TrackedLink>
             </>
           )}
         </div>

@@ -18,6 +18,10 @@ const en: Dictionary = {
     or: "or",
   },
   auth: {
+    google: {
+      divider: "or",
+      error: "We couldn't sign you in with Google. Please try again.",
+    },
     login: {
       title: "Sign in",
       email: "Email",
@@ -162,6 +166,9 @@ const en: Dictionary = {
         priceUsd: "Price (USD)",
         status: "Status",
         description: "Description / notes",
+        legalTerms: "Legal aspects",
+        legalTermsPlaceholder: "Explain the post-investment legal aspects here: formalization, approval timelines, nature of the stake, taxation, withdrawal process, etc.",
+        legalTermsHint: "Shown on the unit's public page, in a \"Legal aspects\" section. Leave empty to hide the section.",
         submit: "Save unit",
         submitting: "Saving…",
         cancel: "Cancel",

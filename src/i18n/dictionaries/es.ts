@@ -16,6 +16,10 @@ const es = {
     or: "o",
   },
   auth: {
+    google: {
+      divider: "o",
+      error: "No pudimos iniciar sesión con Google. Intenta nuevamente.",
+    },
     login: {
       title: "Iniciar sesión",
       email: "Correo electrónico",
@@ -160,6 +164,9 @@ const es = {
         priceUsd: "Precio (USD)",
         status: "Estado",
         description: "Descripción / observaciones",
+        legalTerms: "Aspectos legales",
+        legalTermsPlaceholder: "Explicá acá los aspectos legales posteriores a la inversión: formalización, plazos de aprobación, naturaleza de la participación, tributación, proceso de retiro, etc.",
+        legalTermsHint: "Se muestra en la página pública de la unidad, en una sección \"Aspectos legales\". Dejalo vacío para no mostrar la sección.",
         submit: "Guardar unidad",
         submitting: "Guardando…",
         cancel: "Cancelar",

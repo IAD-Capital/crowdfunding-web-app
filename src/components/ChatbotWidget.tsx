@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bot, X, Send, Mail, ArrowLeft, Loader2 } from "lucide-react";
 
 type Question = {
@@ -58,6 +58,14 @@ export default function ChatbotWidget({ userEmail }: Props) {
   function close() {
     setOpen(false);
   }
+
+  // Lets other components (e.g. the unit page's "Cómo funciona" button) open
+  // the widget without prop drilling — it's mounted once in PublicShell, far
+  // from most of the pages that want to trigger it.
+  useEffect(() => {
+    window.addEventListener("iad:open-chatbot", handleOpen);
+    return () => window.removeEventListener("iad:open-chatbot", handleOpen);
+  }, []);
 
   function selectQuestion(q: Question) {
     setPath((prev) => [...prev, q]);

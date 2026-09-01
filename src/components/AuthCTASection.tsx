@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import PasswordInput from "./PasswordInput";
+import { trackCtaClick } from "@/lib/analytics";
 
 type Mode = "login" | "signup";
 
@@ -48,6 +49,8 @@ export default function AuthCTASection({ lang }: { lang: string }) {
       return;
     }
 
+    trackCtaClick(mode === "login" ? "auth_cta_login_submit" : "auth_cta_signup_submit", { location: "home_auth_cta" });
+
     const dest = data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
     router.push(dest);
     router.refresh();
@@ -66,7 +69,7 @@ export default function AuthCTASection({ lang }: { lang: string }) {
           <span style={eyebrow}>Empezá hoy</span>
           <h2 style={headline}>Invertí en bienes raíces desde cualquier monto</h2>
           <p style={sub}>
-            Accedé a emprendimientos premium y comprá desde el <strong>5%</strong> de
+            Accedé a departamentos premium y comprá desde el <strong>5%</strong> de
             una unidad funcional. Creá tu cuenta en minutos o ingresá con tu usuario.
           </p>
           <ul style={perks}>

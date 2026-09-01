@@ -23,6 +23,7 @@ export type Initial = {
   current_price_usd?: number | null;
   status: string;
   description?: string;
+  legal_terms?: string;
   images?: string[];
   plan_images?: string[];
   group_duration_months?: number | null;
@@ -59,6 +60,7 @@ export default function UnitForm({
   const [currentPriceUsd, setCurrentPriceUsd] = useState(initial?.current_price_usd?.toString() ?? "");
   const [status, setStatus] = useState(initial?.status ?? "available");
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [legalTerms, setLegalTerms] = useState(initial?.legal_terms ?? "");
   const [images, setImages] = useState<string[]>(initial?.images ?? []);
   const [planImages, setPlanImages] = useState<string[]>(initial?.plan_images ?? []);
   const [groupDurationMonths, setGroupDurationMonths] = useState<string>(
@@ -92,6 +94,7 @@ export default function UnitForm({
       current_price_usd: currentPriceUsd ? parseFloat(currentPriceUsd) : null,
       status,
       description: description.trim() || null,
+      legal_terms: legalTerms.trim() || null,
       images,
       plan_images: planImages,
       group_duration_months: groupDurationMonths ? parseInt(groupDurationMonths) : null,
@@ -193,6 +196,13 @@ export default function UnitForm({
             value={description} onChange={(e) => setDescription(e.target.value)} />
         </Field>
 
+        <Field label={t.form.legalTerms}>
+          <textarea style={{ ...input, minHeight: 120, resize: "vertical" }}
+            value={legalTerms} onChange={(e) => setLegalTerms(e.target.value)}
+            placeholder={t.form.legalTermsPlaceholder} />
+          <p style={legalTermsHint}>{t.form.legalTermsHint}</p>
+        </Field>
+
         <Field label="Fotos">
           <UnitImagePicker
             lang={lang}
@@ -272,6 +282,7 @@ const input: React.CSSProperties = {
   borderRadius: 8, fontSize: "0.9rem", width: "100%", outline: "none",
 };
 const errorStyle: React.CSSProperties = { color: "#dc2626", fontSize: "0.875rem" };
+const legalTermsHint: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", margin: 0 };
 const actions: React.CSSProperties = { display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "0.5rem" };
 const btnPrimary: React.CSSProperties = {
   padding: "0.6rem 1.25rem", background: "#111", color: "#fff",

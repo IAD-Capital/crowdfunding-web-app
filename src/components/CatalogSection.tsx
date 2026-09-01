@@ -9,7 +9,8 @@ import {
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { getTierDefs, unitQualifiesForTier, MIN_ENTRY_PCT, type TierThresholds, type TierKey } from "@/lib/investmentTiers";
-import { getAmenityIcon } from "@/lib/icons";
+import { trackCtaClick } from "@/lib/analytics";
+import FavoriteButton from "./FavoriteButton";
 
 export type Development = {
   id: number;
@@ -51,6 +52,8 @@ type Props = {
   isInvestor: boolean;
   hasPhone?: boolean;
   myInvestedUnitIds?: number[];
+  isAuthenticated?: boolean;
+  myFavoriteUnitIds?: number[];
   lang: string;
   tierThresholds: TierThresholds;
 };
@@ -61,39 +64,15 @@ const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
   sold:      { bg: "#991b1b", fg: "#fff", label: "Vendida" },
 };
 
-export default function CatalogSection({ developments, units, isInvestor, hasPhone = true, myInvestedUnitIds = [], lang, tierThresholds }: Props) {
-  const [devFilter, setDevFilter] = useState<number | "all">("all");
-  const [developerFilter, setDeveloperFilter] = useState<number | "all">("all");
+export default function CatalogSection({ developments, units, isInvestor, hasPhone = true, myInvestedUnitIds = [], isAuthenticated = false, myFavoriteUnitIds = [], lang, tierThresholds }: Props) {
   const [tierFilter, setTierFilter] = useState<TierKey | "all">("all");
   const [drawerUnit, setDrawerUnit] = useState<Unit | null>(null);
 
   const tierDefs = getTierDefs(tierThresholds);
 
-  const developerOptions = Array.from(
-    new Map(
-      developments
-        .filter((d): d is Development & { developer_id: number; developer_name: string } =>
-          d.developer_id != null && !!d.developer_name)
-        .map((d) => [d.developer_id, d.developer_name])
-    ).entries()
-  ).sort((a, b) => a[1].localeCompare(b[1]));
-
-  const developerFilteredDevs = developerFilter === "all"
-    ? developments
-    : developments.filter((d) => d.developer_id === developerFilter);
-  const developerFilteredDevIds = new Set(developerFilteredDevs.map((d) => d.id));
-
-  function selectDeveloper(id: number | "all") {
-    setDeveloperFilter(id);
-    setDevFilter("all");
-  }
-
-  const devFiltered = units.filter((u) =>
-    developerFilteredDevIds.has(u.development_id) && (devFilter === "all" || u.development_id === devFilter)
-  );
   const visibleUnits = tierFilter === "all"
-    ? devFiltered
-    : devFiltered.filter((u) => {
+    ? units
+    : units.filter((u) => {
         const tier = tierDefs.find((t) => t.key === tierFilter);
         return tier ? unitQualifiesForTier(u, tier) : true;
       });
@@ -104,7 +83,7 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
     <section style={section}>
       <style>{`
         @media (max-width: 760px) {
-          .dev-grid, .unit-grid {
+          .unit-grid {
             display: flex !important;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
@@ -116,8 +95,8 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
             padding-left: 1.5rem;
             padding-right: 1.5rem;
           }
-          .dev-grid::-webkit-scrollbar, .unit-grid::-webkit-scrollbar { display: none; }
-          .dev-card-item, .unit-card-item {
+          .unit-grid::-webkit-scrollbar { display: none; }
+          .unit-card-item {
             flex: 0 0 84%;
             scroll-snap-align: start;
           }
@@ -125,46 +104,8 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
       `}</style>
       <div style={inner}>
 
-        {/* ── Emprendimientos ─────────────────────── */}
-        <div style={blockHeader}>
-          <div>
-            <h2 style={blockTitle}>Emprendimientos</h2>
-            <p style={blockSub}>{developerFilteredDevs.length} proyecto{developerFilteredDevs.length !== 1 ? "s" : ""} activo{developerFilteredDevs.length !== 1 ? "s" : ""}</p>
-          </div>
-        </div>
-
-        {/* Filter by developer */}
-        {developerOptions.length > 1 && (
-          <div style={filterRow}>
-            <button style={filterChip(developerFilter === "all")} onClick={() => selectDeveloper("all")}>
-              Todas las desarrolladoras
-            </button>
-            {developerOptions.map(([id, name]) => (
-              <button
-                key={id}
-                style={filterChip(developerFilter === id)}
-                onClick={() => selectDeveloper(id)}
-              >
-                {name}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {developerFilteredDevs.length === 0 ? (
-          <p style={emptyMsg}>No hay emprendimientos activos en este momento.</p>
-        ) : (
-          <div style={devGrid} className="dev-grid">
-            {developerFilteredDevs.map((d) => (
-              <div key={d.id} className="dev-card-item">
-                <DevCard d={d} lang={lang} />
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* ── Departamentos ───────────────────────── */}
-        <div style={{ ...blockHeader, marginTop: "4rem" }}>
+        <div style={blockHeader}>
           <div>
             <h2 style={blockTitle}>Departamentos</h2>
             <p style={blockSub}>{units.length} unidad{units.length !== 1 ? "es" : ""} en total</p>
@@ -187,7 +128,7 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
           <div style={tierCardGrid}>
             {tierDefs.map((t) => {
               const active = tierFilter === t.key;
-              const count = devFiltered.filter((u) => unitQualifiesForTier(u, t)).length;
+              const count = units.filter((u) => unitQualifiesForTier(u, t)).length;
               return (
                 <button
                   key={t.key}
@@ -210,24 +151,6 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
           </div>
         </div>
 
-        {/* Filter by development */}
-        {developerFilteredDevs.length > 1 && (
-          <div style={filterRow}>
-            <button style={filterChip(devFilter === "all")} onClick={() => setDevFilter("all")}>
-              Todos
-            </button>
-            {developerFilteredDevs.map((d) => (
-              <button
-                key={d.id}
-                style={filterChip(devFilter === d.id)}
-                onClick={() => setDevFilter(d.id)}
-              >
-                {d.name}
-              </button>
-            ))}
-          </div>
-        )}
-
         {isInvestor && availableUnits.length > 0 && (
           <p style={investorHint}>
             Como inversor podés adquirir entre el 5% y el 100% de cada departamento.
@@ -236,7 +159,7 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
         )}
 
         {visibleUnits.length === 0 ? (
-          <p style={emptyMsg}>No hay unidades disponibles para este emprendimiento.</p>
+          <p style={emptyMsg}>No hay unidades disponibles en este momento.</p>
         ) : (
           <div style={unitGrid} className="unit-grid">
             {visibleUnits.map((u) => (
@@ -250,6 +173,8 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
                   alreadyInvested={myInvestedUnitIds.includes(u.id)}
                   onInvest={() => setDrawerUnit(u)}
                   lang={lang}
+                  isAuthenticated={isAuthenticated}
+                  isFavorited={myFavoriteUnitIds.includes(u.id)}
                 />
               </div>
             ))}
@@ -275,59 +200,13 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
   );
 }
 
-/* ─── Dev card ─────────────────────────────────── */
-function DevCard({ d, lang }: { d: Development; lang: string }) {
-  const fmtDate = d.completion_date
-    ? new Date(d.completion_date).toLocaleDateString("es-AR", { month: "long", year: "numeric", timeZone: "UTC" })
-    : null;
-
-  return (
-    <Link href={`/${lang}/developments/${d.slug ?? d.id}`} style={devCard}>
-      <div style={devCover}>
-        {d.images?.[0] ? (
-          <Image src={d.images[0]} alt={d.name} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 84vw, 300px" />
-        ) : (
-          <div style={devPlaceholder} />
-        )}
-        {d.images?.length > 1 && (
-          <span style={photoBadge}>{d.images.length}</span>
-        )}
-      </div>
-      <div style={devBody}>
-        <h3 style={devName}>{d.name}</h3>
-        <p style={devAddr}>{d.address}</p>
-        {d.developer_name && (
-          <p style={devDeveloper}>Desarrolladora {d.developer_name}</p>
-        )}
-        <div style={devStats}>
-          <span style={statChip}>{d.unit_count} unidades</span>
-          {fmtDate && <span style={statChip}>{fmtDate}</span>}
-        </div>
-        {d.amenities?.length > 0 && (
-          <div style={amenRow}>
-            {d.amenities.slice(0, 3).map((a) => {
-              const Icon = getAmenityIcon(a);
-              return (
-                <span key={a} style={amenChip}><Icon size={12} /> {a}</span>
-              );
-            })}
-            {d.amenities.length > 3 && (
-              <span style={{ ...amenChip, color: "#9ca3af" }}>+{d.amenities.length - 3}</span>
-            )}
-          </div>
-        )}
-        <span style={devCta}>Ver emprendimiento →</span>
-      </div>
-    </Link>
-  );
-}
-
 /* ─── Unit card ─────────────────────────────────── */
 function UnitCard({
-  u, devName, devAddress, devSlug, isInvestor, alreadyInvested, onInvest, lang,
+  u, devName, devAddress, devSlug, isInvestor, alreadyInvested, onInvest, lang, isAuthenticated, isFavorited,
 }: {
   u: Unit; devName: string; devAddress: string; devSlug: string | number; isInvestor: boolean;
   alreadyInvested: boolean; onInvest: () => void; lang: string;
+  isAuthenticated: boolean; isFavorited: boolean;
 }) {
   const sc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
   const canBuy = isInvestor && u.status !== "sold" && !alreadyInvested;
@@ -343,8 +222,20 @@ function UnitCard({
 
   return (
     <div style={unitCard}>
-      <Link href={`/${lang}/developments/${devSlug}/units/${u.id}`} style={unitLink}>
-        <UnitCoverSlider images={u.images} identifier={u.identifier} statusBadge={{ background: sc.bg, color: sc.fg, label: sc.label }} />
+      <Link
+        href={`/${lang}/developments/${devSlug}/units/${u.id}`}
+        style={unitLink}
+        onClick={() => trackCtaClick("catalog_unit_card", { label: u.identifier, location: "catalog" })}
+      >
+        <UnitCoverSlider
+          images={u.images}
+          identifier={u.identifier}
+          statusBadge={{ background: sc.bg, color: sc.fg, label: sc.label }}
+          unitId={u.id}
+          isFavorited={isFavorited}
+          isAuthenticated={isAuthenticated}
+          lang={lang}
+        />
         <div style={unitBody}>
           <div style={unitTopRow}>
             <h3 style={unitId}>{u.identifier}</h3>
@@ -368,17 +259,33 @@ function UnitCard({
 
       {entryPrice != null && (
         <div style={unitPriceRow}>
-          <Link href={`/${lang}/developments/${devSlug}/units/${u.id}`} style={{ textDecoration: "none" }}>
+          <Link
+            href={`/${lang}/developments/${devSlug}/units/${u.id}`}
+            style={{ textDecoration: "none" }}
+            onClick={() => trackCtaClick("catalog_unit_price", { label: u.identifier, location: "catalog" })}
+          >
             <div style={priceSublabel}>Precio de entrada</div>
             <div style={priceEntry}>{fmtUsd(entryPrice)}</div>
             {minInvest != null && <div style={minInvestLabel}>Invertí desde {fmtUsd(minInvest)}</div>}
           </Link>
           {canBuy ? (
-            <button style={btnInvest} onClick={onInvest}>
+            <button
+              style={btnInvest}
+              onClick={() => {
+                trackCtaClick("catalog_invest_button", { label: u.identifier, location: "catalog" });
+                onInvest();
+              }}
+            >
               Invertir →
             </button>
           ) : alreadyInvested ? (
-            <a href={`/${lang}/wallet`} style={btnAlready}>Ya invertido →</a>
+            <a
+              href={`/${lang}/wallet`}
+              style={btnAlready}
+              onClick={() => trackCtaClick("catalog_already_invested", { label: u.identifier, location: "catalog" })}
+            >
+              Ya invertido →
+            </a>
           ) : null}
         </div>
       )}
@@ -388,11 +295,15 @@ function UnitCard({
 
 /* ─── Unit cover slider ──────────────────────────── */
 function UnitCoverSlider({
-  images, identifier, statusBadge,
+  images, identifier, statusBadge, unitId, isFavorited, isAuthenticated, lang,
 }: {
   images: string[] | undefined;
   identifier: string;
   statusBadge: { background: string; color: string; label: string };
+  unitId: number;
+  isFavorited: boolean;
+  isAuthenticated: boolean;
+  lang: string;
 }) {
   const [index, setIndex] = useState(0);
   const list = images ?? [];
@@ -414,6 +325,15 @@ function UnitCoverSlider({
       <span style={{ ...badge, background: statusBadge.background, color: statusBadge.color }}>
         {statusBadge.label}
       </span>
+
+      <FavoriteButton
+        unitId={unitId}
+        initialFavorited={isFavorited}
+        isAuthenticated={isAuthenticated}
+        lang={lang}
+        label={identifier}
+        location="catalog"
+      />
 
       {hasMultiple && (
         <>
@@ -444,12 +364,6 @@ const blockSub: React.CSSProperties = { fontSize: "0.9rem", color: "var(--c-text
 
 const emptyMsg: React.CSSProperties = { color: "var(--c-text-tertiary)", fontSize: "0.95rem" };
 
-const filterRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "1.25rem" };
-const filterChip = (active: boolean): React.CSSProperties => ({
-  padding: "0.3rem 0.75rem", borderRadius: 999, fontSize: "0.82rem", fontWeight: 600,
-  cursor: "pointer", border: `1.5px solid ${active ? "var(--c-accent)" : "var(--c-border-input)"}`,
-  background: active ? "var(--c-accent)" : "#fff", color: active ? "#fff" : "var(--c-text-secondary)",
-});
 const tierFilterBlock: React.CSSProperties = { marginBottom: "2rem" };
 const tierFilterHeader: React.CSSProperties = { textAlign: "center", marginBottom: "1.75rem" };
 const tierFilterTitle: React.CSSProperties = { fontSize: "2.1rem", fontWeight: 800, color: "var(--c-ink)", margin: "0 0 0.5rem", letterSpacing: "-0.02em" };
@@ -509,26 +423,6 @@ const investorHint: React.CSSProperties = {
   padding: "0.75rem 1rem", fontSize: "0.85rem", color: "#92400e",
   marginBottom: "1.25rem",
 };
-
-/* Dev card */
-const devGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", gap: "1.5rem" };
-const devCard: React.CSSProperties = {
-  background: "var(--c-surface)", borderRadius: 14, overflow: "hidden",
-  border: "1px solid var(--c-border)", textDecoration: "none", color: "inherit",
-  display: "flex", flexDirection: "column",
-  boxShadow: "0 2px 8px rgba(14,23,38,0.06)", transition: "transform 0.2s, box-shadow 0.2s",
-};
-const devCover: React.CSSProperties = { position: "relative", height: 200, background: "#eef1f6" };
-const devPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#e8eef7,#dfe7f2)" };
-const photoBadge: React.CSSProperties = { position: "absolute", bottom: 8, right: 8, background: "rgba(14,23,38,0.6)", color: "#fff", fontSize: "0.72rem", padding: "0.15rem 0.45rem", borderRadius: 999 };
-const devBody: React.CSSProperties = { padding: "1.25rem", flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" };
-const devName: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, margin: 0, color: "var(--c-ink)" };
-const devAddr: React.CSSProperties = { fontSize: "0.82rem", color: "var(--c-text-secondary)", margin: 0 };
-const devDeveloper: React.CSSProperties = { fontSize: "0.76rem", color: "var(--c-text-tertiary)", margin: 0, fontWeight: 600 };
-const devStats: React.CSSProperties = { display: "flex", gap: "0.5rem", flexWrap: "wrap" };
-const amenRow: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.25rem" };
-const amenChip: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.72rem", padding: "0.15rem 0.5rem", background: "var(--c-chip-bg)", color: "var(--c-ink)", borderRadius: 999, border: "1px solid var(--c-border)" };
-const devCta: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, color: "var(--c-accent)", marginTop: "auto", paddingTop: "0.5rem" };
 
 const unitLink: React.CSSProperties = { textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column" };
 

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { COOKIE_NAME, verifyToken, type SessionPayload } from "./auth";
 import db from "./db";
@@ -7,7 +8,11 @@ import db from "./db";
 // signature check. getSession() is what server components and API routes use
 // to actually read the session, so it additionally confirms the token's
 // tokenVersion still matches the user's current one in the DB.
-export async function getSession(): Promise<SessionPayload | null> {
+//
+// Wrapped in React's cache() so the several Server Components that each call
+// getSession() independently on a page (layout, Header, page body...) share
+// one DB lookup per request instead of one each.
+export const getSession = cache(async (): Promise<SessionPayload | null> => {
   const token = cookies().get(COOKIE_NAME)?.value;
   if (!token) return null;
 
@@ -18,4 +23,4 @@ export async function getSession(): Promise<SessionPayload | null> {
   if (!user || user.token_version !== session.tokenVersion) return null;
 
   return session;
-}
+});

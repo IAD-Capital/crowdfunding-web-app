@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import PhoneRequiredNotice from "./PhoneRequiredNotice";
+import { trackCtaClick } from "@/lib/analytics";
 
 type Props = {
   unitId: number;
@@ -69,6 +70,7 @@ export default function BuyDrawer({
     const data = await res.json();
     setLoading(false);
     if (!res.ok) { setError(data.error ?? "Error al procesar."); return; }
+    trackCtaClick("buy_drawer_confirm", { label: identifier, location: "buy_drawer", percentage: effectivePct, amount_usd: amount });
     setDone(true);
     router.refresh();
   }
@@ -114,10 +116,19 @@ export default function BuyDrawer({
                 Tu inversión quedará confirmada una vez que sea aprobada.
               </p>
               <div style={successActions}>
-                <a href={`/${lang}/wallet`} style={btnPrimary}>Ver mi cartera →</a>
+                <a
+                  href={`/${lang}/wallet`}
+                  style={btnPrimary}
+                  onClick={() => trackCtaClick("buy_drawer_view_wallet", { label: identifier, location: "buy_drawer" })}
+                >
+                  Ver mi cartera →
+                </a>
                 <button
                   style={btnOutline}
-                  onClick={() => { setDone(false); setFull(false); setPct(Math.min(5, maxSlider)); setError(null); }}
+                  onClick={() => {
+                    trackCtaClick("buy_drawer_reinvest", { label: identifier, location: "buy_drawer" });
+                    setDone(false); setFull(false); setPct(Math.min(5, maxSlider)); setError(null);
+                  }}
                 >
                   Invertir de nuevo
                 </button>
@@ -223,7 +234,10 @@ export default function BuyDrawer({
           <div style={drawerFooter}>
             <button
               style={{ ...confirmBtn, opacity: loading ? 0.7 : 1 }}
-              onClick={handleBuy}
+              onClick={() => {
+                trackCtaClick("buy_drawer_submit", { label: identifier, location: "buy_drawer", percentage: effectivePct });
+                handleBuy();
+              }}
               disabled={loading}
             >
               {loading ? "Procesando…" : `Confirmar inversión · ${effectivePct}%`}

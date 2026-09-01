@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, MapPin, Maximize, BedDouble } from "lucide-react";
 import { getAmenityIcon } from "@/lib/icons";
+import { trackCtaClick } from "@/lib/analytics";
 
 export type FeaturedUnit = {
   id: number;
@@ -106,15 +107,27 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
           <div style={cta}>
             {!hasSession ? (
               <>
-                <Link href={`/${lang}/signup`} style={btnPrimary}>
+                <Link
+                  href={`/${lang}/signup`}
+                  style={btnPrimary}
+                  onClick={() => trackCtaClick("hero_signup", { label: "Empezar a invertir", location: "home_hero" })}
+                >
                   Empezar a invertir
                 </Link>
-                <Link href={`/${lang}/login`} style={btnOutline}>
+                <Link
+                  href={`/${lang}/login`}
+                  style={btnOutline}
+                  onClick={() => trackCtaClick("hero_login", { label: "Iniciar sesión", location: "home_hero" })}
+                >
                   Iniciar sesión
                 </Link>
               </>
             ) : isInvestor ? (
-              <a href="#catalog" style={btnPrimary}>
+              <a
+                href="#catalog"
+                style={btnPrimary}
+                onClick={() => trackCtaClick("hero_view_opportunities", { label: "Ver oportunidades", location: "home_hero" })}
+              >
                 Ver oportunidades
               </a>
             ) : null}
@@ -133,6 +146,7 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
                 href={`/${lang}/developments/${u.development_slug ?? u.development_id}/units/${u.id}`}
                 style={card}
                 className="featured-units-card"
+                onClick={() => trackCtaClick("hero_featured_unit", { label: u.identifier, location: "home_hero_carousel" })}
               >
                 <div style={imageWrap}>
                   {u.images[0] ? (

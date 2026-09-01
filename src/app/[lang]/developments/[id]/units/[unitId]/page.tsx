@@ -1,17 +1,21 @@
 import { getSession } from "@/lib/session";
 import { isValidLocale, DEFAULT_LOCALE, type Locale } from "@/i18n";
 import { notFound } from "next/navigation";
+import { cache } from "react";
+import type { Metadata } from "next";
 import db from "@/lib/db";
+import { getAppUrl } from "@/lib/mail";
 import PublicShell from "@/components/PublicShell";
 import UnitHeroGallery from "@/components/UnitHeroGallery";
 import ImageGallery from "@/components/admin/ImageGallery";
 import BuyPanel from "@/components/BuyPanel";
-import Link from "next/link";
+import OpenChatbotButton from "@/components/OpenChatbotButton";
+import TrackedLink from "@/components/TrackedLink";
 import Image from "next/image";
 import {
   Layers, Maximize, Home, Trees, BedDouble, Bed, Bath, Compass, ChevronRight, MapPin,
   Waves, Dumbbell, PartyPopper, ShieldCheck, Flame, SquareParking, WashingMachine,
-  Laptop, Sparkles, Baby, Sun, Wifi, Utensils, ConciergeBell, CheckCircle2,
+  Laptop, Sparkles, Baby, Sun, Wifi, Utensils, ConciergeBell, CheckCircle2, Scale,
 } from "lucide-react";
 
 const AMENITY_ICON_RULES: { keywords: string[]; icon: React.ReactNode }[] = [
@@ -38,23 +42,14 @@ function getAmenityIcon(name: string): React.ReactNode {
   return match ? match.icon : <CheckCircle2 size={18} />;
 }
 
-export default async function PublicUnitPage({
-  params,
-}: {
-  params: { lang: string; id: string; unitId: string };
-}) {
-  const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
-  const session = await getSession();
-  // Only investors (not superadmin) can invest
-  const canInvest = session?.role === "investor";
-  const isAuthenticated = !!session;
-
-  const isNumeric = /^\d+$/.test(params.id);
+// Shared by generateMetadata and the page component so the dev/unit lookup only runs once per request.
+const getDevAndUnit = cache(async (idParam: string, unitIdParam: string, role: string | undefined) => {
+  const isNumeric = /^\d+$/.test(idParam);
   const [dev] = isNumeric
-    ? await db`SELECT id, name, address, neighborhood, city, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE id = ${params.id}`
-    : await db`SELECT id, name, address, neighborhood, city, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE slug = ${params.id}`;
-  if (!dev) notFound();
-  if (!dev.visible && session?.role !== "superadmin") notFound();
+    ? await db`SELECT id, name, address, neighborhood, city, country, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE id = ${idParam}`
+    : await db`SELECT id, name, address, neighborhood, city, country, images, plan_images, interior_images, amenities, visible, slug FROM developments WHERE slug = ${idParam}`;
+  if (!dev) return null;
+  if (!dev.visible && role !== "superadmin") return null;
 
   const [unit] = await db`
     SELECT u.*,
@@ -67,9 +62,68 @@ export default async function PublicUnitPage({
          FROM investments i2 WHERE i2.unit_id = u.id AND i2.status = 'approved')
       ELSE NULL END AS group_expires_at
     FROM units u
-    WHERE u.id = ${params.unitId} AND u.development_id = ${dev.id}
+    WHERE u.id = ${unitIdParam} AND u.development_id = ${dev.id}
   `;
-  if (!unit) notFound();
+  if (!unit) return null;
+
+  return { dev, unit };
+});
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { lang: string; id: string; unitId: string };
+}): Promise<Metadata> {
+  const session = await getSession();
+  const data = await getDevAndUnit(params.id, params.unitId, session?.role);
+  if (!data) return {};
+  const { dev, unit } = data;
+  const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
+
+  const title = `Unidad ${unit.identifier} - ${dev.address ?? dev.name} - IAD Capital`;
+  const minInvestUsd = unit.price_usd != null ? Math.ceil(Number(unit.price_usd) * 0.05) : null;
+  const description = minInvestUsd != null
+    ? `Encontré esta propiedad en IAD Capital para invertir desde USD ${minInvestUsd.toLocaleString("es-AR")}. ${dev.address ?? dev.name}${unit.total_m2 != null ? ` · ${unit.total_m2} m²` : ""}${unit.rooms != null ? ` · ${unit.rooms} amb.` : ""}.`
+    : `Encontré esta propiedad en IAD Capital. ${dev.address ?? dev.name}${unit.total_m2 != null ? ` · ${unit.total_m2} m²` : ""}.`;
+  const image: string | undefined = unit.images?.[0] ?? dev.images?.[0];
+  const url = `${getAppUrl()}/${lang}/developments/${dev.slug ?? dev.id}/units/${unit.id}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "IAD Capital",
+      locale: lang === "es" ? "es_AR" : "en_US",
+      type: "website",
+      images: image ? [{ url: image, width: 1200, height: 800, alt: unit.identifier }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
+
+export default async function PublicUnitPage({
+  params,
+}: {
+  params: { lang: string; id: string; unitId: string };
+}) {
+  const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
+  const session = await getSession();
+  // Only investors (not superadmin) can invest
+  const canInvest = session?.role === "investor";
+  const isAuthenticated = !!session;
+
+  const data = await getDevAndUnit(params.id, params.unitId, session?.role);
+  if (!data) notFound();
+  const { dev, unit } = data;
 
   // Check if this investor already has a pending request or approved position in this unit
   const [myInvestment] = canInvest
@@ -83,6 +137,11 @@ export default async function PublicUnitPage({
     ? await db<{ phone: string | null }[]>`SELECT phone FROM users WHERE id = ${Number(session!.sub)}`
     : [null];
   const hasPhone = !!phoneRow?.phone?.trim();
+
+  const [favoriteRow] = isAuthenticated
+    ? await db`SELECT id FROM favorites WHERE user_id = ${Number(session!.sub)} AND unit_id = ${unit.id}`
+    : [null];
+  const isFavorited = !!favoriteRow;
 
   // Co-investors: visible to investors only — anonymous, just the aggregate
   const [coInvestorAgg] = canInvest
@@ -126,6 +185,10 @@ export default async function PublicUnitPage({
 
   const galleryImages: string[] = unit.images?.length > 0 ? unit.images : (dev.images ?? []);
 
+  const fullAddress = [dev.address, dev.neighborhood, dev.city, dev.country].filter(Boolean).join(", ");
+  const mapEmbedSrc = `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`;
+  const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+
   return (
     <PublicShell lang={lang}>
       <style
@@ -145,8 +208,24 @@ export default async function PublicUnitPage({
         images={galleryImages}
         alt={unit.identifier}
         backHref={`/${lang}/developments/${dev.slug ?? dev.id}`}
-        backLabel={dev.name}
+        shareUrl={`${getAppUrl()}${unitPath}`}
+        shareTitle={
+          (minInvestUsd != null
+            ? `Encontré esta propiedad en IAD Capital para invertir desde USD ${minInvestUsd.toLocaleString("es-AR")}: `
+            : "Encontré esta propiedad en IAD Capital: ") +
+          `Unidad ${unit.identifier} - ${dev.address} - IAD Capital`
+        }
+        unitId={unit.id}
+        initialFavorited={isFavorited}
+        isAuthenticated={isAuthenticated}
+        lang={lang}
       />
+
+      <div style={imagesDisclaimerWrap}>
+        <p style={imagesDisclaimer}>
+          Las imágenes son ilustrativas y pueden no representar el estado real de la propiedad.
+        </p>
+      </div>
 
       {/* Body */}
       <div style={body}>
@@ -155,48 +234,43 @@ export default async function PublicUnitPage({
           <div style={leftCol}>
             {/* Top info block */}
             <div style={topInfoBlock}>
-              <Link href={`/${lang}/developments/${dev.slug ?? dev.id}`} style={devLinkRow}>
-                <span>{dev.name} · {dev.address}</span>
-                <ChevronRight size={16} />
-              </Link>
-
-              <div style={priceFactsRow}>
-                <div style={priceCol}>
+              <div style={priceCol}>
+                {unit.status !== "partial" && (
                   <span style={{ ...statusPillInline, background: sc.bg, color: sc.fg }}>{sc.label}</span>
-                  {showInvestHeadline ? (
-                    <>
-                      <p style={investFromLabel}>Invertí desde</p>
-                      <p style={bigPrice}>
-                        USD {minInvestUsd!.toLocaleString("es-AR")}
-                        <span style={bigPricePct}> (5%)</span>
-                      </p>
-                      <p style={unitValueNote}>
-                        Valor total de la unidad: USD {Number(unit.price_usd).toLocaleString("es-AR")}
-                      </p>
-                    </>
-                  ) : (
-                    <p style={bigPrice}>
-                      {unit.price_usd != null
-                        ? `USD ${Number(unit.price_usd).toLocaleString("es-AR")}`
-                        : "Consultar"}
+                )}
+                {showInvestHeadline ? (
+                  <>
+                    <p style={unitValueLine}>
+                      Valor de la unidad: USD {Number(unit.price_usd).toLocaleString("es-AR")}
                     </p>
-                  )}
-                  <p style={addressLine}>{dev.address} · Unidad {unit.identifier}</p>
-                </div>
-
-                <div style={quickFacts}>
-                  {unit.rooms != null && (
-                    <QuickFact value={unit.rooms} label={unit.rooms === 1 ? "ambiente" : "ambientes"} />
-                  )}
-                  {unit.bathrooms != null && (
-                    <QuickFact value={unit.bathrooms} label={unit.bathrooms === 1 ? "baño" : "baños"} />
-                  )}
-                  {unit.total_m2 != null && <QuickFact value={Number(unit.total_m2)} label="m²" />}
-                </div>
+                    <p style={bigPrice}>
+                      Invertí desde{" "}
+                      <span style={bigPriceHighlight}>
+                        USD {minInvestUsd!.toLocaleString("es-AR")}
+                        <span style={bigPricePct}>(5%)</span>
+                      </span>
+                    </p>
+                  </>
+                ) : (
+                  <p style={bigPrice}>
+                    {unit.price_usd != null
+                      ? `USD ${Number(unit.price_usd).toLocaleString("es-AR")}`
+                      : "Consultar"}
+                  </p>
+                )}
+                <p style={addressLine}>{dev.address} · Unidad {unit.identifier}</p>
               </div>
 
               {showInvestHeadline && (
-                <a href="#invertir" style={estCta}>Empezar a invertir →</a>
+                <TrackedLink
+                  href="#invertir"
+                  style={estCta}
+                  ctaId="unit_page_start_investing"
+                  ctaLabel={unit.identifier}
+                  ctaLocation="unit_page_header"
+                >
+                  Empezar a invertir →
+                </TrackedLink>
               )}
             </div>
 
@@ -237,6 +311,21 @@ export default async function PublicUnitPage({
               </div>
             )}
 
+            {/* Legal aspects post-investment — filled in per unit from the admin, hidden until set */}
+            {unit.legal_terms && (
+              <div>
+                <h2 style={sectionTitle}>
+                  <span style={legalTitleRow}>
+                    <Scale size={18} />
+                    Aspectos legales
+                  </span>
+                </h2>
+                <div style={legalBox}>
+                  <p style={legalText}>{unit.legal_terms}</p>
+                </div>
+              </div>
+            )}
+
             {/* Unit's own floor plan — kept separate from the development's media below */}
             {unit.plan_images?.length > 0 && (
               <div>
@@ -248,21 +337,21 @@ export default async function PublicUnitPage({
             {/* Development media, split by category so plans/interior/photos don't get mixed */}
             {dev.images?.length > 0 && (
               <div>
-                <h2 style={sectionTitle}>Fotos del emprendimiento</h2>
+                <h2 style={sectionTitle}>Exterior</h2>
                 <ImageGallery images={dev.images} />
               </div>
             )}
 
             {dev.plan_images?.length > 0 && (
               <div>
-                <h2 style={sectionTitle}>Planos del emprendimiento</h2>
+                <h2 style={sectionTitle}>Planos</h2>
                 <ImageGallery images={dev.plan_images} />
               </div>
             )}
 
             {dev.interior_images?.length > 0 && (
               <div>
-                <h2 style={sectionTitle}>Interior del emprendimiento</h2>
+                <h2 style={sectionTitle}>Interior</h2>
                 <ImageGallery images={dev.interior_images} />
               </div>
             )}
@@ -313,10 +402,13 @@ export default async function PublicUnitPage({
                   {relatedUnits.map((u) => {
                     const rsc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
                     return (
-                      <Link
+                      <TrackedLink
                         key={u.id}
                         href={`/${lang}/developments/${dev.slug ?? dev.id}/units/${u.id}`}
                         style={relatedCard}
+                        ctaId="unit_page_related_unit"
+                        ctaLabel={u.identifier}
+                        ctaLocation="unit_page_related_units"
                       >
                         <div style={relatedImageWrap}>
                           {u.images?.[0] ? (
@@ -324,7 +416,9 @@ export default async function PublicUnitPage({
                           ) : (
                             <div style={relatedImagePlaceholder} />
                           )}
-                          <span style={{ ...relatedStatusPill, background: rsc.bg, color: rsc.fg }}>{rsc.label}</span>
+                          {u.status !== "partial" && (
+                            <span style={{ ...relatedStatusPill, background: rsc.bg, color: rsc.fg }}>{rsc.label}</span>
+                          )}
                         </div>
                         <div style={relatedInfo}>
                           <p style={relatedIdentifier}>Unidad {u.identifier}</p>
@@ -340,9 +434,42 @@ export default async function PublicUnitPage({
                             )}
                           </div>
                         </div>
-                      </Link>
+                      </TrackedLink>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* Location — built from the development's address, no lat/lng stored so this uses Google's query-based embed */}
+            {dev.address && (
+              <div>
+                <h2 style={sectionTitle}>Ubicación</h2>
+                <div style={mapWrap}>
+                  <iframe
+                    src={mapEmbedSrc}
+                    style={mapIframe}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title={`Mapa de ${fullAddress}`}
+                  />
+                </div>
+                <div style={mapFooter}>
+                  <span style={mapAddress}>
+                    <MapPin size={14} />
+                    {fullAddress}
+                  </span>
+                  <TrackedLink
+                    href={mapSearchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={mapLink}
+                    ctaId="unit_page_open_maps"
+                    ctaLabel={unit.identifier}
+                    ctaLocation="unit_page_location"
+                  >
+                    Ver en Google Maps →
+                  </TrackedLink>
                 </div>
               </div>
             )}
@@ -362,9 +489,15 @@ export default async function PublicUnitPage({
                   <span>{dev.neighborhood ? `${dev.neighborhood}, ` : ""}{dev.city ?? dev.address}</span>
                 </div>
               </div>
-              <Link href={`/${lang}/developments/${dev.slug ?? dev.id}`} style={devMiniLink}>
+              <TrackedLink
+                href={`/${lang}/developments/${dev.slug ?? dev.id}`}
+                style={devMiniLink}
+                ctaId="unit_page_dev_mini_card"
+                ctaLabel={dev.name}
+                ctaLocation="unit_page"
+              >
                 Ver emprendimiento <ChevronRight size={14} />
-              </Link>
+              </TrackedLink>
             </div>
           </div>
 
@@ -376,7 +509,7 @@ export default async function PublicUnitPage({
                   <p style={sidePriceLabel}>Invertí desde</p>
                   <p style={sidePrice}>
                     USD {minInvestUsd!.toLocaleString("es-AR")}
-                    <span style={sideFromPct}> (5%)</span>
+                    <span style={sideFromPct}>(5%)</span>
                   </p>
                   <p style={sideUnitValueNote}>
                     Valor total de la unidad: USD {Number(unit.price_usd).toLocaleString("es-AR")}
@@ -399,6 +532,12 @@ export default async function PublicUnitPage({
                 </p>
               )}
 
+              {!isAuthenticated && (
+                <p style={noPaymentNote}>
+                  No se paga nada ahora. Tu solicitud sirve para coordinar una reunión y avanzar con la inversión.
+                </p>
+              )}
+
               <div style={sideDivider} />
 
               {canInvest && myInvestment ? (
@@ -406,13 +545,21 @@ export default async function PublicUnitPage({
                   <p style={{ fontWeight: 700, margin: 0, fontSize: "0.88rem" }}>
                     {myInvestment.status === "pending" ? "Solicitud pendiente de aprobación" : "Tu participación"}
                   </p>
-                  <p style={{ margin: "0.25rem 0 0", fontSize: "1.5rem", fontWeight: 900, letterSpacing: "-0.04em" }}>
+                  <p style={{ margin: "0.25rem 0 0", fontSize: "1.5rem", fontWeight: 900 }}>
                     {Number(myInvestment.percentage)}%
                   </p>
                   <p style={{ margin: "0.15rem 0 0", fontSize: "0.82rem", color: myInvestment.status === "pending" ? "#92400e" : "#166534" }}>
                     USD {Number(myInvestment.amount_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })}
                   </p>
-                  <a href={`/${lang}/wallet`} style={walletBtn}>Ver mi cartera →</a>
+                  <TrackedLink
+                    href={`/${lang}/wallet`}
+                    style={walletBtn}
+                    ctaId="unit_page_view_wallet"
+                    ctaLabel={unit.identifier}
+                    ctaLocation="unit_page_sidebar"
+                  >
+                    Ver mi cartera →
+                  </TrackedLink>
                 </div>
               ) : canInvest && unit.status !== "sold" && unit.price_usd != null && !groupExpired ? (
                 <BuyPanel
@@ -429,14 +576,33 @@ export default async function PublicUnitPage({
                 <p style={soldNote}>Esta unidad ya fue vendida en su totalidad.</p>
               ) : !isAuthenticated ? (
                 <>
-                  <Link href={`/${lang}/signup?next=${encodeURIComponent(unitPath)}`} style={sideBtnPrimary}>
+                  <TrackedLink
+                    href={`/${lang}/signup?next=${encodeURIComponent(unitPath)}`}
+                    style={sideBtnPrimary}
+                    ctaId="unit_page_signup"
+                    ctaLabel={unit.identifier}
+                    ctaLocation="unit_page_sidebar"
+                  >
                     Invertir en esta unidad
-                  </Link>
+                  </TrackedLink>
+                  <OpenChatbotButton
+                    label="¿Cómo funciona?"
+                    style={sideBtnSecondary}
+                    ctaId="unit_page_how_it_works"
+                    ctaLabel={unit.identifier}
+                    ctaLocation="unit_page_sidebar"
+                  />
                   <p style={loginHint}>
                     ¿Ya tenés cuenta?{" "}
-                    <Link href={`/${lang}/login?next=${encodeURIComponent(unitPath)}`} style={loginHintLink}>
+                    <TrackedLink
+                      href={`/${lang}/login?next=${encodeURIComponent(unitPath)}`}
+                      style={loginHintLink}
+                      ctaId="unit_page_login"
+                      ctaLabel={unit.identifier}
+                      ctaLocation="unit_page_sidebar"
+                    >
                       Iniciá sesión
-                    </Link>
+                    </TrackedLink>
                   </p>
                 </>
               ) : (
@@ -462,40 +628,26 @@ function FactCell({ icon, text }: { icon: React.ReactNode; text: string }) {
   );
 }
 
-function QuickFact({ value, label }: { value: number; label: string }) {
-  return (
-    <div style={quickFactItem}>
-      <span style={quickFactNum}>{value}</span>
-      <span style={quickFactLabel}>{label}</span>
-    </div>
-  );
-}
-
 const body: React.CSSProperties = { background: "#f9fafb", padding: "2rem 1.5rem 3rem" };
-const bodyInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: "2.5rem", alignItems: "start" };
+const bodyInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: "2.5rem", alignItems: "start" };
 const leftCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "2rem" };
+
+const imagesDisclaimerWrap: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "0.75rem 1.5rem 0" };
+const imagesDisclaimer: React.CSSProperties = { fontSize: "0.78rem", color: "#9ca3af", margin: 0, fontStyle: "italic" };
 
 /* Top info block */
 const topInfoBlock: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1rem" };
-const devLinkRow: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", gap: "0.25rem", width: "fit-content",
-  color: "#6b7280", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none",
-};
-const priceFactsRow: React.CSSProperties = {
-  display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-  flexWrap: "wrap", gap: "1rem",
-};
 const priceCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.3rem" };
 const statusPillInline: React.CSSProperties = { display: "inline-block", width: "fit-content", borderRadius: 999, padding: "0.2rem 0.75rem", fontSize: "0.75rem", fontWeight: 700 };
-const investFromLabel: React.CSSProperties = { fontSize: "0.8rem", color: "#6b7280", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0.15rem 0 0" };
 const bigPrice: React.CSSProperties = { fontSize: "2.25rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.04em" };
-const bigPricePct: React.CSSProperties = { fontSize: "1.2rem", fontWeight: 700, color: "#6b7280" };
-const unitValueNote: React.CSSProperties = { fontSize: "0.82rem", color: "#9ca3af", margin: 0 };
+const unitValueLine: React.CSSProperties = { color: "#6b7280", fontSize: "0.95rem", fontWeight: 600, margin: 0 };
+const bigPriceHighlight: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", fontFamily: "var(--font-display)",
+  background: "rgba(27,77,224,0.08)", border: "1px solid rgba(27,77,224,0.16)",
+  borderRadius: "0.22em", padding: "0 0.22em", color: "#1b4de0",
+};
+const bigPricePct: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, color: "#6b7280", marginLeft: "0.4rem" };
 const addressLine: React.CSSProperties = { color: "#6b7280", fontSize: "0.9rem", margin: 0 };
-const quickFacts: React.CSSProperties = { display: "flex", gap: "1.5rem", flexShrink: 0 };
-const quickFactItem: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.1rem" };
-const quickFactNum: React.CSSProperties = { fontSize: "1.4rem", fontWeight: 800, color: "#111" };
-const quickFactLabel: React.CSSProperties = { fontSize: "0.78rem", color: "#6b7280" };
 const estCta: React.CSSProperties = { color: "#1b4de0", fontWeight: 700, textDecoration: "none", fontSize: "0.85rem", width: "fit-content" };
 
 /* Facts grid */
@@ -528,6 +680,18 @@ const devMiniLink: React.CSSProperties = { display: "inline-flex", alignItems: "
 const sectionTitle: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem", letterSpacing: "-0.02em" };
 const descText: React.CSSProperties = { color: "#374151", lineHeight: 1.7, margin: 0 };
 
+/* Location map */
+const mapWrap: React.CSSProperties = { position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 14, overflow: "hidden", border: "1px solid #e5e7eb", background: "#f3f4f6" };
+const mapIframe: React.CSSProperties = { position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 };
+const mapFooter: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem" };
+const mapAddress: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.35rem", fontSize: "0.85rem", color: "#6b7280" };
+const mapLink: React.CSSProperties = { fontSize: "0.85rem", fontWeight: 700, color: "#1b4de0", textDecoration: "none", whiteSpace: "nowrap" };
+
+/* Legal aspects */
+const legalTitleRow: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.5rem" };
+const legalBox: React.CSSProperties = { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, padding: "1.1rem 1.25rem" };
+const legalText: React.CSSProperties = { color: "#374151", lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" };
+
 /* Group / co-investors */
 const groupBanner: React.CSSProperties = {
   display: "flex", flexDirection: "column", gap: "0.2rem",
@@ -546,16 +710,18 @@ const coListNote: React.CSSProperties = { fontSize: "0.82rem", color: "#374151",
 const coPctBar: React.CSSProperties = { height: 6, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" };
 const coPctFill: React.CSSProperties = { height: "100%", background: "linear-gradient(90deg, #4ade80, #22c55e)", borderRadius: 999 };
 
-const sidebar: React.CSSProperties = { position: "sticky", top: 80 };
+const sidebar: React.CSSProperties = { position: "sticky", top: 80, marginTop: "1.5rem" };
 const sideCard: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" };
 const sidePriceLabel: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", margin: 0, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" };
 const sidePrice: React.CSSProperties = { fontSize: "2rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.04em" };
-const sideFromPct: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, color: "#6b7280" };
+const sideFromPct: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, color: "#6b7280", letterSpacing: "normal", marginLeft: "0.4rem" };
 const sideUnitValueNote: React.CSSProperties = { fontSize: "0.8rem", color: "#9ca3af", margin: 0 };
 const availableNote: React.CSSProperties = { fontSize: "0.78rem", color: "#d97706", fontWeight: 600, margin: 0, background: "#fffbeb", borderRadius: 8, padding: "0.4rem 0.75rem" };
+const noPaymentNote: React.CSSProperties = { fontSize: "0.78rem", color: "#1e40af", margin: 0, background: "#eff6ff", borderRadius: 8, padding: "0.5rem 0.75rem", lineHeight: 1.4 };
 const soldNote: React.CSSProperties = { fontSize: "0.85rem", color: "#991b1b", background: "#fee2e2", borderRadius: 8, padding: "0.75rem", textAlign: "center", margin: 0 };
 const sideDivider: React.CSSProperties = { height: 1, background: "#e5e7eb" };
 const sideBtnPrimary: React.CSSProperties = { display: "block", textAlign: "center", padding: "0.85rem", background: "#111", color: "#fff", borderRadius: 10, textDecoration: "none", fontWeight: 700, fontSize: "0.95rem" };
+const sideBtnSecondary: React.CSSProperties = { display: "block", width: "100%", textAlign: "center", padding: "0.75rem", background: "#fff", color: "#111", border: "1.5px solid #e5e7eb", borderRadius: 10, fontWeight: 700, fontSize: "0.88rem", cursor: "pointer" };
 const loginHint: React.CSSProperties = { fontSize: "0.82rem", color: "#6b7280", textAlign: "center", margin: 0 };
 const loginHintLink: React.CSSProperties = { color: "#111", fontWeight: 700, textDecoration: "underline" };
 const alreadyInvested: React.CSSProperties = { background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: 12, padding: "1rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.15rem", textAlign: "center" };

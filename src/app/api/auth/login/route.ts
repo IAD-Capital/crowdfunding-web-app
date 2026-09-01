@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     WHERE email = ${email.toLowerCase()}
   `;
 
-  if (!user || !(await verifyPassword(password, user.password_hash))) {
+  if (!user || !user.password_hash || !(await verifyPassword(password, user.password_hash))) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 

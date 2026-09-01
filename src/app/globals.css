@@ -4,9 +4,16 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html, body {
   max-width: 100%;
-  overflow-x: hidden;
+  /* clip, not hidden — hidden forces overflow-y to compute to "auto", turning
+     html/body into a scroll container that silently breaks position:sticky
+     for every descendant on the page (e.g. the unit page's invest sidebar). */
+  overflow-x: clip;
 }
 
 :root {
