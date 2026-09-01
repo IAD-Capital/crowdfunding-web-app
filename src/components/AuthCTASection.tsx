@@ -99,6 +99,23 @@ export default function AuthCTASection({ lang }: { lang: string }) {
             </button>
           </div>
 
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+            <>
+              <GoogleSignInButton
+                lang={lang}
+                locale={lang as "es" | "en"}
+                errorText="No pudimos iniciar sesión con Google. Intenta nuevamente."
+                redirectingText="Redirigiendo…"
+                theme="filled_black"
+              />
+              <div style={dividerRow}>
+                <span style={dividerLine} />
+                <span style={dividerText}>o</span>
+                <span style={dividerLine} />
+              </div>
+            </>
+          )}
+
           <form onSubmit={handleSubmit} style={form}>
             {mode === "signup" && (
               <div style={field}>
@@ -150,23 +167,6 @@ export default function AuthCTASection({ lang }: { lang: string }) {
                 : "Crear cuenta e invertir"}
             </button>
           </form>
-
-          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-            <>
-              <div style={dividerRow}>
-                <span style={dividerLine} />
-                <span style={dividerText}>o</span>
-                <span style={dividerLine} />
-              </div>
-              <GoogleSignInButton
-                lang={lang}
-                locale={lang as "es" | "en"}
-                errorText="No pudimos iniciar sesión con Google. Intenta nuevamente."
-                redirectingText="Redirigiendo…"
-                theme="filled_black"
-              />
-            </>
-          )}
 
           <p style={switchHint}>
             {mode === "login" ? "¿No tenés cuenta?" : "¿Ya tenés cuenta?"}{" "}
@@ -256,7 +256,7 @@ const submit: React.CSSProperties = {
 };
 const dividerRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem" };
 const dividerLine: React.CSSProperties = { flex: 1, height: 1, background: "var(--c-border-input)" };
-const dividerText: React.CSSProperties = { fontSize: "0.8125rem", color: "var(--c-text-secondary)" };
+const dividerText: React.CSSProperties = { fontSize: "0.8125rem", color: "var(--c-text-secondary)", textTransform: "uppercase" };
 const switchHint: React.CSSProperties = { fontSize: "0.85rem", color: "var(--c-text-secondary)", textAlign: "center", margin: 0 };
 const switchLink: React.CSSProperties = {
   background: "none", border: "none", color: "var(--c-accent)",
