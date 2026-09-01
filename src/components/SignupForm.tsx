@@ -10,6 +10,7 @@ import PasswordInput from "./PasswordInput";
 import AuthBackgroundSlideshow from "./AuthBackgroundSlideshow";
 import GoogleSignInButton from "./GoogleSignInButton";
 import { trackCtaClick } from "@/lib/analytics";
+import { authMobileStyle, AUTH_BRAND_GRADIENT } from "./authFormMobileStyle";
 
 type Props = {
   t: Dictionary["auth"]["signup"];
@@ -34,6 +35,7 @@ export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = 
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [showChecks, setShowChecks] = useState(false);
 
   const checks = PASSWORD_CHECKS(t);
@@ -56,64 +58,22 @@ export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = 
     });
 
     const data = await res.json();
-    setLoading(false);
 
     if (!res.ok) {
+      setLoading(false);
       setError(data.error ?? t.error.generic);
       return;
     }
 
     trackCtaClick("signup_form_submit", { location: "signup_page" });
+    setRedirecting(true);
     router.push(next && next.startsWith("/") ? next : `/${lang}`);
     router.refresh();
   }
 
   return (
     <div style={splitWrap} className="signup-wrap">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        @media (max-width: 900px) {
-          .signup-wrap {
-            position: relative !important;
-            height: auto !important;
-            min-height: 100vh !important;
-            flex-direction: column-reverse !important;
-            overflow: visible !important;
-            background: ${brandGradient} !important;
-          }
-          .signup-right {
-            display: flex !important;
-            flex: 0 0 auto !important;
-            min-height: 200px !important;
-            background: transparent !important;
-          }
-          .signup-right-content {
-            padding: 2rem 1.5rem 1.5rem !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            text-align: center !important;
-          }
-          .signup-right-logo {
-            height: 108px !important;
-          }
-          .signup-left {
-            flex: 1 1 auto !important;
-            padding: 0 !important;
-            align-items: stretch !important;
-            justify-content: flex-end !important;
-          }
-          .signup-form-card {
-            background: #fff !important;
-            border-radius: 24px 24px 0 0 !important;
-            padding: 2rem 1.5rem 2.25rem !important;
-            box-shadow: 0 -12px 30px rgba(14,23,38,0.18) !important;
-          }
-        }
-      `,
-        }}
-      />
+      <style dangerouslySetInnerHTML={{ __html: authMobileStyle("signup") }} />
 
       {/* Left — form */}
       <div style={leftPane} className="signup-left">
@@ -167,8 +127,8 @@ export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = 
 
               {error && <p style={errorStyle}>{error}</p>}
 
-              <button style={btn} type="submit" disabled={loading}>
-                {loading ? t.loading : t.submit}
+              <button style={btn} type="submit" disabled={loading || redirecting}>
+                {redirecting ? t.redirecting : loading ? t.loading : t.submit}
               </button>
             </form>
 
@@ -179,7 +139,13 @@ export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = 
                   <span style={dividerText}>{tGoogle.divider}</span>
                   <span style={dividerLine} />
                 </div>
-                <GoogleSignInButton lang={lang} next={next} locale={lang as "es" | "en"} errorText={tGoogle.error} />
+                <GoogleSignInButton
+                  lang={lang}
+                  next={next}
+                  locale={lang as "es" | "en"}
+                  errorText={tGoogle.error}
+                  redirectingText={tGoogle.redirecting}
+                />
               </>
             )}
 
@@ -224,7 +190,7 @@ export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = 
   );
 }
 
-const brandGradient = "#1F4458";
+const brandGradient = AUTH_BRAND_GRADIENT;
 
 const splitWrap: React.CSSProperties = {
   position: "fixed",

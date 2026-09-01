@@ -24,14 +24,16 @@ type Props = {
   next?: string;
   locale: "es" | "en";
   errorText: string;
+  redirectingText: string;
 };
 
 const GSI_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 
-export default function GoogleSignInButton({ lang, next, locale, errorText }: Props) {
+export default function GoogleSignInButton({ lang, next, locale, errorText, redirectingText }: Props) {
   const router = useRouter();
   const buttonRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
+  const [redirecting, setRedirecting] = useState(false);
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export default function GoogleSignInButton({ lang, next, locale, errorText }: Pr
         return;
       }
 
+      setRedirecting(true);
       const dest =
         next && next.startsWith("/")
           ? next
@@ -99,7 +102,10 @@ export default function GoogleSignInButton({ lang, next, locale, errorText }: Pr
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
-      <div ref={buttonRef} />
+      <div ref={buttonRef} style={redirecting ? { opacity: 0.6, pointerEvents: "none" } : undefined} />
+      {redirecting && (
+        <p style={{ color: "var(--c-text-secondary, #6b7280)", fontSize: "0.875rem", margin: 0 }}>{redirectingText}</p>
+      )}
       {error && <p style={{ color: "#dc2626", fontSize: "0.875rem", margin: 0 }}>{error}</p>}
     </div>
   );

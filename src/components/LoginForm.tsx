@@ -10,6 +10,7 @@ import PasswordInput from "./PasswordInput";
 import AuthBackgroundSlideshow from "./AuthBackgroundSlideshow";
 import GoogleSignInButton from "./GoogleSignInButton";
 import { trackCtaClick } from "@/lib/analytics";
+import { authMobileStyle, AUTH_BRAND_GRADIENT } from "./authFormMobileStyle";
 
 type Props = {
   t: Dictionary["auth"]["login"];
@@ -59,55 +60,14 @@ export default function LoginForm({ t, tGoogle, lang, next, backgroundImages = [
 
   return (
     <div style={splitWrap} className="login-wrap">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        @media (max-width: 900px) {
-          .login-wrap {
-            position: relative !important;
-            height: auto !important;
-            min-height: 100vh !important;
-            flex-direction: column-reverse !important;
-            overflow: visible !important;
-            background: ${brandGradient} !important;
-          }
-          .login-right {
-            display: flex !important;
-            flex: 0 0 auto !important;
-            min-height: 200px !important;
-            background: transparent !important;
-          }
-          .login-right-content {
-            padding: 2rem 1.5rem 1.5rem !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            text-align: center !important;
-          }
-          .login-right-logo {
-            height: 108px !important;
-          }
-          .login-left {
-            flex: 1 1 auto !important;
-            padding: 0 !important;
-            align-items: stretch !important;
-            justify-content: flex-end !important;
-          }
-          .login-form-card {
-            background: #fff !important;
-            border-radius: 24px 24px 0 0 !important;
-            padding: 2rem 1.5rem 2.25rem !important;
-            box-shadow: 0 -12px 30px rgba(14,23,38,0.18) !important;
-          }
-        }
-      `,
-        }}
-      />
+      <style dangerouslySetInnerHTML={{ __html: authMobileStyle("login") }} />
 
       {/* Left — form */}
       <div style={leftPane} className="login-left">
         <div style={leftCard} className="login-form-card">
           <div style={leftInner}>
+            <h1 style={title}>{t.title}</h1>
+
             <form onSubmit={handleSubmit} style={form}>
               <label style={label}>{t.email}</label>
               <input
@@ -145,7 +105,13 @@ export default function LoginForm({ t, tGoogle, lang, next, backgroundImages = [
                   <span style={dividerText}>{tGoogle.divider}</span>
                   <span style={dividerLine} />
                 </div>
-                <GoogleSignInButton lang={lang} next={next} locale={lang as "es" | "en"} errorText={tGoogle.error} />
+                <GoogleSignInButton
+                  lang={lang}
+                  next={next}
+                  locale={lang as "es" | "en"}
+                  errorText={tGoogle.error}
+                  redirectingText={tGoogle.redirecting}
+                />
               </>
             )}
 
@@ -190,7 +156,7 @@ export default function LoginForm({ t, tGoogle, lang, next, backgroundImages = [
   );
 }
 
-const brandGradient = "#1F4458";
+const brandGradient = AUTH_BRAND_GRADIENT;
 
 const splitWrap: React.CSSProperties = {
   position: "fixed",
@@ -215,6 +181,7 @@ const leftCard: React.CSSProperties = {
   justifyContent: "center",
 };
 const leftInner: React.CSSProperties = { width: "100%", maxWidth: 380 };
+const title: React.CSSProperties = { fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.25rem", color: "var(--c-ink, #0e1726)" };
 const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.5rem" };
 const label: React.CSSProperties = { fontSize: "0.875rem", fontWeight: 500, marginTop: "0.75rem", color: "var(--c-ink, #0e1726)" };
 const input: React.CSSProperties = {

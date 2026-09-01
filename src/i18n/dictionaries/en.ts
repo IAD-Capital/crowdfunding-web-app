@@ -21,6 +21,7 @@ const en: Dictionary = {
     google: {
       divider: "or",
       error: "We couldn't sign you in with Google. Please try again.",
+      redirecting: "Redirecting…",
     },
     login: {
       title: "Sign in",
@@ -80,6 +81,7 @@ const en: Dictionary = {
       password: "Password",
       submit: "Create account",
       loading: "Creating account…",
+      redirecting: "Redirecting…",
       haveAccount: "Already have an account?",
       signIn: "Sign in",
       checks: {

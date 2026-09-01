@@ -8,6 +8,7 @@ import type { Dictionary } from "@/i18n";
 import type { AuthBackgroundImage } from "@/lib/authBackgroundImages";
 import PasswordInput from "./PasswordInput";
 import AuthBackgroundSlideshow from "./AuthBackgroundSlideshow";
+import { authMobileStyle, AUTH_BRAND_GRADIENT } from "./authFormMobileStyle";
 
 type Props = {
   t: Dictionary["auth"]["resetPassword"];
@@ -70,50 +71,7 @@ export default function ResetPasswordForm({ t, lang, token, backgroundImages = [
 
   return (
     <div style={splitWrap} className="reset-wrap">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        @media (max-width: 900px) {
-          .reset-wrap {
-            position: relative !important;
-            height: auto !important;
-            min-height: 100vh !important;
-            flex-direction: column-reverse !important;
-            overflow: visible !important;
-            background: ${brandGradient} !important;
-          }
-          .reset-right {
-            display: flex !important;
-            flex: 0 0 auto !important;
-            min-height: 200px !important;
-            background: transparent !important;
-          }
-          .reset-right-content {
-            padding: 2rem 1.5rem 1.5rem !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            text-align: center !important;
-          }
-          .reset-right-logo {
-            height: 108px !important;
-          }
-          .reset-left {
-            flex: 1 1 auto !important;
-            padding: 0 !important;
-            align-items: stretch !important;
-            justify-content: flex-end !important;
-          }
-          .reset-form-card {
-            background: #fff !important;
-            border-radius: 24px 24px 0 0 !important;
-            padding: 2rem 1.5rem 2.25rem !important;
-            box-shadow: 0 -12px 30px rgba(14,23,38,0.18) !important;
-          }
-        }
-      `,
-        }}
-      />
+      <style dangerouslySetInnerHTML={{ __html: authMobileStyle("reset") }} />
 
       {/* Left — form */}
       <div style={leftPane} className="reset-left">
@@ -208,7 +166,7 @@ export default function ResetPasswordForm({ t, lang, token, backgroundImages = [
   );
 }
 
-const brandGradient = "#1F4458";
+const brandGradient = AUTH_BRAND_GRADIENT;
 
 const splitWrap: React.CSSProperties = {
   position: "fixed",
