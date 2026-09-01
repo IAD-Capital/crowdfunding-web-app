@@ -15,5 +15,13 @@ export default async function SignupPage({
     getAuthBackgroundImages(),
   ]);
 
-  return <SignupForm t={t.auth.signup} lang={lang} next={searchParams.next} backgroundImages={backgroundImages} />;
+  return (
+    <SignupForm
+      t={t.auth.signup}
+      tGoogle={t.auth.google}
+      lang={lang}
+      next={searchParams.next}
+      backgroundImages={backgroundImages}
+    />
+  );
 }

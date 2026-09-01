@@ -18,6 +18,10 @@ const en: Dictionary = {
     or: "or",
   },
   auth: {
+    google: {
+      divider: "or",
+      error: "We couldn't sign you in with Google. Please try again.",
+    },
     login: {
       title: "Sign in",
       email: "Email",

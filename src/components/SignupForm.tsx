@@ -8,10 +8,12 @@ import type { Dictionary } from "@/i18n";
 import type { AuthBackgroundImage } from "@/lib/authBackgroundImages";
 import PasswordInput from "./PasswordInput";
 import AuthBackgroundSlideshow from "./AuthBackgroundSlideshow";
+import GoogleSignInButton from "./GoogleSignInButton";
 import { trackCtaClick } from "@/lib/analytics";
 
 type Props = {
   t: Dictionary["auth"]["signup"];
+  tGoogle: Dictionary["auth"]["google"];
   lang: string;
   next?: string;
   backgroundImages?: AuthBackgroundImage[];
@@ -25,7 +27,7 @@ const PASSWORD_CHECKS = (t: Props["t"]) => [
   { label: t.checks.special,   test: (p: string) => /[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>/?]/.test(p) },
 ];
 
-export default function SignupForm({ t, lang, next, backgroundImages = [] }: Props) {
+export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = [] }: Props) {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -170,6 +172,17 @@ export default function SignupForm({ t, lang, next, backgroundImages = [] }: Pro
               </button>
             </form>
 
+            {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+              <>
+                <div style={dividerRow}>
+                  <span style={dividerLine} />
+                  <span style={dividerText}>{tGoogle.divider}</span>
+                  <span style={dividerLine} />
+                </div>
+                <GoogleSignInButton lang={lang} next={next} locale={lang as "es" | "en"} errorText={tGoogle.error} />
+              </>
+            )}
+
             <p style={footer}>
               {t.haveAccount}{" "}
               <Link
@@ -266,6 +279,9 @@ const btn: React.CSSProperties = {
 };
 const footer: React.CSSProperties = { marginTop: "1.5rem", fontSize: "0.875rem", textAlign: "center", color: "var(--c-text-secondary, #6b7280)" };
 const link: React.CSSProperties = { color: "var(--c-accent, #1b4de0)", fontWeight: 600 };
+const dividerRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem", margin: "1.25rem 0" };
+const dividerLine: React.CSSProperties = { flex: 1, height: 1, background: "var(--c-border-input, #d1d5db)" };
+const dividerText: React.CSSProperties = { fontSize: "0.8125rem", color: "var(--c-text-secondary, #6b7280)" };
 
 /* Right pane */
 const rightPane: React.CSSProperties = {

@@ -16,6 +16,10 @@ const es = {
     or: "o",
   },
   auth: {
+    google: {
+      divider: "o",
+      error: "No pudimos iniciar sesión con Google. Intenta nuevamente.",
+    },
     login: {
       title: "Iniciar sesión",
       email: "Correo electrónico",

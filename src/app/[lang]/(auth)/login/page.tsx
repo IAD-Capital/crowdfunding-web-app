@@ -15,5 +15,13 @@ export default async function LoginPage({
     getAuthBackgroundImages(),
   ]);
 
-  return <LoginForm t={t.auth.login} lang={lang} next={searchParams.next} backgroundImages={backgroundImages} />;
+  return (
+    <LoginForm
+      t={t.auth.login}
+      tGoogle={t.auth.google}
+      lang={lang}
+      next={searchParams.next}
+      backgroundImages={backgroundImages}
+    />
+  );
 }
