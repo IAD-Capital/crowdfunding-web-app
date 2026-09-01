@@ -75,8 +75,15 @@
 }
 
 .navTrigger {
-  height: 100%;
-  padding: 0 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(17, 17, 17, 0.06);
+  }
 }
 
 .navItem {
@@ -92,7 +99,13 @@
 }
 
 .chevron {
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  color: #9ca3af;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s ease;
+}
+
+.navItem:hover .chevron,
+.navItem:focus-within .chevron {
+  color: inherit;
 }
 
 .chevronOpen {
