@@ -7,6 +7,7 @@ export function authMobileStyle(prefix: string) {
     @media (max-width: 900px) {
       .${prefix}-wrap {
         position: relative !important;
+        width: 100% !important;
         height: auto !important;
         min-height: 100vh !important;
         flex-direction: column-reverse !important;
@@ -38,7 +39,7 @@ export function authMobileStyle(prefix: string) {
       .${prefix}-form-card {
         background: #fff !important;
         border-radius: ${AUTH_CARD_MOBILE_RADIUS} !important;
-        padding: 2rem 1.5rem 2.25rem !important;
+        padding: 2rem 2rem 2.25rem !important;
         box-shadow: ${AUTH_CARD_MOBILE_SHADOW} !important;
       }
     }
