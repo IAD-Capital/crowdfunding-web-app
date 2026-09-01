@@ -9,6 +9,7 @@ import PublicShell from "@/components/PublicShell";
 import UnitHeroGallery from "@/components/UnitHeroGallery";
 import ImageGallery from "@/components/admin/ImageGallery";
 import BuyPanel from "@/components/BuyPanel";
+import OpenChatbotButton from "@/components/OpenChatbotButton";
 import TrackedLink from "@/components/TrackedLink";
 import Image from "next/image";
 import {
@@ -246,7 +247,7 @@ export default async function PublicUnitPage({
                       Invertí desde{" "}
                       <span style={bigPriceHighlight}>
                         USD {minInvestUsd!.toLocaleString("es-AR")}
-                        <span style={bigPricePct}> (5%)</span>
+                        <span style={bigPricePct}>(5%)</span>
                       </span>
                     </p>
                   </>
@@ -508,7 +509,7 @@ export default async function PublicUnitPage({
                   <p style={sidePriceLabel}>Invertí desde</p>
                   <p style={sidePrice}>
                     USD {minInvestUsd!.toLocaleString("es-AR")}
-                    <span style={sideFromPct}> (5%)</span>
+                    <span style={sideFromPct}>(5%)</span>
                   </p>
                   <p style={sideUnitValueNote}>
                     Valor total de la unidad: USD {Number(unit.price_usd).toLocaleString("es-AR")}
@@ -531,7 +532,7 @@ export default async function PublicUnitPage({
                 </p>
               )}
 
-              {(!isAuthenticated || (canInvest && !myInvestment)) && (
+              {!isAuthenticated && (
                 <p style={noPaymentNote}>
                   No se paga nada ahora. Tu solicitud sirve para coordinar una reunión y avanzar con la inversión.
                 </p>
@@ -584,6 +585,13 @@ export default async function PublicUnitPage({
                   >
                     Invertir en esta unidad
                   </TrackedLink>
+                  <OpenChatbotButton
+                    label="¿Cómo funciona?"
+                    style={sideBtnSecondary}
+                    ctaId="unit_page_how_it_works"
+                    ctaLabel={unit.identifier}
+                    ctaLocation="unit_page_sidebar"
+                  />
                   <p style={loginHint}>
                     ¿Ya tenés cuenta?{" "}
                     <TrackedLink
@@ -638,7 +646,7 @@ const bigPriceHighlight: React.CSSProperties = {
   background: "rgba(27,77,224,0.08)", border: "1px solid rgba(27,77,224,0.16)",
   borderRadius: "0.22em", padding: "0 0.22em", color: "#1b4de0",
 };
-const bigPricePct: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, color: "#6b7280" };
+const bigPricePct: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, color: "#6b7280", marginLeft: "0.4rem" };
 const addressLine: React.CSSProperties = { color: "#6b7280", fontSize: "0.9rem", margin: 0 };
 const estCta: React.CSSProperties = { color: "#1b4de0", fontWeight: 700, textDecoration: "none", fontSize: "0.85rem", width: "fit-content" };
 
@@ -706,13 +714,14 @@ const sidebar: React.CSSProperties = { position: "sticky", top: 80, marginTop: "
 const sideCard: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" };
 const sidePriceLabel: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", margin: 0, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" };
 const sidePrice: React.CSSProperties = { fontSize: "2rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.04em" };
-const sideFromPct: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, color: "#6b7280", letterSpacing: "normal" };
+const sideFromPct: React.CSSProperties = { fontSize: "1.1rem", fontWeight: 700, color: "#6b7280", letterSpacing: "normal", marginLeft: "0.4rem" };
 const sideUnitValueNote: React.CSSProperties = { fontSize: "0.8rem", color: "#9ca3af", margin: 0 };
 const availableNote: React.CSSProperties = { fontSize: "0.78rem", color: "#d97706", fontWeight: 600, margin: 0, background: "#fffbeb", borderRadius: 8, padding: "0.4rem 0.75rem" };
 const noPaymentNote: React.CSSProperties = { fontSize: "0.78rem", color: "#1e40af", margin: 0, background: "#eff6ff", borderRadius: 8, padding: "0.5rem 0.75rem", lineHeight: 1.4 };
 const soldNote: React.CSSProperties = { fontSize: "0.85rem", color: "#991b1b", background: "#fee2e2", borderRadius: 8, padding: "0.75rem", textAlign: "center", margin: 0 };
 const sideDivider: React.CSSProperties = { height: 1, background: "#e5e7eb" };
 const sideBtnPrimary: React.CSSProperties = { display: "block", textAlign: "center", padding: "0.85rem", background: "#111", color: "#fff", borderRadius: 10, textDecoration: "none", fontWeight: 700, fontSize: "0.95rem" };
+const sideBtnSecondary: React.CSSProperties = { display: "block", width: "100%", textAlign: "center", padding: "0.75rem", background: "#fff", color: "#111", border: "1.5px solid #e5e7eb", borderRadius: 10, fontWeight: 700, fontSize: "0.88rem", cursor: "pointer" };
 const loginHint: React.CSSProperties = { fontSize: "0.82rem", color: "#6b7280", textAlign: "center", margin: 0 };
 const loginHintLink: React.CSSProperties = { color: "#111", fontWeight: 700, textDecoration: "underline" };
 const alreadyInvested: React.CSSProperties = { background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: 12, padding: "1rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.15rem", textAlign: "center" };

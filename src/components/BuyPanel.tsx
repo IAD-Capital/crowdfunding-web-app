@@ -21,7 +21,7 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
   const maxSlider = Math.min(50, availablePct);
   const hasOtherInvestors = availablePct < 100;
 
-  const quickPcts = Array.from(new Set([5, 10, 25, 50, maxSlider]))
+  const quickPcts = Array.from(new Set([5, 10, 25, 30, 35, 40, 45, 50, maxSlider]))
     .filter((p) => p >= 5 && p <= maxSlider)
     .sort((a, b) => a - b);
 
@@ -171,6 +171,10 @@ export default function BuyPanel({ unitId, priceUsd, identifier, lang, available
 
       {error && <p style={errorMsg}>{error}</p>}
 
+      <p style={noPaymentNote}>
+        No se paga nada ahora. Tu solicitud sirve para coordinar una reunión y avanzar con la inversión.
+      </p>
+
       <button
         style={{ ...btnBuy, opacity: loading || !canSubmit ? 0.5 : 1, cursor: canSubmit ? "pointer" : "not-allowed" }}
         onClick={() => {
@@ -229,6 +233,7 @@ const summaryUnitValue: React.CSSProperties = { fontSize: "0.82rem", fontWeight:
 const summaryMinAmount: React.CSSProperties = { fontSize: "0.82rem", fontWeight: 700, color: "#111" };
 
 const errorMsg: React.CSSProperties = { color: "#dc2626", fontSize: "0.82rem", margin: 0, background: "#fee2e2", borderRadius: 8, padding: "0.5rem 0.75rem" };
+const noPaymentNote: React.CSSProperties = { fontSize: "0.78rem", color: "#1e40af", margin: 0, background: "#eff6ff", borderRadius: 8, padding: "0.5rem 0.75rem", lineHeight: 1.4 };
 const btnBuy: React.CSSProperties = {
   background: "#111", color: "#fff", border: "none", borderRadius: 10,
   padding: "0.8rem 1rem", fontWeight: 700, fontSize: "0.9rem",
