@@ -21,7 +21,7 @@ export default async function Footer({ lang }: Props) {
           <p className={s.tagline}>{t.footer.tagline}</p>
           <div className={s.social}>
             <TrackedAnchor
-              href="https://www.instagram.com/iadcapital"
+              href="https://www.instagram.com/iad.capital"
               target="_blank"
               rel="noopener noreferrer"
               className={s.socialLink}
