@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import PasswordInput from "./PasswordInput";
 import GoogleSignInButton from "./GoogleSignInButton";
 import { trackCtaClick } from "@/lib/analytics";
@@ -9,7 +8,6 @@ import { trackCtaClick } from "@/lib/analytics";
 type Mode = "login" | "signup";
 
 export default function AuthCTASection({ lang }: { lang: string }) {
-  const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,8 +51,9 @@ export default function AuthCTASection({ lang }: { lang: string }) {
     trackCtaClick(mode === "login" ? "auth_cta_login_submit" : "auth_cta_signup_submit", { location: "home_auth_cta" });
 
     const dest = data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
-    router.push(dest);
-    router.refresh();
+    // A full document navigation (not router.push) so the request carries the
+    // just-set auth cookie — a client-side soft nav can render before it lands.
+    window.location.href = dest;
   }
 
   return (

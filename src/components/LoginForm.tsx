@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import type { Dictionary } from "@/i18n";
@@ -21,7 +20,6 @@ type Props = {
 };
 
 export default function LoginForm({ t, tGoogle, lang, next, backgroundImages = [] }: Props) {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -54,8 +52,9 @@ export default function LoginForm({ t, tGoogle, lang, next, backgroundImages = [
       next && next.startsWith("/")
         ? next
         : data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
-    router.push(dest);
-    router.refresh();
+    // A full document navigation (not router.push) so the request carries the
+    // just-set auth cookie — a client-side soft nav can render before it lands.
+    window.location.href = dest;
   }
 
   return (

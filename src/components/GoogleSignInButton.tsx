@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 
 declare global {
   interface Window {
@@ -31,7 +30,6 @@ type Props = {
 const GSI_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 
 export default function GoogleSignInButton({ lang, next, locale, errorText, redirectingText, theme = "outline" }: Props) {
-  const router = useRouter();
   const wrapRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
@@ -62,8 +60,9 @@ export default function GoogleSignInButton({ lang, next, locale, errorText, redi
         next && next.startsWith("/")
           ? next
           : data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
-      router.push(dest);
-      router.refresh();
+      // A full document navigation (not router.push) so the request carries the
+      // just-set auth cookie — a client-side soft nav can render before it lands.
+      window.location.href = dest;
     }
 
     function render() {
@@ -105,7 +104,7 @@ export default function GoogleSignInButton({ lang, next, locale, errorText, redi
     return () => {
       cancelled = true;
     };
-  }, [clientId, lang, next, locale, errorText, theme, router]);
+  }, [clientId, lang, next, locale, errorText, theme]);
 
   if (!clientId) return null;
 

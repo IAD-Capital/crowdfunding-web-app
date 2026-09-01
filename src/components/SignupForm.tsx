@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import type { Dictionary } from "@/i18n";
@@ -29,7 +28,6 @@ const PASSWORD_CHECKS = (t: Props["t"]) => [
 ];
 
 export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = [] }: Props) {
-  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,8 +65,9 @@ export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = 
 
     trackCtaClick("signup_form_submit", { location: "signup_page" });
     setRedirecting(true);
-    router.push(next && next.startsWith("/") ? next : `/${lang}`);
-    router.refresh();
+    // A full document navigation (not router.push) so the request carries the
+    // just-set auth cookie — a client-side soft nav can render before it lands.
+    window.location.href = next && next.startsWith("/") ? next : `/${lang}`;
   }
 
   return (
