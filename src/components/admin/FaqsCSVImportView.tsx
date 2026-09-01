@@ -15,6 +15,19 @@ const TEMPLATE_HEADER = "question,answer,is_active,available_in_chatbot";
 const TEMPLATE_EXAMPLE =
   "¿Cuál es la inversión mínima?,Podés invertir desde el 5% del valor de una unidad.,true,true";
 
+const JSON_TEMPLATE = JSON.stringify(
+  [
+    {
+      question: "¿Cuál es la inversión mínima?",
+      answer: "Podés invertir desde el 5% del valor de una unidad.",
+      is_active: true,
+      available_in_chatbot: true,
+    },
+  ],
+  null,
+  2
+);
+
 export default function FaqsCSVImportView({ lang }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -65,13 +78,26 @@ export default function FaqsCSVImportView({ lang }: Props) {
     URL.revokeObjectURL(url);
   }
 
+  function downloadJSONTemplate() {
+    const blob = new Blob([JSON_TEMPLATE], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "template-faqs.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div style={wrap}>
       {/* Format reference */}
       <div style={section}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-          <h2 style={sectionTitle}>Formato del CSV</h2>
-          <button style={btnSecondary} onClick={downloadTemplate}>⬇ Descargar template</button>
+          <h2 style={sectionTitle}>Formato del archivo</h2>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button style={btnSecondary} onClick={downloadTemplate}>⬇ Template CSV</button>
+            <button style={btnSecondary} onClick={downloadJSONTemplate}>⬇ Template JSON</button>
+          </div>
         </div>
         <div style={codeBlock}>
           <p style={codeLine}><strong>Obligatorias:</strong> question, answer</p>
@@ -79,7 +105,10 @@ export default function FaqsCSVImportView({ lang }: Props) {
             <strong>Opcionales:</strong> is_active (true/false, default true), available_in_chatbot (true/false, default false)
           </p>
           <p style={{ ...codeLine, marginTop: "0.75rem", fontFamily: "monospace", fontSize: "0.8rem", color: "#374151", wordBreak: "break-all" }}>
-            {TEMPLATE_HEADER}
+            CSV: {TEMPLATE_HEADER}
+          </p>
+          <p style={{ ...codeLine, marginTop: "0.5rem", fontFamily: "monospace", fontSize: "0.8rem", color: "#374151", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+            JSON: {"[{ \"question\": \"...\", \"answer\": \"...\", \"is_active\": true, \"available_in_chatbot\": false }]"}
           </p>
         </div>
       </div>
@@ -96,7 +125,7 @@ export default function FaqsCSVImportView({ lang }: Props) {
           <input
             ref={inputRef}
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,.json,text/csv,application/json"
             style={{ display: "none" }}
             onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
           />
@@ -109,7 +138,7 @@ export default function FaqsCSVImportView({ lang }: Props) {
             </div>
           ) : (
             <div style={{ textAlign: "center" }}>
-              <p style={{ fontWeight: 600, margin: "0 0 0.25rem" }}>Arrastrá un CSV aquí</p>
+              <p style={{ fontWeight: 600, margin: "0 0 0.25rem" }}>Arrastrá un archivo CSV o JSON aquí</p>
               <p style={{ color: "#9ca3af", fontSize: "0.82rem", margin: 0 }}>o hacé click para seleccionar</p>
             </div>
           )}

@@ -8,7 +8,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   const { error } = await requireSuperAdmin();
   if (error) return error;
 
-  const [row] = await db`SELECT * FROM faqs WHERE id = ${params.id}`;
+  const [row] = await db`SELECT * FROM faq_sections WHERE id = ${params.id}`;
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(row);
 }
@@ -18,27 +18,14 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   if (error) return error;
 
   const body = await req.json();
-  const question = (body.question ?? "").trim();
-  const answer = (body.answer ?? "").trim();
-  const isActive = body.is_active !== false;
-  const availableInChatbot = body.available_in_chatbot === true;
-  const sectionId = body.section_id ? Number(body.section_id) : null;
+  const name = (body.name ?? "").trim();
 
-  if (!question) {
-    return NextResponse.json({ error: "La pregunta es obligatoria." }, { status: 400 });
-  }
-  if (!answer) {
-    return NextResponse.json({ error: "La respuesta es obligatoria." }, { status: 400 });
+  if (!name) {
+    return NextResponse.json({ error: "El nombre es obligatorio." }, { status: 400 });
   }
 
   const [row] = await db`
-    UPDATE faqs SET
-      question             = ${question},
-      answer                = ${answer},
-      is_active             = ${isActive},
-      available_in_chatbot  = ${availableInChatbot},
-      section_id            = ${sectionId},
-      updated_at            = NOW()
+    UPDATE faq_sections SET name = ${name}, updated_at = NOW()
     WHERE id = ${params.id}
     RETURNING *
   `;
@@ -51,7 +38,7 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
   const { error } = await requireSuperAdmin();
   if (error) return error;
 
-  const [row] = await db`DELETE FROM faqs WHERE id = ${params.id} RETURNING id`;
+  const [row] = await db`DELETE FROM faq_sections WHERE id = ${params.id} RETURNING id`;
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   return NextResponse.json({ ok: true });

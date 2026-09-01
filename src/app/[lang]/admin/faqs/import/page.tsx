@@ -7,10 +7,10 @@ export default async function FaqsImportPage({ params }: { params: { lang: strin
   return (
     <div>
       <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.25rem" }}>
-        Importar FAQs desde CSV
+        Importar FAQs desde CSV o JSON
       </h1>
       <p style={{ color: "#6b7280", fontSize: "0.9rem", marginBottom: "2rem" }}>
-        Subí un archivo CSV para crear múltiples preguntas frecuentes de una vez.
+        Subí un archivo CSV o JSON para crear múltiples preguntas frecuentes de una vez.
       </p>
       <FaqsCSVImportView lang={lang} />
     </div>
