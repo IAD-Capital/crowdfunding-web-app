@@ -25,12 +25,14 @@ type Props = {
   locale: "es" | "en";
   errorText: string;
   redirectingText: string;
+  theme?: "outline" | "filled_black" | "filled_blue";
 };
 
 const GSI_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 
-export default function GoogleSignInButton({ lang, next, locale, errorText, redirectingText }: Props) {
+export default function GoogleSignInButton({ lang, next, locale, errorText, redirectingText, theme = "outline" }: Props) {
   const router = useRouter();
+  const wrapRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
   const [redirecting, setRedirecting] = useState(false);
@@ -66,15 +68,22 @@ export default function GoogleSignInButton({ lang, next, locale, errorText, redi
 
     function render() {
       if (cancelled || !window.google || !buttonRef.current) return;
+      // Google's button has no responsive/percentage width — it must be given
+      // a fixed pixel value, so measure the actual available space (the wrap
+      // is width:100%, unlike the shrink-to-fit button div) instead of
+      // hardcoding one, otherwise narrow containers get a clipped/overflowing
+      // button.
+      const available = wrapRef.current?.offsetWidth || 380;
+      const width = Math.max(200, Math.min(380, available));
       window.google.accounts.id.initialize({
         client_id: clientId!,
         callback: handleCredential,
       });
       window.google.accounts.id.renderButton(buttonRef.current, {
         type: "standard",
-        theme: "outline",
+        theme,
         size: "large",
-        width: "380",
+        width: String(width),
         text: "continue_with",
         locale,
       });
@@ -96,12 +105,12 @@ export default function GoogleSignInButton({ lang, next, locale, errorText, redi
     return () => {
       cancelled = true;
     };
-  }, [clientId, lang, next, locale, errorText, router]);
+  }, [clientId, lang, next, locale, errorText, theme, router]);
 
   if (!clientId) return null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+    <div ref={wrapRef} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", width: "100%" }}>
       <div ref={buttonRef} style={redirecting ? { opacity: 0.6, pointerEvents: "none" } : undefined} />
       {redirecting && (
         <p style={{ color: "var(--c-text-secondary, #6b7280)", fontSize: "0.875rem", margin: 0 }}>{redirectingText}</p>
