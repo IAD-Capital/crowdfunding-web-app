@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, Wallet, Heart, UserRound, Settings, LogOut } from "lucide-react";
+import { ChevronDown, Wallet, Heart, UserRound, Settings, LogOut, Download, Bell, Share, SquarePlus } from "lucide-react";
+import { useInstallPrompt } from "./InstallPromptProvider";
 import s from "./Header.module.scss";
 
 type Session = {
@@ -24,7 +25,11 @@ export default function UserMenu({ lang, session, adminLabel, logoutLabel }: Pro
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showIosHint, setShowIosHint] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const {
+    ready, canInstall, isIosInstallable, notificationsAvailable, subscribing, requestInstall, requestNotifications,
+  } = useInstallPrompt();
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -39,6 +44,15 @@ export default function UserMenu({ lang, session, adminLabel, logoutLabel }: Pro
     await fetch("/api/auth/logout", { method: "POST" });
     router.push(`/${lang}`);
     router.refresh();
+  }
+
+  function handleInstallClick() {
+    if (canInstall) {
+      requestInstall();
+      setOpen(false);
+    } else {
+      setShowIosHint((v) => !v);
+    }
   }
 
   const firstName = session.fullName.trim().split(" ")[0] || session.fullName;
@@ -74,6 +88,22 @@ export default function UserMenu({ lang, session, adminLabel, logoutLabel }: Pro
           <Link href={`/${lang}/admin`} className={s.userMenuItem} onClick={() => setOpen(false)}>
             <Settings size={16} /> {adminLabel}
           </Link>
+        )}
+        {ready && (canInstall || isIosInstallable) && (
+          <button type="button" className={s.userMenuItem} onClick={handleInstallClick}>
+            <Download size={16} /> Instalar app
+          </button>
+        )}
+        {showIosHint && isIosInstallable && !canInstall && (
+          <p className={s.userMenuHint}>
+            Tocá <Share size={13} className={s.userMenuHintIcon} /> y luego &quot;Agregar a inicio&quot;{" "}
+            <SquarePlus size={13} className={s.userMenuHintIcon} />.
+          </p>
+        )}
+        {ready && notificationsAvailable && (
+          <button type="button" className={s.userMenuItem} onClick={requestNotifications} disabled={subscribing}>
+            <Bell size={16} /> {subscribing ? "Activando…" : "Activar notificaciones"}
+          </button>
         )}
         <button
           type="button"

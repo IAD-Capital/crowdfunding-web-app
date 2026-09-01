@@ -390,6 +390,26 @@
   color: #dc2626;
 }
 
+.userMenuHint {
+  margin: -0.15rem 0.7rem 0.3rem;
+  padding: 0.5rem 0.6rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+
+.userMenuHintIcon {
+  display: inline;
+  vertical-align: -2px;
+  color: var(--c-accent, #1b4de0);
+}
+
 /* Mobile hamburger menu */
 .hamburgerBtn {
   display: none;
