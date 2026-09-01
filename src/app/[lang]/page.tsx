@@ -81,10 +81,14 @@ const getHomeData = cache(async () => {
       WHERE d.status = 'active' AND d.visible = true
       ORDER BY u.updated_at DESC
     `,
-    db<(FeaturedUnit & { price_usd: string | number })[]>`
+    db<(FeaturedUnit & { price_usd: string | number; available_pct: string | number })[]>`
       SELECT u.id, u.identifier, u.images, u.price_usd, u.total_m2, u.rooms,
              d.id AS development_id, d.name AS development_name, d.address AS development_address,
-             d.slug AS development_slug, d.amenities
+             d.slug AS development_slug, d.amenities,
+             100 - COALESCE((
+               SELECT SUM(percentage) FROM investments
+               WHERE unit_id = u.id AND status = 'approved'
+             ), 0) AS available_pct
       FROM units u
       JOIN developments d ON d.id = u.development_id
       WHERE u.featured = true AND d.status = 'active' AND d.visible = true AND u.status != 'sold'
@@ -111,7 +115,11 @@ const getHomeData = cache(async () => {
         platinum_from: Number(tierRow.platinum_from),
       }
     : { bronze_from: 5000, silver_from: 10000, gold_from: 25000, platinum_from: 150000 };
-  const featuredUnits8: FeaturedUnit[] = featuredUnitRows.map((u) => ({ ...u, price_usd: Number(u.price_usd) }));
+  const featuredUnits8: (FeaturedUnit & { available_pct: number })[] = featuredUnitRows.map((u) => ({
+    ...u,
+    price_usd: Number(u.price_usd),
+    available_pct: Number(u.available_pct),
+  }));
   const myInvestedUnitIds: number[] = investedRows.map((r) => Number(r.unit_id));
   const myFavoriteUnitIds: number[] = favoriteRows.map((r) => Number(r.unit_id));
 
@@ -284,17 +292,13 @@ async function HomeHeroAndStats({ lang }: { lang: Locale }) {
 }
 
 async function HomeSimulatorCatalogAndCTA({ lang }: { lang: Locale }) {
-  const { session, isInvestor, hasPhone, tierThresholds, serialized, myInvestedUnitIds, myFavoriteUnitIds } = await getHomeData();
+  const { session, isInvestor, hasPhone, tierThresholds, serialized, featuredUnits8, myInvestedUnitIds, myFavoriteUnitIds } = await getHomeData();
 
   return (
     <>
       {/* ─── Simulador de inversión ─────────────────── */}
       <div id="simulator">
-        <InvestmentSimulator
-          developments={serialized.developments as Parameters<typeof InvestmentSimulator>[0]["developments"]}
-          units={serialized.units as Parameters<typeof InvestmentSimulator>[0]["units"]}
-          lang={lang}
-        />
+        <InvestmentSimulator units={featuredUnits8} lang={lang} />
       </div>
 
       {/* ─── Full catalog ───────────────────────────── */}
