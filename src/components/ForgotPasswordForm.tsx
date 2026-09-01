@@ -6,6 +6,7 @@ import Image from "next/image";
 import type { Dictionary } from "@/i18n";
 import type { AuthBackgroundImage } from "@/lib/authBackgroundImages";
 import AuthBackgroundSlideshow from "./AuthBackgroundSlideshow";
+import { authMobileStyle, AUTH_BRAND_GRADIENT } from "./authFormMobileStyle";
 
 type Props = {
   t: Dictionary["auth"]["forgotPassword"];
@@ -43,50 +44,7 @@ export default function ForgotPasswordForm({ t, lang, backgroundImages = [] }: P
 
   return (
     <div style={splitWrap} className="forgot-wrap">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        @media (max-width: 900px) {
-          .forgot-wrap {
-            position: relative !important;
-            height: auto !important;
-            min-height: 100vh !important;
-            flex-direction: column-reverse !important;
-            overflow: visible !important;
-            background: ${brandGradient} !important;
-          }
-          .forgot-right {
-            display: flex !important;
-            flex: 0 0 auto !important;
-            min-height: 200px !important;
-            background: transparent !important;
-          }
-          .forgot-right-content {
-            padding: 2rem 1.5rem 1.5rem !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            text-align: center !important;
-          }
-          .forgot-right-logo {
-            height: 108px !important;
-          }
-          .forgot-left {
-            flex: 1 1 auto !important;
-            padding: 0 !important;
-            align-items: stretch !important;
-            justify-content: flex-end !important;
-          }
-          .forgot-form-card {
-            background: #fff !important;
-            border-radius: 24px 24px 0 0 !important;
-            padding: 2rem 1.5rem 2.25rem !important;
-            box-shadow: 0 -12px 30px rgba(14,23,38,0.18) !important;
-          }
-        }
-      `,
-        }}
-      />
+      <style dangerouslySetInnerHTML={{ __html: authMobileStyle("forgot") }} />
 
       {/* Left — form */}
       <div style={leftPane} className="forgot-left">
@@ -158,7 +116,7 @@ export default function ForgotPasswordForm({ t, lang, backgroundImages = [] }: P
   );
 }
 
-const brandGradient = "#1F4458";
+const brandGradient = AUTH_BRAND_GRADIENT;
 
 const splitWrap: React.CSSProperties = {
   position: "fixed",

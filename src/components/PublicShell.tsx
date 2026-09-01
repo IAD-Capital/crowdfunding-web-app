@@ -5,6 +5,7 @@ import Footer from "./Footer";
 import ComingSoon from "./ComingSoon";
 import ChatbotWidget from "./ChatbotWidget";
 import InstallAppPrompt from "./InstallAppPrompt";
+import { InstallPromptProvider } from "./InstallPromptProvider";
 import db from "@/lib/db";
 import { getSession } from "@/lib/session";
 import type { Locale } from "@/i18n";
@@ -38,14 +39,16 @@ export default async function PublicShell({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <Suspense fallback={<HeaderFallback lang={lang} />}>
-        <Header lang={lang} />
-      </Suspense>
-      <main style={{ flex: 1 }}>{children}</main>
-      <Footer lang={lang} />
-      {(settings?.chatbot_enabled ?? true) && <ChatbotWidget userEmail={session?.email ?? null} />}
-      <InstallAppPrompt />
-    </div>
+    <InstallPromptProvider>
+      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <Suspense fallback={<HeaderFallback lang={lang} />}>
+          <Header lang={lang} />
+        </Suspense>
+        <main style={{ flex: 1 }}>{children}</main>
+        <Footer lang={lang} />
+        {(settings?.chatbot_enabled ?? true) && <ChatbotWidget userEmail={session?.email ?? null} />}
+        <InstallAppPrompt />
+      </div>
+    </InstallPromptProvider>
   );
 }

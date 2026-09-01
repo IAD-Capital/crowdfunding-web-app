@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import PasswordInput from "./PasswordInput";
+import GoogleSignInButton from "./GoogleSignInButton";
 import { trackCtaClick } from "@/lib/analytics";
 
 type Mode = "login" | "signup";
@@ -60,7 +61,8 @@ export default function AuthCTASection({ lang }: { lang: string }) {
     <section style={section} id="invertir">
       <style>{`
         @media (max-width: 760px) {
-          .auth-cta-inner { grid-template-columns: 1fr !important; padding: 2rem !important; gap: 2rem !important; }
+          .auth-cta-inner { grid-template-columns: 1fr !important; padding: 1.5rem !important; gap: 1.75rem !important; }
+          .auth-cta-form-card { padding: 1.5rem !important; }
         }
       `}</style>
       <div style={inner} className="auth-cta-inner">
@@ -87,7 +89,7 @@ export default function AuthCTASection({ lang }: { lang: string }) {
         </div>
 
         {/* Right — form */}
-        <div style={formCard}>
+        <div style={formCard} className="auth-cta-form-card">
           {/* Mode toggle */}
           <div style={toggle}>
             <button style={toggleBtn(mode === "login")} onClick={() => switchMode("login")} type="button">
@@ -149,6 +151,23 @@ export default function AuthCTASection({ lang }: { lang: string }) {
                 : "Crear cuenta e invertir"}
             </button>
           </form>
+
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+            <>
+              <div style={dividerRow}>
+                <span style={dividerLine} />
+                <span style={dividerText}>o</span>
+                <span style={dividerLine} />
+              </div>
+              <GoogleSignInButton
+                lang={lang}
+                locale={lang as "es" | "en"}
+                errorText="No pudimos iniciar sesión con Google. Intenta nuevamente."
+                redirectingText="Redirigiendo…"
+                theme="filled_black"
+              />
+            </>
+          )}
 
           <p style={switchHint}>
             {mode === "login" ? "¿No tenés cuenta?" : "¿Ya tenés cuenta?"}{" "}
@@ -236,6 +255,9 @@ const submit: React.CSSProperties = {
   fontWeight: 600, cursor: "pointer", marginTop: "0.25rem",
   transition: "opacity 0.15s", boxShadow: "0 10px 22px rgba(27,77,224,0.22)",
 };
+const dividerRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem" };
+const dividerLine: React.CSSProperties = { flex: 1, height: 1, background: "var(--c-border-input)" };
+const dividerText: React.CSSProperties = { fontSize: "0.8125rem", color: "var(--c-text-secondary)" };
 const switchHint: React.CSSProperties = { fontSize: "0.85rem", color: "var(--c-text-secondary)", textAlign: "center", margin: 0 };
 const switchLink: React.CSSProperties = {
   background: "none", border: "none", color: "var(--c-accent)",

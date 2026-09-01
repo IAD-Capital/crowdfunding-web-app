@@ -19,6 +19,7 @@ const es = {
     google: {
       divider: "o",
       error: "No pudimos iniciar sesión con Google. Intenta nuevamente.",
+      redirecting: "Redirigiendo…",
     },
     login: {
       title: "Iniciar sesión",
@@ -78,6 +79,7 @@ const es = {
       password: "Contraseña",
       submit: "Crear cuenta",
       loading: "Creando cuenta…",
+      redirecting: "Redirigiendo…",
       haveAccount: "¿Ya tienes una cuenta?",
       signIn: "Inicia sesión",
       checks: {

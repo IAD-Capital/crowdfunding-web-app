@@ -5,11 +5,12 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
-  Menu, X, Wallet, Heart, UserRound, Settings, LogOut, LogIn, UserPlus,
+  Menu, X, Wallet, Heart, UserRound, Settings, LogOut, LogIn, UserPlus, Download, Bell, Share, SquarePlus,
 } from "lucide-react";
 import Link from "next/link";
 import NotificationBell, { type Notification } from "./NotificationBell";
 import MobileFeaturedCarousel, { type FeaturedProperty } from "./MobileFeaturedCarousel";
+import { useInstallPrompt } from "./InstallPromptProvider";
 import type { Locale } from "@/i18n";
 import { trackCtaClick } from "@/lib/analytics";
 import s from "./Header.module.scss";
@@ -34,6 +35,10 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showIosHint, setShowIosHint] = useState(false);
+  const {
+    ready, canInstall, isIosInstallable, notificationsAvailable, subscribing, requestInstall, requestNotifications,
+  } = useInstallPrompt();
 
   useEffect(() => {
     setMounted(true);
@@ -61,6 +66,15 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
 
   function close() {
     setOpen(false);
+  }
+
+  function handleInstallClick() {
+    if (canInstall) {
+      requestInstall();
+      close();
+    } else {
+      setShowIosHint((v) => !v);
+    }
   }
 
   async function logout() {
@@ -164,9 +178,35 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
                 </div>
               )}
 
+              {ready && (canInstall || isIosInstallable || notificationsAvailable) && (
+                <div className={s.mobileMenuSection}>
+                  {(canInstall || isIosInstallable) && (
+                    <button type="button" className={s.userMenuItem} onClick={handleInstallClick}>
+                      <Download size={16} /> Instalar app
+                    </button>
+                  )}
+                  {showIosHint && isIosInstallable && !canInstall && (
+                    <p className={s.userMenuHint}>
+                      Tocá <Share size={13} className={s.userMenuHintIcon} /> y luego &quot;Agregar a inicio&quot;{" "}
+                      <SquarePlus size={13} className={s.userMenuHintIcon} />.
+                    </p>
+                  )}
+                  {notificationsAvailable && (
+                    <button
+                      type="button"
+                      className={s.userMenuItem}
+                      onClick={() => requestNotifications()}
+                      disabled={subscribing}
+                    >
+                      <Bell size={16} /> {subscribing ? "Activando…" : "Activar notificaciones"}
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div className={s.mobileMenuSection}>
                 <a
-                  href="https://www.instagram.com/iadcapital"
+                  href="https://www.instagram.com/iad.capital"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={s.userMenuItem}

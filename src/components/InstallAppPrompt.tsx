@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X, Share, SquarePlus, Bell } from "lucide-react";
 import { trackCtaClick } from "@/lib/analytics";
+import { subscribeToPush } from "@/lib/pushSubscription";
 import s from "./InstallAppPrompt.module.scss";
 
 const INSTALL_DISMISS_KEY = "pwa-install-dismissed-at";
@@ -45,18 +46,6 @@ function canOfferNotifications(): boolean {
     (!isIos() || isStandalone()) &&
     !isDismissedRecently(NOTIF_DISMISS_KEY)
   );
-}
-
-// https://developer.mozilla.org/en-US/docs/Web/API/Push_API/Best_Practices
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; i++) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
 }
 
 export default function InstallAppPrompt() {
@@ -136,28 +125,10 @@ export default function InstallAppPrompt() {
   }
 
   async function handleEnableNotifications() {
-    const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-    if (!publicKey) {
-      setStage(null);
-      return;
-    }
     trackCtaClick("enable_notifications_prompt", { location: "notifications_banner" });
     setSubscribing(true);
     try {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") return;
-
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
-      });
-      await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ subscription, userAgent: navigator.userAgent }),
-      });
+      await subscribeToPush();
     } finally {
       setSubscribing(false);
       setStage(null);
