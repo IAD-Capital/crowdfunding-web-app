@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bot, X, Send, Mail, ArrowLeft, Loader2 } from "lucide-react";
+import { WandSparkles, X, Send, Mail, ArrowLeft, Loader2 } from "lucide-react";
 
 type Question = {
   id: number;
@@ -187,7 +187,7 @@ export default function ChatbotWidget({ userEmail }: Props) {
 
       {!open && (
         <button type="button" onClick={handleOpen} style={trigger} aria-label="Abrir chat">
-          <Bot size={26} color="#fff" />
+          <WandSparkles size={26} color="#fff" />
         </button>
       )}
 
@@ -195,7 +195,7 @@ export default function ChatbotWidget({ userEmail }: Props) {
         <div className="chatbot-panel" style={panel}>
           <div style={panelHeader}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Bot size={18} />
+              <WandSparkles size={18} />
               <span style={panelTitle}>Asistente</span>
             </div>
             <button type="button" onClick={close} style={closeBtn} aria-label="Cerrar chat">
