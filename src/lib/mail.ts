@@ -21,7 +21,13 @@ function getTransporter() {
 }
 
 export async function sendMail(
-  opts: { to: string; subject: string; html: string }
+  opts: {
+    to: string;
+    subject: string;
+    html: string;
+    replyTo?: string;
+    attachments?: { filename: string; content: Buffer; contentType?: string }[];
+  }
 ): Promise<{ sent: boolean; error?: string }> {
   const t = getTransporter();
   if (!t) {
@@ -33,8 +39,10 @@ export async function sendMail(
     await t.sendMail({
       from: FROM,
       to: opts.to,
+      replyTo: opts.replyTo,
       subject: opts.subject,
       html: opts.html,
+      attachments: opts.attachments,
     });
     return { sent: true };
   } catch (err) {

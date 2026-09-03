@@ -11,6 +11,7 @@ import ImageGallery from "@/components/admin/ImageGallery";
 import BuyPanel from "@/components/BuyPanel";
 import OpenChatbotButton from "@/components/OpenChatbotButton";
 import TrackedLink from "@/components/TrackedLink";
+import ContactForm from "@/components/ContactForm";
 import Image from "next/image";
 import {
   Layers, Maximize, Home, Trees, BedDouble, Bed, Bath, Compass, ChevronRight, MapPin,
@@ -200,6 +201,7 @@ export default async function PublicUnitPage({
         }
         @media (max-width: 640px) {
           .unit-hero-main { height: 300px !important; }
+          .contact-form-row { grid-template-columns: 1fr !important; }
         }
       `,
         }}
@@ -473,6 +475,19 @@ export default async function PublicUnitPage({
                 </div>
               </div>
             )}
+
+            {/* Solicitar más información de la unidad */}
+            <div>
+              <h2 style={sectionTitle}>¿Querés más información sobre esta unidad?</h2>
+              <div style={legalBox}>
+                <ContactForm
+                  unitContext={{
+                    label: `Unidad ${unit.identifier} — ${dev.address}`,
+                    url: `${getAppUrl()}${unitPath}`,
+                  }}
+                />
+              </div>
+            </div>
 
             {/* Compact development pointer — units stay the focus, this is just context */}
             <div style={devMiniCard}>

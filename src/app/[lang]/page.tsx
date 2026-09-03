@@ -6,6 +6,7 @@ import CatalogSection from "@/components/CatalogSection";
 import InvestmentSimulator from "@/components/InvestmentSimulator";
 import AuthCTASection from "@/components/AuthCTASection";
 import FeaturedUnitsHero, { type FeaturedUnit } from "@/components/FeaturedUnitsHero";
+import ContactSection from "@/components/ContactSection";
 import ScrollReveal from "@/components/ScrollReveal";
 import CountUpNumber from "@/components/CountUpNumber";
 import Skeleton from "@/components/Skeleton";
@@ -240,6 +241,9 @@ export default function Home({ params }: { params: { lang: string } }) {
       <Suspense fallback={<SimulatorCatalogSkeleton />}>
         <HomeSimulatorCatalogAndCTA lang={lang} />
       </Suspense>
+
+      {/* ─── Contact — static, renders immediately ───────────────────────── */}
+      <ContactSection />
     </PublicShell>
   );
 }
