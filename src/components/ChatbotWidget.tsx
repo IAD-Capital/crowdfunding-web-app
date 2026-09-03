@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Fuse from "fuse.js";
 import { WandSparkles, X, Send, Mail, ArrowLeft, Loader2 } from "lucide-react";
 
 type Question = {
@@ -10,13 +11,13 @@ type Question = {
   answer: string | null;
   source?: "chatbot" | "faq";
 };
-type View = "list" | "node" | "other" | "other-sent";
+type View = "search" | "results" | "node" | "unresolved" | "other" | "other-sent" | "resolved";
 
 type Props = { userEmail: string | null };
 
 export default function ChatbotWidget({ userEmail }: Props) {
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState<View>("list");
+  const [view, setView] = useState<View>("search");
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const hasFetched = useRef(false);
@@ -28,11 +29,31 @@ export default function ChatbotWidget({ userEmail }: Props) {
     return (questions ?? []).filter((q) => q.parent_id === parentId);
   }
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState("");
+  const fuse = useMemo(
+    () =>
+      new Fuse(questions ?? [], {
+        keys: [
+          { name: "question", weight: 0.7 },
+          { name: "answer", weight: 0.3 },
+        ],
+        threshold: 0.4,
+        ignoreLocation: true,
+      }),
+    [questions]
+  );
+  const searchResults = useMemo(
+    () => (submittedQuery.trim() ? fuse.search(submittedQuery.trim()).slice(0, 6).map((r) => r.item) : []),
+    [fuse, submittedQuery]
+  );
+
   const [emailInput, setEmailInput] = useState(userEmail ?? "");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState("");
 
+  const [otherOrigin, setOtherOrigin] = useState<View>("search");
   const [otherText, setOtherText] = useState("");
   const [otherEmail, setOtherEmail] = useState(userEmail ?? "");
   const [submittingOther, setSubmittingOther] = useState(false);
@@ -67,6 +88,13 @@ export default function ChatbotWidget({ userEmail }: Props) {
     return () => window.removeEventListener("iad:open-chatbot", handleOpen);
   }, []);
 
+  function handleSubmitSearch() {
+    const q = searchQuery.trim();
+    if (!q) return;
+    setSubmittedQuery(q);
+    setView("results");
+  }
+
   function selectQuestion(q: Question) {
     setPath((prev) => [...prev, q]);
     setEmailSent(false);
@@ -78,20 +106,23 @@ export default function ChatbotWidget({ userEmail }: Props) {
   function goBack() {
     if (path.length <= 1) {
       setPath([]);
-      setView("list");
+      setView("results");
     } else {
       setPath((prev) => prev.slice(0, -1));
       setView("node");
     }
   }
 
-  function backToList() {
+  function resetAll() {
     setPath([]);
-    setView("list");
+    setSearchQuery("");
+    setSubmittedQuery("");
+    setView("search");
   }
 
-  function openOther() {
-    setOtherText("");
+  function openOther(origin: View, prefill = "") {
+    setOtherOrigin(origin);
+    setOtherText(prefill);
     setOtherEmail(userEmail ?? "");
     setOtherError("");
     setView("other");
@@ -204,24 +235,100 @@ export default function ChatbotWidget({ userEmail }: Props) {
           </div>
 
           <div style={panelBody}>
-            {view === "list" && (
-              <div style={optionsList}>
-                {loadingQuestions && (
-                  <div style={centerRow}>
-                    <Loader2 size={20} style={spinStyle} />
-                  </div>
+            {view === "search" && (
+              <div style={detailWrap}>
+                <p style={otherPrompt}>Escribí tu consulta y te sugerimos la respuesta.</p>
+                <textarea
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Escribí tu consulta…"
+                  style={searchTextarea}
+                  rows={5}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  style={submitBtn}
+                  onClick={handleSubmitSearch}
+                  disabled={!searchQuery.trim() || loadingQuestions}
+                >
+                  {loadingQuestions ? "Cargando…" : "Enviar"}
+                </button>
+              </div>
+            )}
+
+            {view === "results" && (
+              <div style={detailWrap}>
+                <button type="button" style={backBtn} onClick={() => setView("search")}>
+                  <ArrowLeft size={15} /> Volver
+                </button>
+
+                {searchResults.length === 0 ? (
+                  <>
+                    <p style={hintText}>No encontramos sugerencias para “{submittedQuery}”.</p>
+                    <div style={optionsList}>
+                      <button type="button" style={optionBtn} onClick={() => setView("search")}>
+                        Buscar de nuevo
+                      </button>
+                      <button
+                        type="button"
+                        style={{ ...optionBtn, ...otherOptionBtn }}
+                        onClick={() => openOther("results", submittedQuery)}
+                      >
+                        Enviar consulta por email
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p style={otherPrompt}>Esto encontramos para tu consulta:</p>
+                    <div style={optionsList}>
+                      {searchResults.map((q) => (
+                        <button key={q.id} type="button" style={optionBtn} onClick={() => selectQuestion(q)}>
+                          {q.question}
+                        </button>
+                      ))}
+                    </div>
+                    <p style={otherPrompt}>¿Alguna de estas responde tu consulta?</p>
+                    <div style={choiceRow}>
+                      <button type="button" style={choiceBtnYes} onClick={() => setView("resolved")}>
+                        Sí
+                      </button>
+                      <button type="button" style={choiceBtnNo} onClick={() => setView("unresolved")}>
+                        No
+                      </button>
+                    </div>
+                  </>
                 )}
-                {!loadingQuestions && childrenOf(null).length === 0 && (
-                  <p style={hintText}>Todavía no hay preguntas cargadas.</p>
-                )}
-                {!loadingQuestions &&
-                  childrenOf(null).map((q) => (
-                    <button key={q.id} type="button" style={optionBtn} onClick={() => selectQuestion(q)}>
-                      {q.question}
-                    </button>
-                  ))}
-                <button type="button" style={{ ...optionBtn, ...otherOptionBtn }} onClick={openOther}>
-                  Otra
+              </div>
+            )}
+
+            {view === "unresolved" && (
+              <div style={detailWrap}>
+                <button type="button" style={backBtn} onClick={() => setView("results")}>
+                  <ArrowLeft size={15} /> Volver
+                </button>
+                <p style={otherPrompt}>Sin problema. ¿Qué querés hacer?</p>
+                <div style={optionsList}>
+                  <button type="button" style={optionBtn} onClick={() => setView("search")}>
+                    Volver a preguntar
+                  </button>
+                  <button
+                    type="button"
+                    style={{ ...optionBtn, ...otherOptionBtn }}
+                    onClick={() => openOther("unresolved", submittedQuery)}
+                  >
+                    Enviar mi consulta por email
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {view === "resolved" && (
+              <div style={detailWrap}>
+                <p style={successText}>¡Genial! Nos alegra haberte ayudado.</p>
+                <button type="button" style={submitBtn} onClick={resetAll}>
+                  Hacer otra consulta
                 </button>
               </div>
             )}
@@ -271,7 +378,7 @@ export default function ChatbotWidget({ userEmail }: Props) {
                         {q.question}
                       </button>
                     ))}
-                    <button type="button" style={{ ...optionBtn, ...otherOptionBtn }} onClick={openOther}>
+                    <button type="button" style={{ ...optionBtn, ...otherOptionBtn }} onClick={() => openOther("node")}>
                       Otra
                     </button>
                   </div>
@@ -281,7 +388,7 @@ export default function ChatbotWidget({ userEmail }: Props) {
 
             {view === "other" && (
               <div style={detailWrap}>
-                <button type="button" style={backBtn} onClick={() => setView(current ? "node" : "list")}>
+                <button type="button" style={backBtn} onClick={() => setView(otherOrigin)}>
                   <ArrowLeft size={15} /> Volver
                 </button>
                 <p style={otherPrompt}>Contanos tu pregunta y la vamos a revisar.</p>
@@ -311,7 +418,7 @@ export default function ChatbotWidget({ userEmail }: Props) {
             {view === "other-sent" && (
               <div style={detailWrap}>
                 <p style={successText}>¡Gracias! Recibimos tu pregunta y la vamos a revisar.</p>
-                <button type="button" style={submitBtn} onClick={backToList}>
+                <button type="button" style={submitBtn} onClick={resetAll}>
                   Volver al inicio
                 </button>
               </div>
@@ -350,15 +457,27 @@ const closeBtn: React.CSSProperties = {
 const panelBody: React.CSSProperties = { flex: 1, overflowY: "auto", padding: "1rem" };
 
 const optionsList: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.5rem" };
+const searchTextarea: React.CSSProperties = {
+  padding: "0.6rem 0.75rem", border: "1px solid #e5e7eb", borderRadius: 10,
+  background: "#f8fafc", fontSize: "0.85rem", fontFamily: "inherit", color: "#111",
+  lineHeight: 1.5, resize: "vertical", outline: "none",
+};
 const optionBtn: React.CSSProperties = {
   textAlign: "left", padding: "0.65rem 0.85rem", borderRadius: 10,
   border: "1px solid #e5e7eb", background: "#f8fafc", cursor: "pointer",
   fontSize: "0.85rem", color: "#111", fontWeight: 500,
 };
 const otherOptionBtn: React.CSSProperties = { background: "#eff3ff", color: "#1b4de0", fontWeight: 700, borderColor: "#c7d7ff" };
-const centerRow: React.CSSProperties = { display: "flex", justifyContent: "center", padding: "1.5rem 0" };
 const hintText: React.CSSProperties = { fontSize: "0.82rem", color: "#9ca3af" };
 const spinStyle: React.CSSProperties = { animation: "chatbot-spin 0.8s linear infinite" };
+
+const choiceRow: React.CSSProperties = { display: "flex", gap: "0.6rem" };
+const choiceBtnBase: React.CSSProperties = {
+  flex: 1, padding: "0.55rem 0.85rem", borderRadius: 10, border: "1px solid transparent",
+  cursor: "pointer", fontSize: "0.85rem", fontWeight: 700,
+};
+const choiceBtnYes: React.CSSProperties = { ...choiceBtnBase, background: "#e6f9f1", color: "#0e9f6e", borderColor: "#bdeeda" };
+const choiceBtnNo: React.CSSProperties = { ...choiceBtnBase, background: "#fdeeee", color: "#dc2626", borderColor: "#f6cccc" };
 
 const detailWrap: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.75rem" };
 const backBtn: React.CSSProperties = {
