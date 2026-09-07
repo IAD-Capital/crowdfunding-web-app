@@ -13,6 +13,29 @@ type Question = {
 };
 type View = "search" | "results" | "node" | "unresolved" | "other" | "other-sent" | "resolved";
 
+// Common Spanish filler words that add no search value on their own — stripping
+// them lets a sentence like "Quisiera saber cómo funciona" match on "funciona"
+// instead of failing to fuzzy-match the whole sentence as one string.
+const SPANISH_STOPWORDS = new Set([
+  "de", "la", "el", "los", "las", "un", "una", "unos", "unas", "en", "y", "o",
+  "que", "es", "son", "por", "para", "con", "sin", "se", "su", "sus", "lo",
+  "al", "del", "mi", "mis", "tu", "tus", "me", "te", "le", "les", "como",
+  "cómo", "qué", "cual", "cuál", "cuando", "cuándo", "donde", "dónde",
+  "porque", "porqué", "quiero", "quisiera", "quisera", "quisiero", "saber",
+  "favor", "porfavor", "gracias", "hay", "hace", "puedo", "podria", "podría",
+  "tengo", "tener", "sobre", "acerca",
+]);
+
+// Splits the query into words and OR's them together (Fuse's extended-search
+// syntax) so a match on any single meaningful word is enough, rather than
+// fuzzy-matching the entire sentence as one pattern.
+function buildFuseQuery(raw: string): string {
+  const tokens = raw.toLowerCase().split(/[^a-zà-ÿ0-9]+/).filter(Boolean);
+  const meaningful = tokens.filter((t) => t.length >= 3 && !SPANISH_STOPWORDS.has(t));
+  const chosen = meaningful.length > 0 ? meaningful : tokens;
+  return chosen.length > 0 ? chosen.join(" | ") : raw;
+}
+
 type Props = { userEmail: string | null };
 
 export default function ChatbotWidget({ userEmail }: Props) {
@@ -40,11 +63,15 @@ export default function ChatbotWidget({ userEmail }: Props) {
         ],
         threshold: 0.4,
         ignoreLocation: true,
+        useExtendedSearch: true,
       }),
     [questions]
   );
   const searchResults = useMemo(
-    () => (submittedQuery.trim() ? fuse.search(submittedQuery.trim()).slice(0, 6).map((r) => r.item) : []),
+    () =>
+      submittedQuery.trim()
+        ? fuse.search(buildFuseQuery(submittedQuery.trim())).slice(0, 6).map((r) => r.item)
+        : [],
     [fuse, submittedQuery]
   );
 
@@ -236,7 +263,7 @@ export default function ChatbotWidget({ userEmail }: Props) {
 
           <div style={panelBody}>
             {view === "search" && (
-              <div style={detailWrap}>
+              <div style={searchViewWrap}>
                 <p style={otherPrompt}>Escribí tu consulta y te sugerimos la respuesta.</p>
                 <textarea
                   value={searchQuery}
@@ -454,11 +481,13 @@ const closeBtn: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "center", padding: "0.25rem",
 };
 
-const panelBody: React.CSSProperties = { flex: 1, overflowY: "auto", padding: "1rem" };
+const panelBody: React.CSSProperties = {
+  flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column",
+};
 
 const optionsList: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.5rem" };
 const searchTextarea: React.CSSProperties = {
-  padding: "0.6rem 0.75rem", border: "1px solid #e5e7eb", borderRadius: 10,
+  flex: 1, padding: "0.6rem 0.75rem", border: "1px solid #e5e7eb", borderRadius: 10,
   background: "#f8fafc", fontSize: "0.85rem", fontFamily: "inherit", color: "#111",
   lineHeight: 1.5, resize: "vertical", outline: "none",
 };
@@ -480,6 +509,7 @@ const choiceBtnYes: React.CSSProperties = { ...choiceBtnBase, background: "#e6f9
 const choiceBtnNo: React.CSSProperties = { ...choiceBtnBase, background: "#fdeeee", color: "#dc2626", borderColor: "#f6cccc" };
 
 const detailWrap: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.75rem" };
+const searchViewWrap: React.CSSProperties = { ...detailWrap, flex: 1 };
 const backBtn: React.CSSProperties = {
   display: "flex", alignItems: "center", gap: "0.35rem", alignSelf: "flex-start",
   background: "none", border: "none", cursor: "pointer", color: "#6b7280", fontSize: "0.8rem", fontWeight: 600, padding: 0,
