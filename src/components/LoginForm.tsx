@@ -67,23 +67,6 @@ export default function LoginForm({ t, tGoogle, lang, next, backgroundImages = [
           <div style={leftInner}>
             <h1 style={title}>{t.title}</h1>
 
-            {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-              <>
-                <GoogleSignInButton
-                  lang={lang}
-                  next={next}
-                  locale={lang as "es" | "en"}
-                  errorText={tGoogle.error}
-                  redirectingText={tGoogle.redirecting}
-                />
-                <div style={dividerRow}>
-                  <span style={dividerLine} />
-                  <span style={dividerText}>{tGoogle.divider}</span>
-                  <span style={dividerLine} />
-                </div>
-              </>
-            )}
-
             <form onSubmit={handleSubmit} style={form}>
               <label style={label}>{t.email}</label>
               <input
@@ -113,6 +96,23 @@ export default function LoginForm({ t, tGoogle, lang, next, backgroundImages = [
                 {redirecting ? t.redirecting : loading ? t.loading : t.submit}
               </button>
             </form>
+
+            {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+              <>
+                <div style={dividerRow}>
+                  <span style={dividerLine} />
+                  <span style={dividerText}>{tGoogle.divider}</span>
+                  <span style={dividerLine} />
+                </div>
+                <GoogleSignInButton
+                  lang={lang}
+                  next={next}
+                  locale={lang as "es" | "en"}
+                  errorText={tGoogle.error}
+                  redirectingText={tGoogle.redirecting}
+                />
+              </>
+            )}
 
             <p style={footer}>
               {t.noAccount}{" "}

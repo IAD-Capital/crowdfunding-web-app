@@ -100,23 +100,6 @@ export default function AuthCTASection({ lang }: { lang: string }) {
             onChange={switchMode}
           />
 
-          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-            <>
-              <GoogleSignInButton
-                lang={lang}
-                locale={lang as "es" | "en"}
-                errorText="No pudimos iniciar sesión con Google. Intenta nuevamente."
-                redirectingText="Redirigiendo…"
-                theme="filled_black"
-              />
-              <div style={dividerRow}>
-                <span style={dividerLine} />
-                <span style={dividerText}>o</span>
-                <span style={dividerLine} />
-              </div>
-            </>
-          )}
-
           <form onSubmit={handleSubmit} style={form}>
             {mode === "signup" && (
               <div style={field}>
@@ -168,6 +151,22 @@ export default function AuthCTASection({ lang }: { lang: string }) {
                 : "Crear cuenta e invertir"}
             </button>
           </form>
+
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+            <>
+              <div style={dividerRow}>
+                <span style={dividerLine} />
+                <span style={dividerText}>o</span>
+                <span style={dividerLine} />
+              </div>
+              <GoogleSignInButton
+                lang={lang}
+                locale={lang as "es" | "en"}
+                errorText="No pudimos iniciar sesión con Google. Intenta nuevamente."
+                redirectingText="Redirigiendo…"
+              />
+            </>
+          )}
 
           <p style={switchHint}>
             {mode === "login" ? "¿No tenés cuenta?" : "¿Ya tenés cuenta?"}{" "}

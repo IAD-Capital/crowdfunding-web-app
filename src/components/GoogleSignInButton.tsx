@@ -24,12 +24,11 @@ type Props = {
   locale: "es" | "en";
   errorText: string;
   redirectingText: string;
-  theme?: "outline" | "filled_black" | "filled_blue";
 };
 
 const GSI_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 
-export default function GoogleSignInButton({ lang, next, locale, errorText, redirectingText, theme = "outline" }: Props) {
+export default function GoogleSignInButton({ lang, next, locale, errorText, redirectingText }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
@@ -80,7 +79,7 @@ export default function GoogleSignInButton({ lang, next, locale, errorText, redi
       });
       window.google.accounts.id.renderButton(buttonRef.current, {
         type: "standard",
-        theme,
+        theme: "outline",
         size: "large",
         width: String(width),
         text: "continue_with",
@@ -104,13 +103,20 @@ export default function GoogleSignInButton({ lang, next, locale, errorText, redi
     return () => {
       cancelled = true;
     };
-  }, [clientId, lang, next, locale, errorText, theme]);
+  }, [clientId, lang, next, locale, errorText]);
 
   if (!clientId) return null;
 
   return (
     <div ref={wrapRef} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", width: "100%" }}>
-      <div ref={buttonRef} style={redirecting ? { opacity: 0.6, pointerEvents: "none" } : undefined} />
+      <div
+        ref={buttonRef}
+        style={{
+          transform: "scale(1.1)",
+          transformOrigin: "center",
+          ...(redirecting ? { opacity: 0.6, pointerEvents: "none" as const } : {}),
+        }}
+      />
       {redirecting && (
         <p style={{ color: "var(--c-text-secondary, #6b7280)", fontSize: "0.875rem", margin: 0 }}>{redirectingText}</p>
       )}
