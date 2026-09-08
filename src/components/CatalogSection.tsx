@@ -99,7 +99,7 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
           <p style={emptyMsg}>No hay unidades disponibles en este momento.</p>
         ) : (
           <div style={unitGrid} className="unit-grid">
-            {visibleUnits.map((u) => (
+            {visibleUnits.map((u, i) => (
               <div key={u.id} className="unit-card-item">
                 <UnitCard
                   u={u}
@@ -112,6 +112,7 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
                   lang={lang}
                   isAuthenticated={isAuthenticated}
                   isFavorited={myFavoriteUnitIds.includes(u.id)}
+                  priority={i < 4}
                 />
               </div>
             ))}
@@ -147,11 +148,11 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
 
 /* ─── Unit card ─────────────────────────────────── */
 function UnitCard({
-  u, devAddress, devSlug, devAmenities, isInvestor, alreadyInvested, onInvest, lang, isAuthenticated, isFavorited,
+  u, devAddress, devSlug, devAmenities, isInvestor, alreadyInvested, onInvest, lang, isAuthenticated, isFavorited, priority,
 }: {
   u: Unit; devAddress: string; devSlug: string | number; devAmenities: string[]; isInvestor: boolean;
   alreadyInvested: boolean; onInvest: () => void; lang: string;
-  isAuthenticated: boolean; isFavorited: boolean;
+  isAuthenticated: boolean; isFavorited: boolean; priority?: boolean;
 }) {
   const canBuy = isInvestor && u.status !== "sold" && !alreadyInvested;
   const floorLabel = u.floor == null ? null : u.floor === 0 ? "Planta baja" : `Piso ${u.floor}`;
@@ -190,6 +191,7 @@ function UnitCard({
           canBuy={canBuy}
           alreadyInvested={alreadyInvested}
           fmtUsd={fmtUsd}
+          priority={priority}
           onInvest={() => {
             trackCtaClick("catalog_invest_button", { label: u.identifier, location: "catalog" });
             onInvest();
@@ -203,7 +205,7 @@ function UnitCard({
 /* ─── Unit cover slider ──────────────────────────── */
 function UnitCoverSlider({
   images, identifier, floorLabel, devAddress, totalM2, rooms, bedrooms, amenities, yieldInfo,
-  unitId, isFavorited, isAuthenticated, lang, entryPrice, minInvest, canBuy, alreadyInvested, fmtUsd, onInvest,
+  unitId, isFavorited, isAuthenticated, lang, entryPrice, minInvest, canBuy, alreadyInvested, fmtUsd, priority, onInvest,
 }: {
   images: string[] | undefined;
   identifier: string;
@@ -223,6 +225,7 @@ function UnitCoverSlider({
   canBuy: boolean;
   alreadyInvested: boolean;
   fmtUsd: (n: number) => string;
+  priority?: boolean;
   onInvest: () => void;
 }) {
   const router = useRouter();
@@ -239,7 +242,7 @@ function UnitCoverSlider({
   return (
     <div style={unitCover}>
       {list.length > 0 ? (
-        <Image src={list[index]} alt={identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 84vw, 300px" />
+        <Image src={list[index]} alt={identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 84vw, 300px" priority={priority} />
       ) : (
         <div style={unitPlaceholder}><Building2 size={28} style={{ opacity: 0.2 }} /></div>
       )}
