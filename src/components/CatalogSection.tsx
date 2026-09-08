@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import BuyDrawer from "./BuyDrawer";
 import {
-  Building2,
+  Building2, MapPin, Maximize, BedDouble,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
-import { getTierDefs, unitQualifiesForTier, MIN_ENTRY_PCT, type TierThresholds, type TierKey } from "@/lib/investmentTiers";
+import { MIN_ENTRY_PCT } from "@/lib/investmentTiers";
 import { trackCtaClick } from "@/lib/analytics";
+import { getAmenityIcon } from "@/lib/icons";
 import FavoriteButton from "./FavoriteButton";
 
 export type Development = {
@@ -55,28 +57,15 @@ type Props = {
   isAuthenticated?: boolean;
   myFavoriteUnitIds?: number[];
   lang: string;
-  tierThresholds: TierThresholds;
+  limit?: number;
+  seeAllHref?: string;
 };
 
-const STATUS_UNIT: Record<string, { bg: string; fg: string; label: string }> = {
-  available: { bg: "var(--c-positive)", fg: "#fff", label: "Disponible" },
-  partial:   { bg: "#d9a531", fg: "#fff", label: "Parcial" },
-  sold:      { bg: "#991b1b", fg: "#fff", label: "Vendida" },
-};
-
-export default function CatalogSection({ developments, units, isInvestor, hasPhone = true, myInvestedUnitIds = [], isAuthenticated = false, myFavoriteUnitIds = [], lang, tierThresholds }: Props) {
-  const [tierFilter, setTierFilter] = useState<TierKey | "all">("all");
+export default function CatalogSection({ developments, units, isInvestor, hasPhone = true, myInvestedUnitIds = [], isAuthenticated = false, myFavoriteUnitIds = [], lang, limit, seeAllHref }: Props) {
   const [drawerUnit, setDrawerUnit] = useState<Unit | null>(null);
 
-  const tierDefs = getTierDefs(tierThresholds);
-
-  const visibleUnits = tierFilter === "all"
-    ? units
-    : units.filter((u) => {
-        const tier = tierDefs.find((t) => t.key === tierFilter);
-        return tier ? unitQualifiesForTier(u, tier) : true;
-      });
-  const availableUnits = visibleUnits.filter((u) => u.status !== "sold");
+  const visibleUnits = limit != null ? units.slice(0, limit) : units;
+  const hasMore = limit != null && units.length > limit;
   const drawerDev = drawerUnit ? developments.find((d) => d.id === drawerUnit.development_id) : null;
 
   return (
@@ -87,6 +76,7 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
             display: flex !important;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
+            scroll-padding-left: 1.5rem;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             gap: 1rem;
@@ -104,46 +94,14 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
       `}</style>
       <div style={inner}>
 
-        {/* Filter by investment tier */}
-        <div style={tierFilterBlock}>
-          <div style={tierFilterHeader}>
-            <h3 style={tierFilterTitle}>¿Cuánto querés invertir?</h3>
-            <p style={tierFilterSub}>
-              Elegí el nivel que se ajusta a tu capital. {availableUnits.length} unidad{availableUnits.length !== 1 ? "es" : ""} disponible{availableUnits.length !== 1 ? "s" : ""} en total.
-            </p>
-            {tierFilter !== "all" && (
-              <button style={tierClearBtn} onClick={() => setTierFilter("all")}>
-                Ver todos
-              </button>
-            )}
-          </div>
-          <div style={tierCardGrid}>
-            {tierDefs.map((t) => {
-              const active = tierFilter === t.key;
-              const count = units.filter((u) => unitQualifiesForTier(u, t)).length;
-              return (
-                <button
-                  key={t.key}
-                  style={tierCard(t.key, active)}
-                  onClick={() => setTierFilter(active ? "all" : t.key)}
-                >
-                  <span style={tierCardTopRow}>
-                    <span style={tierCardDot(t.key)} />
-                    <span style={tierCardLabel(t.key)}>{t.label}</span>
-                  </span>
-                  <span style={tierCardRange(t.key)}>
-                    {t.key === "platinum" ? "100% de la unidad" : `Desde USD ${t.from.toLocaleString("es-AR")}`}
-                  </span>
-                  <span style={tierCardCount(t.key, active)}>
-                    {count} unidad{count !== 1 ? "es" : ""} disponible{count !== 1 ? "s" : ""}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        <div style={sectionHeader}>
+          <h3 style={sectionTitle}>Todas las propiedades</h3>
+          <p style={sectionSub}>
+            {units.length} unidad{units.length !== 1 ? "es" : ""} disponible{units.length !== 1 ? "s" : ""} en total.
+          </p>
         </div>
 
-        {isInvestor && availableUnits.length > 0 && (
+        {isInvestor && units.length > 0 && (
           <p style={investorHint}>
             Como inversor podés adquirir entre el 5% y el 100% de cada departamento.
             Seleccioná uno para calcular tu inversión.
@@ -161,6 +119,7 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
                   devName={developments.find((d) => d.id === u.development_id)?.name ?? ""}
                   devAddress={developments.find((d) => d.id === u.development_id)?.address ?? ""}
                   devSlug={developments.find((d) => d.id === u.development_id)?.slug ?? u.development_id}
+                  devAmenities={developments.find((d) => d.id === u.development_id)?.amenities ?? []}
                   isInvestor={isInvestor}
                   alreadyInvested={myInvestedUnitIds.includes(u.id)}
                   onInvest={() => setDrawerUnit(u)}
@@ -170,6 +129,14 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
                 />
               </div>
             ))}
+          </div>
+        )}
+
+        {hasMore && seeAllHref && (
+          <div style={seeAllRow}>
+            <Link href={seeAllHref} style={seeAllBtn}>
+              Ver más propiedades →
+            </Link>
           </div>
         )}
       </div>
@@ -194,13 +161,12 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
 
 /* ─── Unit card ─────────────────────────────────── */
 function UnitCard({
-  u, devName, devAddress, devSlug, isInvestor, alreadyInvested, onInvest, lang, isAuthenticated, isFavorited,
+  u, devName, devAddress, devSlug, devAmenities, isInvestor, alreadyInvested, onInvest, lang, isAuthenticated, isFavorited,
 }: {
-  u: Unit; devName: string; devAddress: string; devSlug: string | number; isInvestor: boolean;
+  u: Unit; devName: string; devAddress: string; devSlug: string | number; devAmenities: string[]; isInvestor: boolean;
   alreadyInvested: boolean; onInvest: () => void; lang: string;
   isAuthenticated: boolean; isFavorited: boolean;
 }) {
-  const sc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
   const canBuy = isInvestor && u.status !== "sold" && !alreadyInvested;
   const floorLabel = u.floor == null ? null : u.floor === 0 ? "Planta baja" : `Piso ${u.floor}`;
 
@@ -222,81 +188,60 @@ function UnitCard({
         <UnitCoverSlider
           images={u.images}
           identifier={u.identifier}
-          statusBadge={{ background: sc.bg, color: sc.fg, label: sc.label }}
+          floorLabel={floorLabel}
+          devName={devName}
+          devAddress={devAddress}
+          totalM2={u.total_m2}
+          rooms={u.rooms}
+          bedrooms={u.bedrooms}
+          amenities={devAmenities}
+          yieldInfo={hasCurrent ? { positive, gain } : null}
           unitId={u.id}
           isFavorited={isFavorited}
           isAuthenticated={isAuthenticated}
           lang={lang}
+          entryPrice={entryPrice}
+          minInvest={minInvest}
+          canBuy={canBuy}
+          alreadyInvested={alreadyInvested}
+          fmtUsd={fmtUsd}
+          onInvest={() => {
+            trackCtaClick("catalog_invest_button", { label: u.identifier, location: "catalog" });
+            onInvest();
+          }}
         />
-        <div style={unitBody}>
-          <div style={unitTopRow}>
-            <h3 style={unitId}>{u.identifier}</h3>
-            {floorLabel && <span style={unitFloorLabel}>{floorLabel}</span>}
-          </div>
-          <div style={unitAddrLine}>{devName} — {devAddress.toUpperCase()}</div>
-
-          <div style={unitStats}>
-            {u.total_m2 != null && <span style={statChip}>{u.total_m2.toLocaleString("es-AR", { minimumFractionDigits: 2 })} m²</span>}
-            {u.rooms != null && <span style={statChip}>{u.rooms} amb.</span>}
-            {u.bedrooms != null && <span style={statChip}>{u.bedrooms} dorm.</span>}
-          </div>
-
-          {hasCurrent && (
-            <div style={{ ...yieldBadge, background: positive ? "var(--c-positive-light)" : "#fee2e2", color: positive ? "var(--c-positive)" : "#991b1b" }}>
-              <span>{positive ? "▲" : "▼"} {Math.abs(gain).toFixed(1)}% sobre el valor original</span>
-            </div>
-          )}
-        </div>
       </Link>
-
-      {entryPrice != null && (
-        <div style={unitPriceRow}>
-          <Link
-            href={`/${lang}/developments/${devSlug}/units/${u.id}`}
-            style={{ textDecoration: "none" }}
-            onClick={() => trackCtaClick("catalog_unit_price", { label: u.identifier, location: "catalog" })}
-          >
-            <div style={priceSublabel}>Precio de entrada</div>
-            <div style={priceEntry}>{fmtUsd(entryPrice)}</div>
-            {minInvest != null && <div style={minInvestLabel}>Invertí desde {fmtUsd(minInvest)}</div>}
-          </Link>
-          {canBuy ? (
-            <button
-              style={btnInvest}
-              onClick={() => {
-                trackCtaClick("catalog_invest_button", { label: u.identifier, location: "catalog" });
-                onInvest();
-              }}
-            >
-              Invertir →
-            </button>
-          ) : alreadyInvested ? (
-            <a
-              href={`/${lang}/wallet`}
-              style={btnAlready}
-              onClick={() => trackCtaClick("catalog_already_invested", { label: u.identifier, location: "catalog" })}
-            >
-              Ya invertido →
-            </a>
-          ) : null}
-        </div>
-      )}
     </div>
   );
 }
 
 /* ─── Unit cover slider ──────────────────────────── */
 function UnitCoverSlider({
-  images, identifier, statusBadge, unitId, isFavorited, isAuthenticated, lang,
+  images, identifier, floorLabel, devName, devAddress, totalM2, rooms, bedrooms, amenities, yieldInfo,
+  unitId, isFavorited, isAuthenticated, lang, entryPrice, minInvest, canBuy, alreadyInvested, fmtUsd, onInvest,
 }: {
   images: string[] | undefined;
   identifier: string;
-  statusBadge: { background: string; color: string; label: string };
+  floorLabel: string | null;
+  devName: string;
+  devAddress: string;
+  totalM2?: number | null;
+  rooms?: number | null;
+  bedrooms?: number | null;
+  amenities: string[];
+  yieldInfo: { positive: boolean; gain: number } | null;
   unitId: number;
   isFavorited: boolean;
   isAuthenticated: boolean;
   lang: string;
+  entryPrice: number | null;
+  minInvest: number | null;
+  canBuy: boolean;
+  alreadyInvested: boolean;
+  fmtUsd: (n: number) => string;
+  onInvest: () => void;
 }) {
+  const router = useRouter();
   const [index, setIndex] = useState(0);
   const list = images ?? [];
   const hasMultiple = list.length > 1;
@@ -314,34 +259,112 @@ function UnitCoverSlider({
       ) : (
         <div style={unitPlaceholder}><Building2 size={28} style={{ opacity: 0.2 }} /></div>
       )}
-      <span style={{ ...badge, background: statusBadge.background, color: statusBadge.color }}>
-        {statusBadge.label}
-      </span>
+      <div style={unitGradient} />
 
-      <FavoriteButton
-        unitId={unitId}
-        initialFavorited={isFavorited}
-        isAuthenticated={isAuthenticated}
-        lang={lang}
-        label={identifier}
-        location="catalog"
-      />
+      {minInvest != null && (
+        <div style={investPill}>
+          <span style={investPillLabel}>Invertí desde</span>
+          <span style={investPillValue}>{fmtUsd(minInvest)}</span>
+        </div>
+      )}
+
+      <div style={topRightRow}>
+        <FavoriteButton
+          unitId={unitId}
+          initialFavorited={isFavorited}
+          isAuthenticated={isAuthenticated}
+          lang={lang}
+          label={identifier}
+          location="catalog"
+          variant="hero"
+        />
+      </div>
 
       {hasMultiple && (
         <>
-          <button type="button" style={{ ...sliderArrow, left: 6 }} onClick={(e) => go(-1, e)} aria-label="Foto anterior">
+          <button type="button" style={{ ...sliderArrow, left: 10 }} onClick={(e) => go(-1, e)} aria-label="Foto anterior">
             <ChevronLeft size={16} />
           </button>
-          <button type="button" style={{ ...sliderArrow, right: 6 }} onClick={(e) => go(1, e)} aria-label="Foto siguiente">
+          <button type="button" style={{ ...sliderArrow, right: 10 }} onClick={(e) => go(1, e)} aria-label="Foto siguiente">
             <ChevronRight size={16} />
           </button>
+        </>
+      )}
+
+      <div style={unitOverlay}>
+        <div style={unitOverlayAddr}>
+          <MapPin size={12} />
+          <span style={unitOverlayAddrText}>
+            {floorLabel ? `${floorLabel} · ` : ""}{devName} — {devAddress.toUpperCase()}
+          </span>
+        </div>
+
+        <div style={unitOverlayStatRow}>
+          {totalM2 != null && (
+            <span style={unitOverlayStatChip}><Maximize size={11} /> {totalM2.toLocaleString("es-AR", { minimumFractionDigits: 2 })} m²</span>
+          )}
+          {rooms != null && <span style={unitOverlayStatChip}><BedDouble size={11} /> {rooms} amb.</span>}
+          {bedrooms != null && <span style={unitOverlayStatChip}>{bedrooms} dorm.</span>}
+        </div>
+
+        {amenities.length > 0 && (
+          <div style={unitAmenityRow}>
+            {amenities.slice(0, 4).map((a) => {
+              const Icon = getAmenityIcon(a);
+              return (
+                <div key={a} style={unitAmenityItem}>
+                  <div style={unitAmenityCircle}><Icon size={12} /></div>
+                  <span style={unitAmenityLabel}>{a}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {yieldInfo && (
+          <span style={{ ...unitYieldChip, background: yieldInfo.positive ? "rgba(70,211,154,0.22)" : "rgba(252,165,165,0.25)", color: yieldInfo.positive ? "#8fe9c4" : "#fecaca" }}>
+            {yieldInfo.positive ? "▲" : "▼"} {Math.abs(yieldInfo.gain).toFixed(1)}% sobre el valor original
+          </span>
+        )}
+
+        {entryPrice != null && (
+          <div style={unitPriceBox}>
+            <div>
+              <span style={unitPriceBoxLabel}>VALOR DE LA UNIDAD</span>
+              <div style={unitPriceBoxValue}>{fmtUsd(entryPrice)}</div>
+            </div>
+            {canBuy ? (
+              <button
+                type="button"
+                style={unitInvestBtn}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onInvest(); }}
+              >
+                Invertir →
+              </button>
+            ) : alreadyInvested ? (
+              <button
+                type="button"
+                style={unitAlreadyBtn}
+                onClick={(e) => {
+                  e.preventDefault(); e.stopPropagation();
+                  trackCtaClick("catalog_already_invested", { label: identifier, location: "catalog" });
+                  router.push(`/${lang}/wallet`);
+                }}
+              >
+                Ya invertido →
+              </button>
+            ) : null}
+          </div>
+        )}
+
+        {hasMultiple && (
           <div style={sliderDots}>
             {list.map((_, i) => (
               <span key={i} style={sliderDot(i === index)} />
             ))}
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -356,60 +379,16 @@ const blockSub: React.CSSProperties = { fontSize: "0.9rem", color: "var(--c-text
 
 const emptyMsg: React.CSSProperties = { color: "var(--c-text-tertiary)", fontSize: "0.95rem" };
 
-const tierFilterBlock: React.CSSProperties = { marginBottom: "2rem" };
-const tierFilterHeader: React.CSSProperties = { textAlign: "center", marginBottom: "1.75rem" };
-const tierFilterTitle: React.CSSProperties = { fontSize: "2.1rem", fontWeight: 800, color: "var(--c-ink)", margin: "0 0 0.5rem", letterSpacing: "-0.02em" };
-const tierFilterSub: React.CSSProperties = { fontSize: "1rem", color: "var(--c-text-secondary)", margin: 0 };
-const tierClearBtn: React.CSSProperties = {
-  fontSize: "0.8rem", fontWeight: 600, color: "var(--c-text-secondary)", background: "none",
-  border: "none", cursor: "pointer", textDecoration: "underline", marginTop: "0.5rem",
+const sectionHeader: React.CSSProperties = { textAlign: "center", marginBottom: "1.75rem" };
+const sectionTitle: React.CSSProperties = { fontSize: "2.1rem", fontWeight: 800, color: "var(--c-ink)", margin: "0 0 0.5rem", letterSpacing: "-0.02em" };
+const sectionSub: React.CSSProperties = { fontSize: "1rem", color: "var(--c-text-secondary)", margin: 0 };
+
+const seeAllRow: React.CSSProperties = { display: "flex", justifyContent: "center", marginTop: "2.5rem" };
+const seeAllBtn: React.CSSProperties = {
+  padding: "0.85rem 1.75rem", background: "var(--c-ink)", color: "#fff",
+  borderRadius: 999, fontWeight: 700, fontSize: "0.92rem", textDecoration: "none",
 };
 
-const TIER_META: Record<string, { dot: string; activeBorder: string; dark?: boolean }> = {
-  bronze:   { dot: "#c08457", activeBorder: "#c08457" },
-  silver:   { dot: "#9aa7b5", activeBorder: "#9aa7b5" },
-  gold:     { dot: "#d9a531", activeBorder: "#d9a531" },
-  platinum: { dot: "#7fa0ff", activeBorder: "#7fa0ff", dark: true },
-};
-
-const tierCardGrid: React.CSSProperties = {
-  display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "2.5rem",
-};
-const tierCard = (key: string, active: boolean): React.CSSProperties => {
-  const m = TIER_META[key];
-  if (m.dark) {
-    return {
-      display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.2rem",
-      padding: "1rem 1.1rem", borderRadius: 14, cursor: "pointer", textAlign: "left",
-      border: `2px solid ${active ? m.activeBorder : "var(--c-ink)"}`,
-      background: "var(--c-ink)",
-      boxShadow: active ? `0 2px 10px ${m.activeBorder}55` : "none",
-      transition: "all 0.15s",
-    };
-  }
-  return {
-    display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.2rem",
-    padding: "1rem 1.1rem", borderRadius: 14, cursor: "pointer", textAlign: "left",
-    border: `2px solid ${active ? m.activeBorder : "var(--c-border)"}`,
-    background: "#fff",
-    boxShadow: active ? `0 2px 10px ${m.activeBorder}33` : "0 1px 3px rgba(14,23,38,0.04)",
-    transition: "all 0.15s",
-  };
-};
-const tierCardTopRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.85rem" };
-const tierCardDot = (key: string): React.CSSProperties => ({
-  width: 9, height: 9, borderRadius: "50%", background: TIER_META[key].dot, flexShrink: 0,
-});
-const tierCardLabel = (key: string): React.CSSProperties => ({
-  fontSize: "0.95rem", fontWeight: 700, color: TIER_META[key].dark ? "#fff" : "var(--c-ink)",
-});
-const tierCardRange = (key: string): React.CSSProperties => ({
-  fontSize: "0.78rem", color: TIER_META[key].dark ? "var(--c-text-on-dark)" : "var(--c-text-tertiary)", fontWeight: 600,
-});
-const tierCardCount = (key: string, active: boolean): React.CSSProperties => ({
-  fontSize: "0.72rem", fontWeight: 700, marginTop: "0.3rem",
-  color: TIER_META[key].dark ? "var(--c-text-on-dark)" : (active ? "var(--c-ink)" : "var(--c-text-tertiary)"),
-});
 const investorHint: React.CSSProperties = {
   background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10,
   padding: "0.75rem 1rem", fontSize: "0.85rem", color: "#92400e",
@@ -420,28 +399,82 @@ const unitLink: React.CSSProperties = { textDecoration: "none", color: "inherit"
 
 /* Unit card */
 const unitGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(260px, 100%), 1fr))", gap: "1.5rem" };
-const unitCard: React.CSSProperties = {
-  background: "var(--c-surface)", borderRadius: 14, overflow: "hidden",
-  border: "1px solid var(--c-border)", display: "flex", flexDirection: "column",
-  boxShadow: "0 2px 8px rgba(14,23,38,0.06)", transition: "border-color 0.15s, box-shadow 0.15s",
-};
-const unitCover: React.CSSProperties = { position: "relative", height: 160, background: "#eef1f6" };
-const unitPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#e8eef7,#dfe7f2)" };
-const badge: React.CSSProperties = { position: "absolute", top: 10, left: 10, padding: "0.15rem 0.55rem", borderRadius: 999, fontSize: "0.72rem", fontWeight: 700 };
-const unitBody: React.CSSProperties = { padding: "1.1rem 1.2rem 0.9rem", display: "flex", flexDirection: "column", gap: "0.4rem" };
-const unitTopRow: React.CSSProperties = { display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "0.5rem" };
-const unitFloorLabel: React.CSSProperties = { fontSize: "0.78rem", color: "var(--c-text-tertiary)", fontWeight: 600, whiteSpace: "nowrap" };
-const unitAddrLine: React.CSSProperties = { fontSize: "0.75rem", color: "var(--c-text-secondary)", margin: "0 0 0.3rem" };
-const unitId: React.CSSProperties = { fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "var(--c-ink)" };
-const unitStats: React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: "0.3rem" };
-const unitPriceRow: React.CSSProperties = {
-  display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "0.75rem",
-  padding: "0.9rem 1.2rem 1.1rem", borderTop: "1px solid var(--c-border-soft)", marginTop: "0.4rem",
-};
-const statChip: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", gap: "0.3rem",
-  fontSize: "0.75rem", padding: "0.15rem 0.55rem", background: "var(--c-chip-bg)", color: "var(--c-ink)", borderRadius: 999,
+const unitCard: React.CSSProperties = { display: "flex", flexDirection: "column" };
+const unitCover: React.CSSProperties = {
+  position: "relative", height: 487, borderRadius: 20, overflow: "hidden",
+  background: "linear-gradient(135deg, #e8eef7, #dfe7f2)",
   border: "1px solid var(--c-border)",
+  boxShadow: "0 20px 40px -20px rgba(14,23,38,0.35)",
+};
+const unitPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#e8eef7,#dfe7f2)" };
+const unitGradient: React.CSSProperties = {
+  position: "absolute", inset: 0,
+  background: "linear-gradient(to top, rgba(9,13,23,0.92) 0%, rgba(9,13,23,0.55) 42%, rgba(9,13,23,0) 68%)",
+};
+const topRightRow: React.CSSProperties = { position: "absolute", top: 10, right: 10, zIndex: 2, display: "flex", alignItems: "center", gap: "0.4rem" };
+
+const investPill: React.CSSProperties = {
+  position: "absolute", top: "1rem", left: "1rem", zIndex: 2,
+  display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.15rem",
+  background: "#fff", borderRadius: 16, padding: "0.6rem 1rem",
+  boxShadow: "0 8px 20px -6px rgba(14,23,38,0.35)",
+};
+const investPillLabel: React.CSSProperties = { fontSize: "0.68rem", color: "var(--c-text-tertiary)", fontWeight: 600 };
+const investPillValue: React.CSSProperties = {
+  fontFamily: "var(--font-display)", fontSize: "1.05rem", fontWeight: 800,
+  color: "var(--c-positive)", letterSpacing: "-0.02em",
+};
+
+const unitOverlay: React.CSSProperties = {
+  position: "absolute", left: 0, right: 0, bottom: 0, padding: "1rem 1.1rem",
+  display: "flex", flexDirection: "column", gap: "0.4rem", zIndex: 1,
+};
+const unitOverlayAddr: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.3rem", color: "rgba(255,255,255,0.75)" };
+const unitOverlayAddrText: React.CSSProperties = { fontSize: "0.72rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+const unitOverlayStatRow: React.CSSProperties = { display: "flex", gap: "0.4rem", flexWrap: "wrap" };
+const unitOverlayStatChip: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "0.25rem",
+  background: "rgba(255,255,255,0.14)", color: "#fff", fontSize: "0.7rem", fontWeight: 600,
+  padding: "0.22rem 0.5rem", borderRadius: 999, backdropFilter: "blur(4px)",
+};
+const unitAmenityRow: React.CSSProperties = { display: "flex", gap: "0.5rem", marginTop: "0.1rem" };
+const unitAmenityItem: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.15rem", width: 42 };
+const unitAmenityCircle: React.CSSProperties = {
+  width: 26, height: 26, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,0.55)",
+  display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", flexShrink: 0,
+};
+const unitAmenityLabel: React.CSSProperties = {
+  fontSize: "0.56rem", color: "rgba(255,255,255,0.8)", fontWeight: 500, textAlign: "center",
+  lineHeight: 1.05, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 42,
+};
+const unitYieldChip: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", borderRadius: 999, padding: "0.2rem 0.55rem",
+  fontSize: "0.68rem", fontWeight: 700, marginTop: "0.15rem", backdropFilter: "blur(4px)", width: "fit-content",
+};
+
+const unitPriceBox: React.CSSProperties = {
+  display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem",
+  background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)",
+  borderRadius: 14, padding: "0.6rem 0.8rem", backdropFilter: "blur(6px)",
+  boxShadow: "0px 2px 2px rgba(0,0,0,0.25)", marginTop: "0.5rem",
+};
+const unitPriceBoxLabel: React.CSSProperties = {
+  fontSize: "0.62rem", fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.06em",
+  textShadow: "0px 2px 2px rgba(0,0,0,0.25)", display: "block",
+};
+const unitPriceBoxValue: React.CSSProperties = {
+  fontFamily: "var(--font-display)", fontSize: "1.05rem", fontWeight: 800, color: "#fff",
+  letterSpacing: "-0.02em", lineHeight: 1.2, textShadow: "0px 2px 2px rgba(0,0,0,0.25)",
+};
+const unitInvestBtn: React.CSSProperties = {
+  padding: "0.5rem 0.8rem", background: "#fff", color: "var(--c-accent)",
+  border: "none", borderRadius: 10, fontWeight: 700, fontSize: "0.78rem", cursor: "pointer",
+  whiteSpace: "nowrap", flexShrink: 0,
+};
+const unitAlreadyBtn: React.CSSProperties = {
+  padding: "0.5rem 0.8rem", background: "rgba(70,211,154,0.9)", color: "#06281c",
+  border: "none", borderRadius: 10, fontWeight: 700, fontSize: "0.78rem", cursor: "pointer",
+  whiteSpace: "nowrap", flexShrink: 0,
 };
 const sliderArrow: React.CSSProperties = {
   position: "absolute", top: "50%", transform: "translateY(-50%)",
@@ -450,29 +483,10 @@ const sliderArrow: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2,
 };
 const sliderDots: React.CSSProperties = {
-  position: "absolute", bottom: 8, left: 0, right: 0,
-  display: "flex", justifyContent: "center", gap: "0.3rem", zIndex: 2,
+  display: "flex", justifyContent: "center", gap: "0.35rem",
+  marginTop: "0.6rem", marginBottom: "0.15rem",
 };
 const sliderDot = (active: boolean): React.CSSProperties => ({
   width: 5, height: 5, borderRadius: "50%",
   background: active ? "#fff" : "rgba(255,255,255,0.5)",
 });
-const priceSublabel: React.CSSProperties = { fontSize: "0.72rem", color: "var(--c-text-tertiary)", margin: "0 0 0.2rem", fontWeight: 600 };
-const priceEntry: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "1.25rem", fontWeight: 800, color: "var(--c-ink)", margin: 0 };
-const minInvestLabel: React.CSSProperties = {
-  fontSize: "0.78rem", fontWeight: 700, color: "var(--c-accent)",
-  margin: "0.15rem 0 0", display: "inline-block",
-};
-const yieldBadge: React.CSSProperties = { display: "flex", alignItems: "center", borderRadius: 8, padding: "0.35rem 0.6rem", fontSize: "0.75rem", fontWeight: 700, marginTop: "0.5rem" };
-const btnInvest: React.CSSProperties = {
-  padding: "0.7rem 1rem", background: "var(--c-accent-light)",
-  border: "none", borderRadius: 10, fontWeight: 700,
-  fontSize: "0.85rem", cursor: "pointer", color: "var(--c-accent)", transition: "all 0.15s",
-  textAlign: "center", whiteSpace: "nowrap", flexShrink: 0,
-};
-const btnAlready: React.CSSProperties = {
-  padding: "0.7rem 1rem", textAlign: "center",
-  background: "var(--c-positive-light)", border: "none", borderRadius: 10,
-  fontWeight: 700, fontSize: "0.82rem", color: "var(--c-positive)", textDecoration: "none",
-  whiteSpace: "nowrap", flexShrink: 0,
-};
