@@ -11,7 +11,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
 
   const body = await req.json();
   const {
-    identifier, floor, total_m2, covered_m2, uncovered_m2,
+    identifier, floor, total_m2, covered_m2, uncovered_m2, semi_covered_m2,
     rooms, bedrooms, bathrooms, orientation, price_usd, current_price_usd, status, description, legal_terms, images,
     plan_images, group_duration_months,
   } = body;
@@ -27,6 +27,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
       total_m2              = ${total_m2 ?? null},
       covered_m2            = ${covered_m2 ?? null},
       uncovered_m2          = ${uncovered_m2 ?? null},
+      semi_covered_m2       = ${semi_covered_m2 ?? null},
       rooms                 = ${rooms ?? null},
       bedrooms              = ${bedrooms ?? null},
       bathrooms             = ${bathrooms ?? null},

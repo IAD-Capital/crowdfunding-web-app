@@ -18,10 +18,17 @@ type FormState = {
   effective_date: string;
   stage: string;
   total_value_usd: string;
-  value_per_m2_usd: string;
+  use_homogeneous: boolean;
 };
 
-const EMPTY_FORM: FormState = { effective_date: "", stage: UNIT_PRICE_STAGES[0].value, total_value_usd: "", value_per_m2_usd: "" };
+type Props = {
+  unitId: number;
+  initial: PriceHistoryEntry[];
+  unitTotalM2?: number | null;
+  unitCoveredM2?: number | null;
+  unitSemiCoveredM2?: number | null;
+  unitUncoveredM2?: number | null;
+};
 
 function fmtUsd(v: number) {
   return `USD ${Number(v).toLocaleString("es-AR", { maximumFractionDigits: 0 })}`;
@@ -31,18 +38,47 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
-export default function UnitPriceHistoryManager({ unitId, initial }: { unitId: number; initial: PriceHistoryEntry[] }) {
+// Weighted m² used to price the unit: covered counts in full, semi-covered
+// (balconies, etc.) at 3/4, fully uncovered (open terraces/yards) at half.
+function computeHomogeneousM2(covered?: number | null, semiCovered?: number | null, uncovered?: number | null): number | null {
+  if (covered == null && semiCovered == null && uncovered == null) return null;
+  return (covered ?? 0) * 1 + (semiCovered ?? 0) * 0.75 + (uncovered ?? 0) * 0.5;
+}
+
+function computeValuePerM2(totalValueUsd: string, denom: number | null): number | null {
+  const total = parseFloat(totalValueUsd);
+  if (denom == null || denom <= 0 || !total || Number.isNaN(total)) return null;
+  return total / denom;
+}
+
+export default function UnitPriceHistoryManager({
+  unitId, initial, unitTotalM2 = null, unitCoveredM2 = null, unitSemiCoveredM2 = null, unitUncoveredM2 = null,
+}: Props) {
   const router = useRouter();
   const sorted = [...initial].sort((a, b) => a.effective_date.localeCompare(b.effective_date) || a.id - b.id);
   const [entries, setEntries] = useState(sorted);
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+
+  const homogeneousM2 = computeHomogeneousM2(unitCoveredM2, unitSemiCoveredM2, unitUncoveredM2);
+  const canUseHomogeneous = homogeneousM2 != null && homogeneousM2 > 0;
+  const canUseTotal = unitTotalM2 != null && unitTotalM2 > 0;
+  const defaultUseHomogeneous = canUseHomogeneous;
+
+  const [form, setForm] = useState<FormState>({
+    effective_date: "", stage: UNIT_PRICE_STAGES[0].value, total_value_usd: "", use_homogeneous: defaultUseHomogeneous,
+  });
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState<FormState>(EMPTY_FORM);
+  const [editForm, setEditForm] = useState<FormState>({
+    effective_date: "", stage: UNIT_PRICE_STAGES[0].value, total_value_usd: "", use_homogeneous: defaultUseHomogeneous,
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   function refresh() {
     router.refresh();
+  }
+
+  function denomFor(useHomogeneous: boolean) {
+    return useHomogeneous ? homogeneousM2 : unitTotalM2;
   }
 
   async function handleAdd(e: React.FormEvent) {
@@ -60,7 +96,7 @@ export default function UnitPriceHistoryManager({ unitId, initial }: { unitId: n
         effective_date: form.effective_date,
         stage: form.stage,
         total_value_usd: parseFloat(form.total_value_usd),
-        value_per_m2_usd: form.value_per_m2_usd ? parseFloat(form.value_per_m2_usd) : null,
+        value_per_m2_usd: computeValuePerM2(form.total_value_usd, denomFor(form.use_homogeneous)),
       }),
     });
     const data = await res.json();
@@ -71,7 +107,7 @@ export default function UnitPriceHistoryManager({ unitId, initial }: { unitId: n
     }
     const next = [...entries, data].sort((a, b) => a.effective_date.localeCompare(b.effective_date) || a.id - b.id);
     setEntries(next);
-    setForm(EMPTY_FORM);
+    setForm({ effective_date: "", stage: UNIT_PRICE_STAGES[0].value, total_value_usd: "", use_homogeneous: defaultUseHomogeneous });
     refresh();
   }
 
@@ -81,7 +117,7 @@ export default function UnitPriceHistoryManager({ unitId, initial }: { unitId: n
       effective_date: entry.effective_date.slice(0, 10),
       stage: entry.stage,
       total_value_usd: String(entry.total_value_usd),
-      value_per_m2_usd: entry.value_per_m2_usd != null ? String(entry.value_per_m2_usd) : "",
+      use_homogeneous: defaultUseHomogeneous,
     });
   }
 
@@ -99,7 +135,7 @@ export default function UnitPriceHistoryManager({ unitId, initial }: { unitId: n
         effective_date: editForm.effective_date,
         stage: editForm.stage,
         total_value_usd: parseFloat(editForm.total_value_usd),
-        value_per_m2_usd: editForm.value_per_m2_usd ? parseFloat(editForm.value_per_m2_usd) : null,
+        value_per_m2_usd: computeValuePerM2(editForm.total_value_usd, denomFor(editForm.use_homogeneous)),
       }),
     });
     const data = await res.json();
@@ -121,6 +157,27 @@ export default function UnitPriceHistoryManager({ unitId, initial }: { unitId: n
     refresh();
   }
 
+  function M2Calc({ value, onChange }: { value: FormState; onChange: (next: FormState) => void }) {
+    const computed = computeValuePerM2(value.total_value_usd, denomFor(value.use_homogeneous));
+    return (
+      <div style={m2CalcWrap}>
+        <div style={computedBox} title={value.use_homogeneous ? "Valor total / m² homogeneizados" : "Valor total / m² totales"}>
+          <span style={computedLabel}>Valor m² (auto)</span>
+          <span style={computedValue}>{computed != null ? fmtUsd(computed) : "—"}</span>
+        </div>
+        <label style={checkboxLabel}>
+          <input
+            type="checkbox"
+            checked={value.use_homogeneous}
+            disabled={!canUseHomogeneous}
+            onChange={(e) => onChange({ ...value, use_homogeneous: e.target.checked })}
+          />
+          m² homogeneizados{canUseHomogeneous && ` (${homogeneousM2!.toFixed(2)} m²)`}
+        </label>
+      </div>
+    );
+  }
+
   return (
     <div style={wrap}>
       <h2 style={title}>Historial de precios</h2>
@@ -128,6 +185,12 @@ export default function UnitPriceHistoryManager({ unitId, initial }: { unitId: n
         Se muestra en la página pública de la unidad, con la variación porcentual respecto al registro anterior.
         Si no cargás ningún registro, esa sección no aparece.
       </p>
+      {!canUseHomogeneous && (
+        <p style={hint}>
+          Cargá los m² cubiertos / semicubiertos / descubiertos de la unidad para poder calcular con m² homogeneizados.
+          {canUseTotal ? " Por ahora se calcula con m² totales." : " Por ahora no hay m² cargados para calcular el valor m²."}
+        </p>
+      )}
 
       {entries.length === 0 ? (
         <p style={emptyText}>Todavía no hay historial cargado para esta unidad.</p>
@@ -177,13 +240,7 @@ export default function UnitPriceHistoryManager({ unitId, initial }: { unitId: n
                             value={editForm.total_value_usd}
                             onChange={(e) => setEditForm((f) => ({ ...f, total_value_usd: e.target.value }))}
                           />
-                          <input
-                            style={editInput}
-                            type="number" step="0.01" min="0"
-                            placeholder="Valor m² (USD)"
-                            value={editForm.value_per_m2_usd}
-                            onChange={(e) => setEditForm((f) => ({ ...f, value_per_m2_usd: e.target.value }))}
-                          />
+                          <M2Calc value={editForm} onChange={setEditForm} />
                           <div style={editActions}>
                             <button type="button" style={btnSecondary} onClick={() => setEditingId(null)} disabled={saving}>
                               Cancelar
@@ -257,13 +314,7 @@ export default function UnitPriceHistoryManager({ unitId, initial }: { unitId: n
           onChange={(e) => setForm((f) => ({ ...f, total_value_usd: e.target.value }))}
           required
         />
-        <input
-          style={input}
-          type="number" step="0.01" min="0"
-          placeholder="Valor m² (USD, opcional)"
-          value={form.value_per_m2_usd}
-          onChange={(e) => setForm((f) => ({ ...f, value_per_m2_usd: e.target.value }))}
-        />
+        <M2Calc value={form} onChange={setForm} />
         <button type="submit" style={btnPrimary} disabled={saving}>
           {saving ? "Agregando…" : "+ Agregar"}
         </button>
@@ -292,12 +343,22 @@ const pctDown: React.CSSProperties = { background: "#fee2e2", color: "#991b1b" }
 
 const linkBtn: React.CSSProperties = { background: "none", border: "none", color: "#1b4de0", fontWeight: 600, fontSize: "0.8rem", cursor: "pointer", marginRight: "0.75rem", padding: 0 };
 
-const addForm: React.CSSProperties = { display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" };
+const addForm: React.CSSProperties = { display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "flex-start" };
 const input: React.CSSProperties = { padding: "0.55rem 0.75rem", border: "1px solid #d1d5db", borderRadius: 8, fontSize: "0.9rem", flex: "1 1 160px", outline: "none" };
-const editRow: React.CSSProperties = { display: "flex", gap: "0.6rem", flexWrap: "wrap", alignItems: "center" };
+const editRow: React.CSSProperties = { display: "flex", gap: "0.6rem", flexWrap: "wrap", alignItems: "flex-start" };
 const editInput: React.CSSProperties = { padding: "0.5rem 0.65rem", border: "1px solid #d1d5db", borderRadius: 8, fontSize: "0.85rem", flex: "1 1 140px", outline: "none" };
 const editActions: React.CSSProperties = { display: "flex", gap: "0.5rem" };
 
 const errorStyle: React.CSSProperties = { color: "#dc2626", fontSize: "0.85rem", marginTop: "0.75rem" };
 const btnPrimary: React.CSSProperties = { padding: "0.6rem 1.1rem", background: "#111", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: "0.88rem", whiteSpace: "nowrap" };
 const btnSecondary: React.CSSProperties = { padding: "0.5rem 0.9rem", background: "#fff", color: "#111", border: "1px solid #d1d5db", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: "0.85rem" };
+
+/* Auto m² calc */
+const m2CalcWrap: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.3rem", flex: "1 1 220px" };
+const checkboxLabel: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.4rem", fontSize: "0.78rem", color: "#374151", fontWeight: 600, whiteSpace: "nowrap" };
+const computedBox: React.CSSProperties = {
+  display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem",
+  padding: "0.5rem 0.75rem", background: "#f3f4f6", border: "1px solid #e5e7eb", borderRadius: 8,
+};
+const computedLabel: React.CSSProperties = { fontSize: "0.75rem", color: "#6b7280", fontWeight: 600 };
+const computedValue: React.CSSProperties = { fontSize: "0.85rem", color: "#111", fontWeight: 700 };

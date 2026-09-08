@@ -15,6 +15,7 @@ export type Initial = {
   total_m2?: number;
   covered_m2?: number;
   uncovered_m2?: number;
+  semi_covered_m2?: number;
   rooms?: number;
   bedrooms?: number;
   bathrooms?: number;
@@ -52,6 +53,7 @@ export default function UnitForm({
   const [totalM2, setTotalM2] = useState(initial?.total_m2?.toString() ?? "");
   const [coveredM2, setCoveredM2] = useState(initial?.covered_m2?.toString() ?? "");
   const [uncoveredM2, setUncoveredM2] = useState(initial?.uncovered_m2?.toString() ?? "");
+  const [semiCoveredM2, setSemiCoveredM2] = useState(initial?.semi_covered_m2?.toString() ?? "");
   const [rooms, setRooms] = useState(initial?.rooms?.toString() ?? "");
   const [bedrooms, setBedrooms] = useState(initial?.bedrooms?.toString() ?? "");
   const [bathrooms, setBathrooms] = useState(initial?.bathrooms?.toString() ?? "");
@@ -86,6 +88,7 @@ export default function UnitForm({
       total_m2: totalM2 ? parseFloat(totalM2) : null,
       covered_m2: coveredM2 ? parseFloat(coveredM2) : null,
       uncovered_m2: uncoveredM2 ? parseFloat(uncoveredM2) : null,
+      semi_covered_m2: semiCoveredM2 ? parseFloat(semiCoveredM2) : null,
       rooms: rooms ? parseInt(rooms) : null,
       bedrooms: bedrooms ? parseInt(bedrooms) : null,
       bathrooms: bathrooms ? parseInt(bathrooms) : null,
@@ -153,6 +156,9 @@ export default function UnitForm({
           </Field>
           <Field label={t.form.coveredM2}>
             <input style={input} type="number" step="0.01" value={coveredM2} onChange={(e) => setCoveredM2(e.target.value)} />
+          </Field>
+          <Field label="M² semicubiertos">
+            <input style={input} type="number" step="0.01" value={semiCoveredM2} onChange={(e) => setSemiCoveredM2(e.target.value)} />
           </Field>
           <Field label={t.form.uncoveredM2}>
             <input style={input} type="number" step="0.01" value={uncoveredM2} onChange={(e) => setUncoveredM2(e.target.value)} />
