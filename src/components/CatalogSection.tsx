@@ -104,14 +104,6 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
       `}</style>
       <div style={inner}>
 
-        {/* ── Departamentos ───────────────────────── */}
-        <div style={blockHeader}>
-          <div>
-            <h2 style={blockTitle}>Departamentos</h2>
-            <p style={blockSub}>{units.length} unidad{units.length !== 1 ? "es" : ""} en total</p>
-          </div>
-        </div>
-
         {/* Filter by investment tier */}
         <div style={tierFilterBlock}>
           <div style={tierFilterHeader}>

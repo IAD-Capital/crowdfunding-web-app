@@ -74,14 +74,14 @@ const section: React.CSSProperties = {
 const inner: React.CSSProperties = {
   maxWidth: 1100,
   margin: "0 auto",
-  background: "linear-gradient(135deg, var(--c-accent), var(--c-accent-dark))",
+  background: "rgb(14, 23, 38)",
   borderRadius: 26,
   padding: "3.5rem",
   display: "grid",
   gridTemplateColumns: "1.1fr .9fr",
   gap: "3.5rem",
   alignItems: "center",
-  boxShadow: "0 40px 80px -40px rgba(27,77,224,0.6)",
+  boxShadow: "0 40px 80px -40px rgba(14,23,38,0.6)",
 };
 const copy: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1.1rem" };
 const eyebrow: React.CSSProperties = {
