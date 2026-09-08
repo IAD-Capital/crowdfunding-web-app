@@ -167,6 +167,30 @@ export default async function PublicUnitPage({
     ORDER BY effective_date ASC, id ASC
   `;
 
+  // Today's price is always a valid data point — one loaded historic entry is enough to
+  // show a comparison, since "now" (current_price_usd, falling back to price_usd) closes the timeline.
+  const currentTotalValue = unit.current_price_usd != null
+    ? Number(unit.current_price_usd)
+    : unit.price_usd != null
+    ? Number(unit.price_usd)
+    : null;
+  const currentValuePerM2 = currentTotalValue != null && unit.total_m2 != null
+    ? currentTotalValue / Number(unit.total_m2)
+    : null;
+  const priceHistoryTimeline = [
+    ...priceHistory.map((e) => ({ ...e, isToday: false as const })),
+    ...(priceHistory.length > 0 && currentTotalValue != null
+      ? [{
+          id: -1,
+          effective_date: new Date().toISOString(),
+          stage: "",
+          total_value_usd: currentTotalValue,
+          value_per_m2_usd: currentValuePerM2,
+          isToday: true as const,
+        }]
+      : []),
+  ];
+
   // Other units in the same development — same building, easy next step to invest
   const relatedUnits = await db`
     SELECT id, identifier, price_usd, total_m2, rooms, images, status
@@ -335,24 +359,25 @@ export default async function PublicUnitPage({
                   </span>
                 </h2>
                 <div style={priceHistoryList}>
-                  {priceHistory.map((entry, i) => {
-                    const prev = priceHistory[i - 1];
+                  {priceHistoryTimeline.map((entry, i) => {
+                    const prev = priceHistoryTimeline[i - 1];
                     const pct = prev
                       ? ((Number(entry.total_value_usd) - Number(prev.total_value_usd)) / Number(prev.total_value_usd)) * 100
                       : null;
-                    const isCurrent = i === priceHistory.length - 1;
+                    const isCurrent = entry.isToday;
+                    const isLast = i === priceHistoryTimeline.length - 1;
                     const dotColor = pct == null ? "#1b4de0" : pct >= 0 ? "#22c55e" : "#ef4444";
                     return (
                       <div key={entry.id} style={priceHistoryItem}>
                         <div style={priceHistoryMarkerCol}>
                           <div style={priceHistoryDot(dotColor)} />
-                          {!isCurrent && <div style={priceHistoryLine} />}
+                          {!isLast && <div style={priceHistoryLine} />}
                         </div>
                         <div style={priceHistoryCard(isCurrent)}>
                           <div style={priceHistoryCardTop}>
-                            <p style={priceHistoryDate}>{fmtDate(new Date(entry.effective_date))}</p>
+                            <p style={priceHistoryDate}>{isCurrent ? "Hoy" : fmtDate(new Date(entry.effective_date))}</p>
                             <div style={priceHistoryBadgeGroup}>
-                              <span style={priceHistoryStagePill}>{unitPriceStageLabel(entry.stage)}</span>
+                              {entry.stage && <span style={priceHistoryStagePill}>{unitPriceStageLabel(entry.stage)}</span>}
                               {isCurrent && (
                                 <span style={priceHistoryCurrentPill}>
                                   <Sparkles size={11} />
