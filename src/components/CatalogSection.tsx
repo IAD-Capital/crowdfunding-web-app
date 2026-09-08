@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import BuyDrawer from "./BuyDrawer";
 import {
-  Building2, MapPin, Maximize, BedDouble,
+  MapPin, Maximize, BedDouble,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { MIN_ENTRY_PCT } from "@/lib/investmentTiers";
@@ -155,7 +155,6 @@ function UnitCard({
   isAuthenticated: boolean; isFavorited: boolean; priority?: boolean;
 }) {
   const canBuy = isInvestor && u.status !== "sold" && !alreadyInvested;
-  const floorLabel = u.floor == null ? null : u.floor === 0 ? "Planta baja" : `Piso ${u.floor}`;
 
   const fmtUsd = (n: number) => `USD ${Math.round(n).toLocaleString("es-AR")}`;
   const entryPrice = u.price_usd;
@@ -175,7 +174,6 @@ function UnitCard({
         <UnitCoverSlider
           images={u.images}
           identifier={u.identifier}
-          floorLabel={floorLabel}
           devAddress={devAddress}
           totalM2={u.total_m2}
           rooms={u.rooms}
@@ -204,12 +202,11 @@ function UnitCard({
 
 /* ─── Unit cover slider ──────────────────────────── */
 function UnitCoverSlider({
-  images, identifier, floorLabel, devAddress, totalM2, rooms, bedrooms, amenities, yieldInfo,
+  images, identifier, devAddress, totalM2, rooms, bedrooms, amenities, yieldInfo,
   unitId, isFavorited, isAuthenticated, lang, entryPrice, minInvest, canBuy, alreadyInvested, fmtUsd, priority, onInvest,
 }: {
   images: string[] | undefined;
   identifier: string;
-  floorLabel: string | null;
   devAddress: string;
   totalM2?: number | null;
   rooms?: number | null;
@@ -244,7 +241,9 @@ function UnitCoverSlider({
       {list.length > 0 ? (
         <Image src={list[index]} alt={identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 84vw, 300px" priority={priority} />
       ) : (
-        <div style={unitPlaceholder}><Building2 size={28} style={{ opacity: 0.2 }} /></div>
+        <div style={unitPlaceholder}>
+          <Image src="/iad-logo.svg" alt="" width={202} height={109} unoptimized style={logoPlaceholderImg} />
+        </div>
       )}
       <div style={unitGradient} />
 
@@ -281,9 +280,7 @@ function UnitCoverSlider({
       <div style={unitOverlay}>
         <div style={unitOverlayAddr}>
           <MapPin size={12} />
-          <span style={unitOverlayAddrText}>
-            {floorLabel ? `${floorLabel} · ` : ""}{devAddress.toUpperCase()}
-          </span>
+          <span style={unitOverlayAddrText}>{devAddress.toUpperCase()}</span>
         </div>
 
         <div style={unitOverlayStatRow}>
@@ -296,15 +293,21 @@ function UnitCoverSlider({
 
         {amenities.length > 0 && (
           <div style={unitAmenityRow}>
-            {amenities.slice(0, 4).map((a) => {
+            {amenities.slice(0, 3).map((a) => {
               const Icon = getAmenityIcon(a);
               return (
                 <div key={a} style={unitAmenityItem}>
-                  <div style={unitAmenityCircle}><Icon size={12} /></div>
+                  <div style={unitAmenityCircle}><Icon size={15} /></div>
                   <span style={unitAmenityLabel}>{a}</span>
                 </div>
               );
             })}
+            {amenities.length > 3 && (
+              <div style={unitAmenityItem}>
+                <div style={unitAmenityCircle}>···</div>
+                <span style={unitAmenityLabel}>Más</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -394,6 +397,7 @@ const unitCover: React.CSSProperties = {
   boxShadow: "0 20px 40px -20px rgba(14,23,38,0.35)",
 };
 const unitPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#e8eef7,#dfe7f2)" };
+const logoPlaceholderImg: React.CSSProperties = { width: 68, height: "auto", opacity: 0.28, filter: "grayscale(1)" };
 const unitGradient: React.CSSProperties = {
   position: "absolute", inset: 0,
   background: "linear-gradient(to top, rgba(9,13,23,0.92) 0%, rgba(9,13,23,0.55) 42%, rgba(9,13,23,0) 68%)",
@@ -406,9 +410,9 @@ const investPill: React.CSSProperties = {
   background: "#fff", borderRadius: 16, padding: "0.6rem 1rem",
   boxShadow: "0 8px 20px -6px rgba(14,23,38,0.35)",
 };
-const investPillLabel: React.CSSProperties = { fontSize: "0.68rem", color: "var(--c-text-tertiary)", fontWeight: 600 };
+const investPillLabel: React.CSSProperties = { fontSize: "0.78rem", color: "var(--c-text-tertiary)", fontWeight: 600 };
 const investPillValue: React.CSSProperties = {
-  fontFamily: "var(--font-display)", fontSize: "1.05rem", fontWeight: 800,
+  fontFamily: "var(--font-display)", fontSize: "1.45rem", fontWeight: 800,
   color: "var(--c-positive)", letterSpacing: "-0.02em",
 };
 
@@ -417,22 +421,23 @@ const unitOverlay: React.CSSProperties = {
   display: "flex", flexDirection: "column", gap: "0.4rem", zIndex: 1,
 };
 const unitOverlayAddr: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.3rem", color: "rgba(255,255,255,0.75)" };
-const unitOverlayAddrText: React.CSSProperties = { fontSize: "0.72rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+const unitOverlayAddrText: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
 const unitOverlayStatRow: React.CSSProperties = { display: "flex", gap: "0.4rem", flexWrap: "wrap" };
 const unitOverlayStatChip: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", gap: "0.25rem",
-  background: "rgba(255,255,255,0.14)", color: "#fff", fontSize: "0.7rem", fontWeight: 600,
-  padding: "0.22rem 0.5rem", borderRadius: 999, backdropFilter: "blur(4px)",
+  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+  background: "rgba(255,255,255,0.14)", color: "#fff", fontSize: "0.8rem", fontWeight: 600,
+  padding: "0.3rem 0.6rem", borderRadius: 999, backdropFilter: "blur(4px)",
 };
-const unitAmenityRow: React.CSSProperties = { display: "flex", gap: "0.5rem", marginTop: "0.1rem" };
-const unitAmenityItem: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.15rem", width: 42 };
+const unitAmenityRow: React.CSSProperties = { display: "flex", gap: "0.6rem", marginTop: "0.1rem" };
+const unitAmenityItem: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.2rem", width: 52 };
 const unitAmenityCircle: React.CSSProperties = {
-  width: 26, height: 26, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,0.55)",
+  width: 34, height: 34, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,0.55)",
   display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", flexShrink: 0,
+  fontSize: "0.85rem", fontWeight: 700, letterSpacing: "-0.05em",
 };
 const unitAmenityLabel: React.CSSProperties = {
-  fontSize: "0.56rem", color: "rgba(255,255,255,0.8)", fontWeight: 500, textAlign: "center",
-  lineHeight: 1.05, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 42,
+  fontSize: "0.64rem", color: "rgba(255,255,255,0.8)", fontWeight: 500, textAlign: "center",
+  lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 52,
 };
 const unitYieldChip: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", borderRadius: 999, padding: "0.2rem 0.55rem",
@@ -440,18 +445,18 @@ const unitYieldChip: React.CSSProperties = {
 };
 
 const unitPriceBox: React.CSSProperties = {
-  display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem",
+  display: "flex", alignSelf: "flex-start", alignItems: "center", justifyContent: "space-between", gap: "0.85rem",
   background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)",
-  borderRadius: 14, padding: "0.6rem 0.8rem", backdropFilter: "blur(6px)",
+  borderRadius: 14, padding: "0.65rem 0.9rem", backdropFilter: "blur(6px)",
   boxShadow: "0px 2px 2px rgba(0,0,0,0.25)", marginTop: "0.5rem",
 };
 const unitPriceBoxLabel: React.CSSProperties = {
-  fontSize: "0.62rem", fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.06em",
-  textShadow: "0px 2px 2px rgba(0,0,0,0.25)", display: "block",
+  fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.06em",
+  textShadow: "0px 2px 2px rgba(0,0,0,0.25)", display: "block", whiteSpace: "nowrap",
 };
 const unitPriceBoxValue: React.CSSProperties = {
-  fontFamily: "var(--font-display)", fontSize: "1.05rem", fontWeight: 800, color: "#fff",
-  letterSpacing: "-0.02em", lineHeight: 1.2, textShadow: "0px 2px 2px rgba(0,0,0,0.25)",
+  fontFamily: "var(--font-display)", fontSize: "1.3rem", fontWeight: 800, color: "#fff",
+  letterSpacing: "-0.02em", lineHeight: 1.2, textShadow: "0px 2px 2px rgba(0,0,0,0.25)", whiteSpace: "nowrap",
 };
 const unitInvestBtn: React.CSSProperties = {
   padding: "0.5rem 0.8rem", background: "#fff", color: "var(--c-accent)",
