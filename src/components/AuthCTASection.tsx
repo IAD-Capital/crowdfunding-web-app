@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import PasswordInput from "./PasswordInput";
 import GoogleSignInButton from "./GoogleSignInButton";
+import SegmentedToggle from "./SegmentedToggle";
 import { trackCtaClick } from "@/lib/analytics";
 
 type Mode = "login" | "signup";
@@ -90,14 +91,14 @@ export default function AuthCTASection({ lang }: { lang: string }) {
         {/* Right — form */}
         <div style={formCard} className="auth-cta-form-card">
           {/* Mode toggle */}
-          <div style={toggle}>
-            <button style={toggleBtn(mode === "login")} onClick={() => switchMode("login")} type="button">
-              Iniciar sesión
-            </button>
-            <button style={toggleBtn(mode === "signup")} onClick={() => switchMode("signup")} type="button">
-              Crear cuenta
-            </button>
-          </div>
+          <SegmentedToggle
+            options={[
+              { value: "login", label: "Iniciar sesión" },
+              { value: "signup", label: "Crear cuenta" },
+            ]}
+            value={mode}
+            onChange={switchMode}
+          />
 
           {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
             <>
@@ -224,18 +225,6 @@ const formCard: React.CSSProperties = {
   background: "var(--c-surface)", borderRadius: 18, padding: "2rem",
   display: "flex", flexDirection: "column", gap: "1.25rem",
 };
-const toggle: React.CSSProperties = {
-  display: "grid", gridTemplateColumns: "1fr 1fr",
-  background: "var(--c-field-bg)", borderRadius: 10, padding: "0.2rem", gap: "0.2rem",
-};
-const toggleBtn = (active: boolean): React.CSSProperties => ({
-  padding: "0.5rem", border: "none", borderRadius: 8,
-  background: active ? "#fff" : "transparent",
-  color: active ? "var(--c-ink)" : "var(--c-text-secondary)",
-  fontWeight: active ? 700 : 500, fontSize: "0.875rem",
-  cursor: "pointer", transition: "all 0.15s",
-  boxShadow: active ? "0 1px 4px rgba(14,23,38,0.08)" : "none",
-});
 const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.75rem" };
 const field: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.3rem" };
 const label: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 700, color: "var(--c-text-secondary)" };

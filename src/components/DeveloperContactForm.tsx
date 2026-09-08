@@ -2,7 +2,8 @@
 
 import { useState, useRef, FormEvent } from "react";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { X, Send } from "lucide-react";
+import { Field, FieldStyles, SuccessBox, form, row, errorStyle, btnPrimary } from "./contactFormKit";
 
 const MAX_PHOTOS = 3;
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
@@ -68,111 +69,95 @@ export default function DeveloperContactForm() {
     setPhotos([]);
   }
 
-  if (result?.ok) {
-    return (
-      <div style={successBox}>
-        <p style={successText}>{result.message}</p>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit} style={form}>
-      <div style={row} className="contact-form-row">
-        <Field label="Nombre completo">
-          <input style={input} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-        </Field>
-        <Field label="Desarrolladora / Empresa">
-          <input style={input} value={company} onChange={(e) => setCompany(e.target.value)} required />
-        </Field>
-      </div>
-      <div style={row} className="contact-form-row">
-        <Field label="Email">
-          <input type="email" style={input} value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </Field>
-        <Field label="Teléfono">
-          <input style={input} value={phone} onChange={(e) => setPhone(e.target.value)} required />
-        </Field>
-      </div>
-      <Field label="Dirección de la unidad">
-        <input style={input} value={address} onChange={(e) => setAddress(e.target.value)} required />
-      </Field>
-      <Field label="Detalles de la unidad">
-        <textarea
-          style={textarea}
-          rows={4}
-          placeholder="Superficie, ambientes, precio, estado, etc."
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-          required
-        />
-      </Field>
+    <>
+      <FieldStyles />
+      {result?.ok ? (
+        <SuccessBox message={result.message} />
+      ) : (
+        <form onSubmit={handleSubmit} style={form}>
+          <div style={row} className="contact-form-row">
+            <Field label="Nombre completo">
+              <input className="cf-input" placeholder=" " value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+            </Field>
+            <Field label="Desarrolladora / Empresa">
+              <input className="cf-input" placeholder=" " value={company} onChange={(e) => setCompany(e.target.value)} required />
+            </Field>
+          </div>
+          <div style={row} className="contact-form-row">
+            <Field label="Email">
+              <input type="email" className="cf-input" placeholder=" " value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </Field>
+            <Field label="Teléfono">
+              <input className="cf-input" placeholder=" " value={phone} onChange={(e) => setPhone(e.target.value)} required />
+            </Field>
+          </div>
+          <Field label="Dirección de la unidad">
+            <input className="cf-input" placeholder=" " value={address} onChange={(e) => setAddress(e.target.value)} required />
+          </Field>
+          <Field label="Detalles de la unidad (superficie, ambientes, precio, estado, etc.)">
+            <textarea
+              className="cf-textarea"
+              placeholder=" "
+              rows={4}
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              required
+            />
+          </Field>
 
-      <Field label={`Fotos (máximo ${MAX_PHOTOS})`}>
-        <div style={photosGrid}>
-          {photos.map((file, i) => (
-            <div key={i} style={photoThumb}>
-              <Image src={URL.createObjectURL(file)} alt="" fill style={{ objectFit: "cover" }} unoptimized />
-              <button type="button" onClick={() => removePhoto(i)} style={removeBtn} aria-label="Quitar foto">
-                <X size={13} />
-              </button>
+          <div style={fieldGroup}>
+            <span style={fieldGroupLabel}>Fotos (máximo {MAX_PHOTOS})</span>
+            <div style={photosGrid}>
+              {photos.map((file, i) => (
+                <div key={i} style={photoThumb}>
+                  <Image src={URL.createObjectURL(file)} alt="" fill style={{ objectFit: "cover" }} unoptimized />
+                  <button type="button" onClick={() => removePhoto(i)} style={removeBtn} aria-label="Quitar foto">
+                    <X size={13} />
+                  </button>
+                </div>
+              ))}
+              {photos.length < MAX_PHOTOS && (
+                <button type="button" onClick={() => inputRef.current?.click()} style={addBtn} className="cf-photo-add">
+                  <span style={{ fontSize: "1.4rem", color: "var(--c-text-tertiary)", lineHeight: 1 }}>+</span>
+                  <span style={{ fontSize: "0.68rem", color: "var(--c-text-tertiary)" }}>Agregar</span>
+                </button>
+              )}
             </div>
-          ))}
-          {photos.length < MAX_PHOTOS && (
-            <button type="button" onClick={() => inputRef.current?.click()} style={addBtn}>
-              <span style={{ fontSize: "1.4rem", color: "#9ca3af", lineHeight: 1 }}>+</span>
-              <span style={{ fontSize: "0.68rem", color: "#9ca3af" }}>Agregar</span>
-            </button>
-          )}
-        </div>
-        <input
-          ref={inputRef} type="file" accept="image/*" multiple style={{ display: "none" }}
-          onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
-        />
-      </Field>
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: "none" }}
+              onChange={(e) => {
+                handleFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </div>
 
-      {result && !result.ok && <p style={errorStyle}>{result.message}</p>}
+          {result && !result.ok && <p style={errorStyle}>{result.message}</p>}
 
-      <button type="submit" style={btnPrimary} disabled={loading}>
-        {loading ? "Enviando…" : "Enviar propuesta"}
-      </button>
-    </form>
+          <button type="submit" style={btnPrimary} className="cf-submit" disabled={loading}>
+            {loading ? "Enviando…" : (
+              <>
+                Enviar propuesta <Send size={16} />
+              </>
+            )}
+          </button>
+        </form>
+      )}
+    </>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={fieldWrap}>
-      <label style={fieldLabel}>{label}</label>
-      {children}
-    </div>
-  );
-}
-
-const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1rem" };
-const row: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" };
-const fieldWrap: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.35rem" };
-const fieldLabel: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 600, color: "#374151" };
-const input: React.CSSProperties = {
-  padding: "0.65rem 0.8rem", border: "1px solid #d1d5db", borderRadius: 8,
-  fontSize: "0.9rem", width: "100%", outline: "none", background: "#fff",
-};
-const textarea: React.CSSProperties = { ...input, resize: "vertical", fontFamily: "inherit" };
-const errorStyle: React.CSSProperties = { fontSize: "0.82rem", color: "#dc2626", margin: 0 };
-const btnPrimary: React.CSSProperties = {
-  padding: "0.75rem 1.5rem", background: "#111", color: "#fff",
-  borderRadius: 10, fontWeight: 700, fontSize: "0.92rem", border: "none", cursor: "pointer",
-};
-const successBox: React.CSSProperties = {
-  padding: "1.5rem", background: "#f0fdf4", border: "1px solid #86efac",
-  borderRadius: 12, textAlign: "center",
-};
-const successText: React.CSSProperties = { color: "#166534", fontWeight: 600, margin: 0, fontSize: "0.92rem" };
-
+const fieldGroup: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.6rem" };
+const fieldGroupLabel: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 600, color: "var(--c-text-tertiary)" };
 const photosGrid: React.CSSProperties = { display: "flex", gap: "0.6rem", flexWrap: "wrap" };
 const photoThumb: React.CSSProperties = {
-  position: "relative", width: 84, height: 84, borderRadius: 8, overflow: "hidden",
-  border: "1px solid #e5e7eb", background: "#f9fafb",
+  position: "relative", width: 84, height: 84, borderRadius: 12, overflow: "hidden",
+  border: "1px solid var(--c-border)", background: "var(--c-field-bg)",
 };
 const removeBtn: React.CSSProperties = {
   position: "absolute", top: 3, right: 3, width: 20, height: 20, borderRadius: "50%",
@@ -180,7 +165,7 @@ const removeBtn: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
 };
 const addBtn: React.CSSProperties = {
-  width: 84, height: 84, border: "2px dashed #d1d5db", borderRadius: 8,
+  width: 84, height: 84, border: "2px dashed var(--c-border-input)", borderRadius: 12,
   background: "#fff", cursor: "pointer",
   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "0.15rem",
 };

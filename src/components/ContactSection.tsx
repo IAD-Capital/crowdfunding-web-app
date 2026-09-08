@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ContactForm from "./ContactForm";
 import DeveloperContactForm from "./DeveloperContactForm";
+import SegmentedToggle from "./SegmentedToggle";
 
 type Tab = "users" | "developers";
 
@@ -10,43 +11,45 @@ export default function ContactSection() {
   const [tab, setTab] = useState<Tab>("users");
 
   return (
-    <section id="contacto" style={outerSection}>
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        @media (max-width: 640px) {
-          .contact-form-row { grid-template-columns: 1fr !important; }
+    <section id="contacto" style={section}>
+      <style>{`
+        @media (max-width: 760px) {
+          .contact-cta-inner { grid-template-columns: 1fr !important; padding: 1.5rem !important; gap: 1.75rem !important; }
+          .contact-cta-form-card { padding: 1.5rem !important; }
         }
-      `,
-        }}
-      />
-      <div style={inner}>
-        <div style={header}>
-          <div style={eyebrow}>Contacto</div>
-          <h2 style={title}>Hablemos</h2>
-          <p style={subtitle}>
+      `}</style>
+      <div style={inner} className="contact-cta-inner">
+        {/* Left — copy */}
+        <div style={copy}>
+          <span style={eyebrow}>Contacto</span>
+          <h2 style={headline}>Estamos para ayudarte</h2>
+          <p style={sub}>
             Contanos qué necesitás: si sos desarrolladora querés publicar una unidad, o si tenés
             alguna consulta general sobre cómo invertir.
           </p>
+          <ul style={perks}>
+            {[
+              "Respuesta rápida a tu consulta",
+              "Sin compromiso, solo resolvemos tus dudas",
+              "Para inversores y desarrolladoras",
+            ].map((p) => (
+              <li key={p} style={perk}>
+                <span style={checkmark}>✓</span> {p}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div style={card}>
-          <div style={tabsRow}>
-            <button
-              type="button"
-              onClick={() => setTab("users")}
-              style={{ ...tabBtn, ...(tab === "users" ? tabBtnActive : {}) }}
-            >
-              Consulta general
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab("developers")}
-              style={{ ...tabBtn, ...(tab === "developers" ? tabBtnActive : {}) }}
-            >
-              Soy desarrolladora
-            </button>
-          </div>
+        {/* Right — form */}
+        <div style={formCard} className="contact-cta-form-card">
+          <SegmentedToggle
+            options={[
+              { value: "users", label: "Consulta general" },
+              { value: "developers", label: "Soy desarrolladora" },
+            ]}
+            value={tab}
+            onChange={setTab}
+          />
 
           <div style={formWrap}>
             {tab === "users" ? (
@@ -64,23 +67,42 @@ export default function ContactSection() {
   );
 }
 
-const outerSection: React.CSSProperties = {
-  minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center",
-  background: "var(--c-ink)",
-  padding: "4rem 1.5rem",
+const section: React.CSSProperties = {
+  background: "var(--c-bg)",
+  padding: "4rem 1.5rem 5rem",
 };
-const inner: React.CSSProperties = { maxWidth: 900, margin: "0 auto", width: "100%" };
-const header: React.CSSProperties = { textAlign: "center", maxWidth: 560, margin: "0 auto 2.5rem" };
-const eyebrow: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em", color: "#7fa0ff", textTransform: "uppercase", marginBottom: "0.7rem" };
-const title: React.CSSProperties = { fontSize: "2.1rem", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 0.75rem", color: "#fff" };
-const subtitle: React.CSSProperties = { fontSize: "0.95rem", color: "var(--c-text-on-dark)", margin: 0, lineHeight: 1.6 };
+const inner: React.CSSProperties = {
+  maxWidth: 1100,
+  margin: "0 auto",
+  background: "linear-gradient(135deg, var(--c-accent), var(--c-accent-dark))",
+  borderRadius: 26,
+  padding: "3.5rem",
+  display: "grid",
+  gridTemplateColumns: "1.1fr .9fr",
+  gap: "3.5rem",
+  alignItems: "center",
+  boxShadow: "0 40px 80px -40px rgba(27,77,224,0.6)",
+};
+const copy: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "1.1rem" };
+const eyebrow: React.CSSProperties = {
+  fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.1em",
+  textTransform: "uppercase", color: "#bcd0ff",
+};
+const headline: React.CSSProperties = {
+  fontSize: "clamp(1.75rem, 3.5vw, 2.4rem)", fontWeight: 800,
+  lineHeight: 1.1, letterSpacing: "-0.03em", margin: 0, color: "#fff",
+};
+const sub: React.CSSProperties = { color: "#d6e0ff", lineHeight: 1.6, fontSize: "1rem", margin: 0, maxWidth: 440 };
+const perks: React.CSSProperties = { listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.6rem" };
+const perk: React.CSSProperties = { display: "flex", alignItems: "flex-start", gap: "0.6rem", fontSize: "0.92rem", color: "#fff" };
+const checkmark: React.CSSProperties = {
+  width: 20, height: 20, borderRadius: "50%", background: "rgba(255,255,255,0.18)",
+  display: "inline-flex", alignItems: "center", justifyContent: "center",
+  color: "#fff", fontWeight: 800, fontSize: "0.7rem", flexShrink: 0,
+};
 
-const card: React.CSSProperties = { background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 18, overflow: "hidden" };
-const tabsRow: React.CSSProperties = { display: "flex", borderBottom: "1px solid var(--c-border)" };
-const tabBtn: React.CSSProperties = {
-  flex: 1, padding: "1rem", background: "transparent", border: "none", cursor: "pointer",
-  fontSize: "0.92rem", fontWeight: 700, color: "var(--c-text-secondary)",
-  borderBottom: "2px solid transparent", marginBottom: "-1px",
+const formCard: React.CSSProperties = {
+  background: "var(--c-surface)", borderRadius: 18, padding: "2rem",
+  display: "flex", flexDirection: "column", gap: "1.25rem",
 };
-const tabBtnActive: React.CSSProperties = { color: "var(--c-ink)", borderBottom: "2px solid var(--c-accent)" };
-const formWrap: React.CSSProperties = { padding: "1.75rem" };
+const formWrap: React.CSSProperties = {};
