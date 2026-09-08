@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
   const answer = (body.answer ?? "").trim();
   const isActive = body.is_active !== false;
   const availableInChatbot = body.available_in_chatbot === true;
+  const sectionId = body.section_id ? Number(body.section_id) : null;
 
   if (!question) {
     return NextResponse.json({ error: "La pregunta es obligatoria." }, { status: 400 });
@@ -28,9 +29,9 @@ export async function POST(req: NextRequest) {
   }
 
   const [row] = await db`
-    INSERT INTO faqs (question, answer, is_active, available_in_chatbot, sort_order)
+    INSERT INTO faqs (question, answer, is_active, available_in_chatbot, section_id, sort_order)
     VALUES (
-      ${question}, ${answer}, ${isActive}, ${availableInChatbot},
+      ${question}, ${answer}, ${isActive}, ${availableInChatbot}, ${sectionId},
       (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM faqs)
     )
     RETURNING *

@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import PasswordInput from "./PasswordInput";
 import GoogleSignInButton from "./GoogleSignInButton";
+import SegmentedToggle from "./SegmentedToggle";
 import { trackCtaClick } from "@/lib/analytics";
 
 type Mode = "login" | "signup";
 
 export default function AuthCTASection({ lang }: { lang: string }) {
-  const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,8 +52,9 @@ export default function AuthCTASection({ lang }: { lang: string }) {
     trackCtaClick(mode === "login" ? "auth_cta_login_submit" : "auth_cta_signup_submit", { location: "home_auth_cta" });
 
     const dest = data.role === "superadmin" ? `/${lang}/admin` : `/${lang}`;
-    router.push(dest);
-    router.refresh();
+    // A full document navigation (not router.push) so the request carries the
+    // just-set auth cookie — a client-side soft nav can render before it lands.
+    window.location.href = dest;
   }
 
   return (
@@ -91,14 +91,31 @@ export default function AuthCTASection({ lang }: { lang: string }) {
         {/* Right — form */}
         <div style={formCard} className="auth-cta-form-card">
           {/* Mode toggle */}
-          <div style={toggle}>
-            <button style={toggleBtn(mode === "login")} onClick={() => switchMode("login")} type="button">
-              Iniciar sesión
-            </button>
-            <button style={toggleBtn(mode === "signup")} onClick={() => switchMode("signup")} type="button">
-              Crear cuenta
-            </button>
-          </div>
+          <SegmentedToggle
+            options={[
+              { value: "login", label: "Iniciar sesión" },
+              { value: "signup", label: "Crear cuenta" },
+            ]}
+            value={mode}
+            onChange={switchMode}
+          />
+
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+            <>
+              <GoogleSignInButton
+                lang={lang}
+                locale={lang as "es" | "en"}
+                errorText="No pudimos iniciar sesión con Google. Intenta nuevamente."
+                redirectingText="Redirigiendo…"
+                theme="filled_black"
+              />
+              <div style={dividerRow}>
+                <span style={dividerLine} />
+                <span style={dividerText}>o</span>
+                <span style={dividerLine} />
+              </div>
+            </>
+          )}
 
           <form onSubmit={handleSubmit} style={form}>
             {mode === "signup" && (
@@ -151,23 +168,6 @@ export default function AuthCTASection({ lang }: { lang: string }) {
                 : "Crear cuenta e invertir"}
             </button>
           </form>
-
-          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-            <>
-              <div style={dividerRow}>
-                <span style={dividerLine} />
-                <span style={dividerText}>o</span>
-                <span style={dividerLine} />
-              </div>
-              <GoogleSignInButton
-                lang={lang}
-                locale={lang as "es" | "en"}
-                errorText="No pudimos iniciar sesión con Google. Intenta nuevamente."
-                redirectingText="Redirigiendo…"
-                theme="filled_black"
-              />
-            </>
-          )}
 
           <p style={switchHint}>
             {mode === "login" ? "¿No tenés cuenta?" : "¿Ya tenés cuenta?"}{" "}
@@ -225,18 +225,6 @@ const formCard: React.CSSProperties = {
   background: "var(--c-surface)", borderRadius: 18, padding: "2rem",
   display: "flex", flexDirection: "column", gap: "1.25rem",
 };
-const toggle: React.CSSProperties = {
-  display: "grid", gridTemplateColumns: "1fr 1fr",
-  background: "var(--c-field-bg)", borderRadius: 10, padding: "0.2rem", gap: "0.2rem",
-};
-const toggleBtn = (active: boolean): React.CSSProperties => ({
-  padding: "0.5rem", border: "none", borderRadius: 8,
-  background: active ? "#fff" : "transparent",
-  color: active ? "var(--c-ink)" : "var(--c-text-secondary)",
-  fontWeight: active ? 700 : 500, fontSize: "0.875rem",
-  cursor: "pointer", transition: "all 0.15s",
-  boxShadow: active ? "0 1px 4px rgba(14,23,38,0.08)" : "none",
-});
 const form: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.75rem" };
 const field: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.3rem" };
 const label: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 700, color: "var(--c-text-secondary)" };
@@ -257,7 +245,7 @@ const submit: React.CSSProperties = {
 };
 const dividerRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem" };
 const dividerLine: React.CSSProperties = { flex: 1, height: 1, background: "var(--c-border-input)" };
-const dividerText: React.CSSProperties = { fontSize: "0.8125rem", color: "var(--c-text-secondary)" };
+const dividerText: React.CSSProperties = { fontSize: "0.8125rem", color: "var(--c-text-secondary)", textTransform: "uppercase" };
 const switchHint: React.CSSProperties = { fontSize: "0.85rem", color: "var(--c-text-secondary)", textAlign: "center", margin: 0 };
 const switchLink: React.CSSProperties = {
   background: "none", border: "none", color: "var(--c-accent)",

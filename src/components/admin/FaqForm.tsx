@@ -10,11 +10,14 @@ export type Initial = {
   answer: string;
   is_active: boolean;
   available_in_chatbot: boolean;
+  section_id: number | null;
 };
 
-type Props = { lang: string; initial?: Initial };
+export type SectionOption = { id: number; name: string };
 
-export default function FaqForm({ lang, initial }: Props) {
+type Props = { lang: string; initial?: Initial; sections: SectionOption[] };
+
+export default function FaqForm({ lang, initial, sections }: Props) {
   const router = useRouter();
   const isEdit = !!initial;
   const listUrl = `/${lang}/admin/faqs`;
@@ -23,6 +26,7 @@ export default function FaqForm({ lang, initial }: Props) {
   const [answer, setAnswer] = useState(initial?.answer ?? "");
   const [isActive, setIsActive] = useState(initial?.is_active ?? true);
   const [availableInChatbot, setAvailableInChatbot] = useState(initial?.available_in_chatbot ?? false);
+  const [sectionId, setSectionId] = useState<string>(initial?.section_id ? String(initial.section_id) : "");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -46,6 +50,7 @@ export default function FaqForm({ lang, initial }: Props) {
       answer: answer.trim(),
       is_active: isActive,
       available_in_chatbot: availableInChatbot,
+      section_id: sectionId ? Number(sectionId) : null,
     };
 
     const url = isEdit ? `/api/admin/faqs/${initial!.id}` : "/api/admin/faqs";
@@ -93,6 +98,15 @@ export default function FaqForm({ lang, initial }: Props) {
             onChange={(e) => setAnswer(e.target.value)}
             required
           />
+        </Field>
+
+        <Field label="Sección">
+          <select style={select} value={sectionId} onChange={(e) => setSectionId(e.target.value)}>
+            <option value="">Sin sección</option>
+            {sections.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
         </Field>
 
         <label style={checkboxLabel}>
@@ -148,6 +162,11 @@ const textarea: React.CSSProperties = {
   padding: "0.55rem 0.75rem", border: "1px solid #d1d5db",
   borderRadius: 8, fontSize: "0.9rem", width: "100%", outline: "none",
   fontFamily: "inherit", resize: "vertical",
+};
+const select: React.CSSProperties = {
+  padding: "0.55rem 0.75rem", border: "1px solid #d1d5db",
+  borderRadius: 8, fontSize: "0.9rem", width: "100%", outline: "none",
+  fontFamily: "inherit", background: "#fff",
 };
 const checkboxLabel: React.CSSProperties = {
   display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.88rem", cursor: "pointer", color: "#374151",

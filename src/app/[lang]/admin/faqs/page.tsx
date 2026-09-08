@@ -5,9 +5,11 @@ export default async function AdminFaqsPage({ params }: { params: { lang: string
   const lang = params.lang;
 
   const rows = await db<Faq[]>`
-    SELECT id, question, answer, is_active, available_in_chatbot, sort_order
-    FROM faqs
-    ORDER BY sort_order, id
+    SELECT f.id, f.question, f.answer, f.is_active, f.available_in_chatbot, f.sort_order,
+           f.section_id, s.name AS section_name
+    FROM faqs f
+    LEFT JOIN faq_sections s ON s.id = f.section_id
+    ORDER BY f.sort_order, f.id
   `;
 
   return <FaqsView faqs={rows} lang={lang} />;

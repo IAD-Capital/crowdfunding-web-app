@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import type { Dictionary } from "@/i18n";
@@ -29,7 +28,6 @@ const PASSWORD_CHECKS = (t: Props["t"]) => [
 ];
 
 export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = [] }: Props) {
-  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,8 +65,9 @@ export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = 
 
     trackCtaClick("signup_form_submit", { location: "signup_page" });
     setRedirecting(true);
-    router.push(next && next.startsWith("/") ? next : `/${lang}`);
-    router.refresh();
+    // A full document navigation (not router.push) so the request carries the
+    // just-set auth cookie — a client-side soft nav can render before it lands.
+    window.location.href = next && next.startsWith("/") ? next : `/${lang}`;
   }
 
   return (
@@ -80,6 +79,23 @@ export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = 
         <div style={leftCard} className="signup-form-card">
           <div style={leftInner}>
             <h1 style={title}>{t.title}</h1>
+
+            {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+              <>
+                <GoogleSignInButton
+                  lang={lang}
+                  next={next}
+                  locale={lang as "es" | "en"}
+                  errorText={tGoogle.error}
+                  redirectingText={tGoogle.redirecting}
+                />
+                <div style={dividerRow}>
+                  <span style={dividerLine} />
+                  <span style={dividerText}>{tGoogle.divider}</span>
+                  <span style={dividerLine} />
+                </div>
+              </>
+            )}
 
             <form onSubmit={handleSubmit} style={form}>
               <label style={label}>{t.fullName}</label>
@@ -131,23 +147,6 @@ export default function SignupForm({ t, tGoogle, lang, next, backgroundImages = 
                 {redirecting ? t.redirecting : loading ? t.loading : t.submit}
               </button>
             </form>
-
-            {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-              <>
-                <div style={dividerRow}>
-                  <span style={dividerLine} />
-                  <span style={dividerText}>{tGoogle.divider}</span>
-                  <span style={dividerLine} />
-                </div>
-                <GoogleSignInButton
-                  lang={lang}
-                  next={next}
-                  locale={lang as "es" | "en"}
-                  errorText={tGoogle.error}
-                  redirectingText={tGoogle.redirecting}
-                />
-              </>
-            )}
 
             <p style={footer}>
               {t.haveAccount}{" "}
@@ -247,7 +246,7 @@ const footer: React.CSSProperties = { marginTop: "1.5rem", fontSize: "0.875rem",
 const link: React.CSSProperties = { color: "var(--c-accent, #1b4de0)", fontWeight: 600 };
 const dividerRow: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem", margin: "1.25rem 0" };
 const dividerLine: React.CSSProperties = { flex: 1, height: 1, background: "var(--c-border-input, #d1d5db)" };
-const dividerText: React.CSSProperties = { fontSize: "0.8125rem", color: "var(--c-text-secondary, #6b7280)" };
+const dividerText: React.CSSProperties = { fontSize: "0.8125rem", color: "var(--c-text-secondary, #6b7280)", textTransform: "uppercase" };
 
 /* Right pane */
 const rightPane: React.CSSProperties = {

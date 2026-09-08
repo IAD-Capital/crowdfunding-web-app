@@ -6,13 +6,14 @@ import CatalogSection from "@/components/CatalogSection";
 import InvestmentSimulator from "@/components/InvestmentSimulator";
 import AuthCTASection from "@/components/AuthCTASection";
 import FeaturedUnitsHero, { type FeaturedUnit } from "@/components/FeaturedUnitsHero";
+import ContactSection from "@/components/ContactSection";
 import ScrollReveal from "@/components/ScrollReveal";
 import CountUpNumber from "@/components/CountUpNumber";
 import Skeleton from "@/components/Skeleton";
 import { FileCheck2, Eye, Activity, ShieldCheck } from "lucide-react";
 import db from "@/lib/db";
 import type { Development, Unit } from "@/components/CatalogSection";
-import { MIN_ENTRY_PCT, type TierThresholds } from "@/lib/investmentTiers";
+import { MIN_ENTRY_PCT } from "@/lib/investmentTiers";
 
 type DevRow = Omit<Development, "unit_count"> & { unit_count: number; completion_date: Date | string | null };
 type UnitRow = Omit<Unit, "price_usd" | "current_price_usd" | "available_pct" | "group_expires_at"> & {
@@ -39,7 +40,6 @@ const getHomeData = cache(async () => {
 
   const [
     [phoneRow],
-    [tierRow],
     developments,
     units,
     featuredUnitRows,
@@ -49,9 +49,6 @@ const getHomeData = cache(async () => {
     isInvestor
       ? db<{ phone: string | null }[]>`SELECT phone FROM users WHERE id = ${Number(session!.sub)}`
       : Promise.resolve([null]),
-    db<TierThresholds[]>`
-      SELECT bronze_from, silver_from, gold_from, platinum_from FROM app_settings WHERE id = 1
-    `,
     db<DevRow[]>`
       SELECT d.id, d.name, d.address, d.description, d.status,
              d.completion_date, d.amenities, d.images, d.slug,
@@ -107,14 +104,6 @@ const getHomeData = cache(async () => {
   ]);
 
   const hasPhone = !!phoneRow?.phone?.trim();
-  const tierThresholds: TierThresholds = tierRow
-    ? {
-        bronze_from: Number(tierRow.bronze_from),
-        silver_from: Number(tierRow.silver_from),
-        gold_from: Number(tierRow.gold_from),
-        platinum_from: Number(tierRow.platinum_from),
-      }
-    : { bronze_from: 5000, silver_from: 10000, gold_from: 25000, platinum_from: 150000 };
   const featuredUnits8: (FeaturedUnit & { available_pct: number })[] = featuredUnitRows.map((u) => ({
     ...u,
     price_usd: Number(u.price_usd),
@@ -152,7 +141,7 @@ const getHomeData = cache(async () => {
   };
 
   return {
-    session, isInvestor, hasPhone, tierThresholds,
+    session, isInvestor, hasPhone,
     units, featuredUnits8, myInvestedUnitIds, myFavoriteUnitIds,
     minInvestUsd, overallPricePerM2, serialized,
   };
@@ -240,6 +229,9 @@ export default function Home({ params }: { params: { lang: string } }) {
       <Suspense fallback={<SimulatorCatalogSkeleton />}>
         <HomeSimulatorCatalogAndCTA lang={lang} />
       </Suspense>
+
+      {/* ─── Contact — static, renders immediately ───────────────────────── */}
+      <ContactSection />
     </PublicShell>
   );
 }
@@ -292,7 +284,7 @@ async function HomeHeroAndStats({ lang }: { lang: Locale }) {
 }
 
 async function HomeSimulatorCatalogAndCTA({ lang }: { lang: Locale }) {
-  const { session, isInvestor, hasPhone, tierThresholds, serialized, featuredUnits8, myInvestedUnitIds, myFavoriteUnitIds } = await getHomeData();
+  const { session, isInvestor, hasPhone, serialized, featuredUnits8, myInvestedUnitIds, myFavoriteUnitIds } = await getHomeData();
 
   return (
     <>
@@ -312,7 +304,8 @@ async function HomeSimulatorCatalogAndCTA({ lang }: { lang: Locale }) {
           isAuthenticated={!!session}
           myFavoriteUnitIds={myFavoriteUnitIds}
           lang={lang}
-          tierThresholds={tierThresholds}
+          limit={6}
+          seeAllHref={`/${lang}/propiedades`}
         />
       </div>
 

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Menu, X, Wallet, Heart, UserRound, Settings, LogOut, LogIn, UserPlus, Download, Bell, Share, SquarePlus,
@@ -31,7 +30,6 @@ type Props = {
 };
 
 export default function MobileMenu({ lang, session, notifications, featuredProperties, labels }: Props) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -81,8 +79,9 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
     setLoggingOut(true);
     await fetch("/api/auth/logout", { method: "POST" });
     setOpen(false);
-    router.push(`/${lang}`);
-    router.refresh();
+    // A full document navigation (not router.push) so the request carries the
+    // just-cleared auth cookie — a client-side soft nav can render before it lands.
+    window.location.href = `/${lang}`;
   }
 
   const firstName = session?.fullName.trim().split(" ")[0] || session?.fullName;

@@ -1,14 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 export default function LogoutButton({ label, lang }: { label?: string; lang: string }) {
-  const router = useRouter();
-
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push(`/${lang}/login`);
-    router.refresh();
+    // A full document navigation (not router.push) so the request carries the
+    // just-cleared auth cookie — a client-side soft nav can render before it lands.
+    window.location.href = `/${lang}/login`;
   }
 
   return (

@@ -155,6 +155,14 @@ CREATE TABLE IF NOT EXISTS chatbot_unanswered_questions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS faq_sections (
+  id         SERIAL PRIMARY KEY,
+  name       TEXT        NOT NULL,
+  sort_order INTEGER     NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS faqs (
   id                    SERIAL PRIMARY KEY,
   question              TEXT        NOT NULL,
@@ -162,9 +170,11 @@ CREATE TABLE IF NOT EXISTS faqs (
   is_active             BOOLEAN     NOT NULL DEFAULT TRUE,
   available_in_chatbot  BOOLEAN     NOT NULL DEFAULT FALSE,
   sort_order            INTEGER     NOT NULL DEFAULT 0,
+  section_id            INTEGER     REFERENCES faq_sections(id) ON DELETE SET NULL,
   created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE INDEX IF NOT EXISTS faqs_section_id_idx ON faqs(section_id);
 
 CREATE TABLE IF NOT EXISTS push_subscriptions (
   id            SERIAL PRIMARY KEY,

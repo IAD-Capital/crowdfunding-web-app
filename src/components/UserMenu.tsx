@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronDown, Wallet, Heart, UserRound, Settings, LogOut, Download, Bell, Share, SquarePlus } from "lucide-react";
 import { useInstallPrompt } from "./InstallPromptProvider";
@@ -22,7 +21,6 @@ type Props = {
 };
 
 export default function UserMenu({ lang, session, adminLabel, logoutLabel }: Props) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [showIosHint, setShowIosHint] = useState(false);
@@ -42,8 +40,9 @@ export default function UserMenu({ lang, session, adminLabel, logoutLabel }: Pro
   async function logout() {
     setLoggingOut(true);
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push(`/${lang}`);
-    router.refresh();
+    // A full document navigation (not router.push) so the request carries the
+    // just-cleared auth cookie — a client-side soft nav can render before it lands.
+    window.location.href = `/${lang}`;
   }
 
   function handleInstallClick() {

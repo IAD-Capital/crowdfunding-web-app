@@ -216,6 +216,16 @@ export default function InvestmentSimulator({ units, lang }: Props) {
             </button>
           </div>
 
+          <div style={resultBox} className="sim-result-box">
+            <div>
+              <div style={resultLabel}>Tu inversión</div>
+              <div style={resultValue}>{fmtUsd(displayAmount)}</div>
+            </div>
+            {effectivePct !== 100 && selectedUnit && (
+              <span style={totalValueLabel}>Valor total de la unidad {fmtUsd(price)}</span>
+            )}
+          </div>
+
           <div style={pctBlock}>
             <label style={{ ...label, marginBottom: 0 }}>Porcentaje de participación</label>
 
@@ -258,16 +268,6 @@ export default function InvestmentSimulator({ units, lang }: Props) {
                 <span>{steps[steps.length - 1] ?? 0}%</span>
               </div>
             </div>
-          </div>
-
-          <div style={resultBox} className="sim-result-box">
-            <div>
-              <div style={resultLabel}>Tu inversión</div>
-              <div style={resultValue}>{fmtUsd(displayAmount)}</div>
-            </div>
-            {effectivePct !== 100 && selectedUnit && (
-              <span style={totalValueLabel}>Valor total de la unidad {fmtUsd(price)}</span>
-            )}
           </div>
 
           {selectedUnit && (

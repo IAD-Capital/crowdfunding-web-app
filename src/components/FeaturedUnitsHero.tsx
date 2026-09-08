@@ -67,6 +67,7 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
         @media (max-width: 760px) {
           .featured-units-card { width: 78vw !important; }
           .featured-units-nav { display: none !important; }
+          .featured-units-track { width: calc(100% + 1.5rem) !important; }
         }
         @media (min-width: 861px) {
           .featured-hero-layout {
@@ -258,7 +259,7 @@ const trustCheck: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center",
   color: "var(--c-positive)", fontSize: "0.65rem", fontWeight: 800,
 };
-const nav: React.CSSProperties = { display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.85rem" };
+const nav: React.CSSProperties = { display: "flex", justifyContent: "flex-start", gap: "0.5rem", marginTop: "0.85rem" };
 const navBtn: React.CSSProperties = {
   width: 40, height: 40, borderRadius: "50%", border: "1px solid var(--c-border)",
   background: "var(--c-surface)", color: "var(--c-ink)", display: "flex", alignItems: "center",
