@@ -170,24 +170,30 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
 
                     <div style={statRow}>
                       {u.total_m2 != null && (
-                        <span style={statChip}><Maximize size={12} /> {Number(u.total_m2)} m²</span>
+                        <span style={statChip}><Maximize size={13} /> {Number(u.total_m2)} m²</span>
                       )}
                       {u.rooms != null && (
-                        <span style={statChip}><BedDouble size={12} /> {u.rooms} amb.</span>
+                        <span style={statChip}><BedDouble size={13} /> {u.rooms} amb.</span>
                       )}
                     </div>
 
                     {u.amenities.length > 0 && (
                       <div style={amenityRow}>
-                        {u.amenities.slice(0, 4).map((a) => {
+                        {u.amenities.slice(0, 3).map((a) => {
                           const Icon = getAmenityIcon(a);
                           return (
                             <div key={a} style={amenityItem}>
-                              <div style={amenityCircle}><Icon size={14} /></div>
+                              <div style={amenityCircle}><Icon size={15} /></div>
                               <span style={amenityLabel}>{a}</span>
                             </div>
                           );
                         })}
+                        {u.amenities.length > 3 && (
+                          <div style={amenityItem}>
+                            <div style={amenityCircle}>···</div>
+                            <span style={amenityLabel}>Más</span>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -283,7 +289,8 @@ const imageWrap: React.CSSProperties = {
   border: "1px solid var(--c-border)",
   boxShadow: "0 20px 40px -20px rgba(14,23,38,0.35)",
 };
-const imagePlaceholder: React.CSSProperties = { position: "absolute", inset: 0 };
+const imagePlaceholder: React.CSSProperties = { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" };
+const logoPlaceholderImg: React.CSSProperties = { width: 68, height: "auto", opacity: 0.28, filter: "grayscale(1)" };
 const gradient: React.CSSProperties = {
   position: "absolute", inset: 0,
   background: "linear-gradient(to top, rgba(9,13,23,0.92) 0%, rgba(9,13,23,0.55) 42%, rgba(9,13,23,0) 68%)",
@@ -294,23 +301,24 @@ const overlay: React.CSSProperties = {
   display: "flex", flexDirection: "column", gap: "0.5rem",
 };
 const overlayAddr: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.3rem", color: "rgba(255,255,255,0.7)" };
-const overlayAddrText: React.CSSProperties = { fontSize: "0.75rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+const overlayAddrText: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
 
 const statRow: React.CSSProperties = { display: "flex", gap: "0.5rem", flexWrap: "wrap" };
 const statChip: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: "0.3rem",
-  background: "rgba(255,255,255,0.12)", color: "#fff", fontSize: "0.75rem", fontWeight: 600,
+  background: "rgba(255,255,255,0.12)", color: "#fff", fontSize: "0.8rem", fontWeight: 600,
   padding: "0.3rem 0.6rem", borderRadius: 999, backdropFilter: "blur(4px)",
 };
 
 const amenityRow: React.CSSProperties = { display: "flex", gap: "0.6rem", marginTop: "0.1rem" };
 const amenityItem: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.2rem", width: 52 };
 const amenityCircle: React.CSSProperties = {
-  width: 32, height: 32, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,0.55)",
+  width: 34, height: 34, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,0.55)",
   display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", flexShrink: 0,
+  fontSize: "0.85rem", fontWeight: 700, letterSpacing: "-0.05em",
 };
 const amenityLabel: React.CSSProperties = {
-  fontSize: "0.62rem", color: "rgba(255,255,255,0.8)", fontWeight: 500, textAlign: "center",
+  fontSize: "0.64rem", color: "rgba(255,255,255,0.8)", fontWeight: 500, textAlign: "center",
   lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 52,
 };
 
@@ -320,23 +328,23 @@ const investPill: React.CSSProperties = {
   background: "#fff", borderRadius: 16, padding: "0.6rem 1rem",
   boxShadow: "0 8px 20px -6px rgba(14,23,38,0.35)",
 };
-const investPillLabel: React.CSSProperties = { fontSize: "0.72rem", color: "var(--c-text-tertiary)", fontWeight: 600 };
+const investPillLabel: React.CSSProperties = { fontSize: "0.78rem", color: "var(--c-text-tertiary)", fontWeight: 600 };
 const investPillValue: React.CSSProperties = {
-  fontFamily: "var(--font-display)", fontSize: "1.35rem", fontWeight: 800,
+  fontFamily: "var(--font-display)", fontSize: "1.45rem", fontWeight: 800,
   color: "var(--c-positive)", letterSpacing: "-0.02em",
 };
 
 const valorM2Box: React.CSSProperties = {
   display: "flex", flexDirection: "column", alignItems: "center", gap: "0.15rem",
   alignSelf: "flex-start", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)",
-  borderRadius: 14, padding: "0.6rem 1rem", backdropFilter: "blur(6px)",
+  borderRadius: 14, padding: "0.65rem 1rem", backdropFilter: "blur(6px)",
   boxShadow: "0px 2px 2px rgba(0,0,0,0.25)", marginTop: "0.65rem",
 };
 const valorM2Value: React.CSSProperties = {
-  fontFamily: "var(--font-display)", fontSize: "1.15rem", fontWeight: 800, color: "#fff",
+  fontFamily: "var(--font-display)", fontSize: "1.3rem", fontWeight: 800, color: "#fff",
   letterSpacing: "-0.02em", lineHeight: 1, textShadow: "0px 2px 2px rgba(0,0,0,0.25)",
 };
 const valorM2Label: React.CSSProperties = {
-  fontSize: "0.65rem", fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.06em",
+  fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.06em",
   textShadow: "0px 2px 2px rgba(0,0,0,0.25)",
 };
