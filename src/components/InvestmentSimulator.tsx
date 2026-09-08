@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, MapPin, Maximize, BedDouble } from "lucide-react";
 import { MIN_ENTRY_PCT } from "@/lib/investmentTiers";
 import { trackCtaClick } from "@/lib/analytics";
 
@@ -12,8 +12,11 @@ export type SimUnit = {
   identifier: string;
   images: string[];
   price_usd: number;
+  total_m2: number | null;
+  rooms: number | null;
   available_pct?: number;
   development_name: string;
+  development_address: string;
   development_slug: string | null;
   development_id: number;
 };
@@ -66,7 +69,7 @@ export default function InvestmentSimulator({ units, lang }: Props) {
         const cardCenter = r.left + r.width / 2;
         const dist = Math.abs(cardCenter - center);
         const ratio = Math.min(dist / (rect.width / 2 || 1), 1);
-        const scale = 1.16 - ratio * 0.32;
+        const scale = 1.08 - ratio * 0.2;
         const opacity = Math.max(1 - ratio * 0.4, 0.55);
         el.style.transform = `scale(${scale.toFixed(3)})`;
         el.style.opacity = opacity.toFixed(2);
@@ -98,6 +101,7 @@ export default function InvestmentSimulator({ units, lang }: Props) {
   const fillPct = steps.length > 1 ? (clampedIndex / (steps.length - 1)) * 100 : 100;
 
   const fmtUsd = (n: number) => `USD ${Math.round(n).toLocaleString("es-AR")}`;
+  const fmtUsdPerM2 = (priceUsd: number, totalM2: number) => `${fmtUsd(priceUsd / totalM2)}/m²`;
 
   // Animate "Tu inversión" like the home page's stat counters: count from the
   // previous amount up (or down) to the new one instead of jumping instantly.
@@ -147,7 +151,7 @@ export default function InvestmentSimulator({ units, lang }: Props) {
       <style>{`
         @media (max-width: 860px) {
           .sim-inner { grid-template-columns: 1fr !important; }
-          .sim-unit-card { width: 42% !important; }
+          .sim-unit-card { width: 46vw !important; }
           .sim-carousel-nav { display: none !important; }
         }
         @media (min-width: 861px) {
@@ -190,18 +194,53 @@ export default function InvestmentSimulator({ units, lang }: Props) {
                     if (el) cardRefs.current.set(u.id, el);
                     else cardRefs.current.delete(u.id);
                   }}
-                  style={{ ...unitCard, ...(active ? unitCardActive : {}) }}
+                  style={unitCard}
                   onClick={() => handleSelectUnit(u)}
+                  aria-label={`Unidad en ${u.development_address}`}
+                  aria-pressed={active}
                 >
-                  <div style={unitCardImageWrap}>
+                  <div style={unitCardImageWrap(active)}>
                     {u.images[0] ? (
-                      <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 860px) 42vw, 132px" />
+                      <Image src={u.images[0]} alt={u.development_address} fill style={{ objectFit: "cover" }} sizes="(max-width: 860px) 46vw, 150px" />
                     ) : (
                       <div style={unitCardImagePlaceholder} />
                     )}
+                    <div style={unitCardGradient} />
+
+                    <div style={unitCardInvestPill}>
+                      <span style={unitCardInvestLabel}>Invertí desde</span>
+                      <span style={unitCardInvestValue}>{fmtUsd(u.price_usd * MIN_ENTRY_PCT)}</span>
+                    </div>
+
+                    {active && (
+                      <span style={unitCardCheckBadge}>
+                        <Check size={10} strokeWidth={3} />
+                      </span>
+                    )}
+
+                    <div style={unitCardOverlay}>
+                      <div style={unitCardAddr}>
+                        <MapPin size={9} />
+                        <span style={unitCardAddrText}>{u.development_address}</span>
+                      </div>
+
+                      <div style={unitCardStatRow}>
+                        {u.total_m2 != null && (
+                          <span style={unitCardStatChip}><Maximize size={9} /> {Number(u.total_m2)} m²</span>
+                        )}
+                        {u.rooms != null && (
+                          <span style={unitCardStatChip}><BedDouble size={9} /> {u.rooms} amb.</span>
+                        )}
+                      </div>
+
+                      {u.total_m2 != null && (
+                        <div style={unitCardValorM2Box}>
+                          <span style={unitCardValorM2Label}>VALOR M²</span>
+                          <span style={unitCardValorM2Value}>{fmtUsdPerM2(u.price_usd, Number(u.total_m2))}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <span style={unitCardId}>{u.identifier}</span>
-                  <span style={unitCardPrice}>{fmtUsd(u.price_usd)}</span>
                 </button>
               );
             })}
@@ -307,31 +346,90 @@ const checkIcon: React.CSSProperties = {
 
 const card: React.CSSProperties = {
   background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 22,
-  padding: "2.1rem 0", display: "flex", flexDirection: "column", gap: "0.5rem", minWidth: 0, overflow: "hidden",
+  padding: "2.1rem 0", display: "flex", flexDirection: "column", gap: "0.5rem", minWidth: 0,
+  // No overflow clipping here (setting just overflowY would force overflowX to "auto"
+  // per spec, re-clipping horizontally). The unit strip below manages its own scroll
+  // clipping — with side padding reserved for the selected card's focus ring — so an
+  // ancestor overflow:hidden would just double-clip that ring at the edges.
   boxShadow: "0 30px 60px -30px rgba(14,23,38,0.28)",
 };
 const label: React.CSSProperties = { fontSize: "0.78rem", fontWeight: 700, color: "var(--c-text-secondary)", marginBottom: "0.5rem" };
 
-/* Unit strip (edge-to-edge carousel picker) */
+/* Unit strip — indented to match the label/nav rhythm above and below it, with enough
+   side padding that the active card's focus ring and hover scale never get clipped. */
 const unitStrip: React.CSSProperties = {
-  display: "flex", alignItems: "center", gap: "0.9rem", overflowX: "auto", overflowY: "hidden",
-  padding: "0.6rem 0", margin: "0.4rem 0 1.25rem", scrollbarWidth: "none",
+  display: "flex", alignItems: "center", gap: "0.7rem", overflowX: "auto", overflowY: "hidden",
+  padding: "0.6rem 1.75rem 0.6rem 2.25rem", margin: "0.4rem 0 1.25rem", scrollbarWidth: "none",
   scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch",
 };
 const unitCard: React.CSSProperties = {
-  flex: "0 0 auto", width: 132, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.45rem",
-  padding: "0.4rem", borderRadius: 18, border: "2px solid transparent", background: "transparent",
-  cursor: "pointer", transition: "transform 0.15s ease, opacity 0.15s ease, border-color 0.15s, background 0.15s",
+  flex: "0 0 auto", width: 150, display: "block",
+  padding: "0.2rem", borderRadius: 16, border: "none", background: "transparent",
+  cursor: "pointer", transition: "transform 0.15s ease, opacity 0.15s ease",
   fontFamily: "inherit", scrollSnapAlign: "center",
 };
-const unitCardActive: React.CSSProperties = { border: "2px solid var(--c-accent)", background: "var(--c-accent-light)" };
-const unitCardImageWrap: React.CSSProperties = {
-  position: "relative", width: "100%", aspectRatio: "1 / 1", borderRadius: 16, overflow: "hidden",
+// Selection state lives on the image itself — a soft accent halo + check badge —
+// instead of a hard border on the button, so nothing gets clipped by the scroller edge.
+const unitCardImageWrap = (active: boolean): React.CSSProperties => ({
+  position: "relative", width: "100%", aspectRatio: "3 / 4.1", borderRadius: 14, overflow: "hidden",
   background: "linear-gradient(135deg, #e8eef7, #dfe7f2)", flexShrink: 0,
-};
+  border: "1px solid var(--c-border)",
+  boxShadow: active
+    ? "0 0 0 2px var(--c-surface), 0 0 0 4px var(--c-accent), 0 10px 20px -12px rgba(27,77,224,0.45)"
+    : "0 10px 20px -14px rgba(14,23,38,0.35)",
+  transition: "box-shadow 0.15s ease",
+});
 const unitCardImagePlaceholder: React.CSSProperties = { position: "absolute", inset: 0 };
-const unitCardId: React.CSSProperties = { fontSize: "0.85rem", fontWeight: 700, color: "var(--c-ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" };
-const unitCardPrice: React.CSSProperties = { fontSize: "0.74rem", fontWeight: 600, color: "var(--c-text-tertiary)", whiteSpace: "nowrap" };
+const unitCardGradient: React.CSSProperties = {
+  position: "absolute", inset: 0,
+  background: "linear-gradient(to top, rgba(9,13,23,0.92) 0%, rgba(9,13,23,0.55) 42%, rgba(9,13,23,0) 68%)",
+};
+const unitCardCheckBadge: React.CSSProperties = {
+  position: "absolute", top: 7, left: 7, zIndex: 2, width: 17, height: 17, borderRadius: "50%",
+  background: "var(--c-accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+  boxShadow: "0 0 0 2px rgba(255,255,255,0.85)",
+};
+
+const unitCardInvestPill: React.CSSProperties = {
+  position: "absolute", top: "0.45rem", right: "0.45rem", zIndex: 2,
+  display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.05rem",
+  background: "#fff", borderRadius: 9, padding: "0.28rem 0.45rem",
+  boxShadow: "0 6px 12px -6px rgba(14,23,38,0.35)",
+};
+const unitCardInvestLabel: React.CSSProperties = { fontSize: "0.52rem", color: "var(--c-text-tertiary)", fontWeight: 600 };
+const unitCardInvestValue: React.CSSProperties = {
+  fontFamily: "var(--font-display)", fontSize: "0.78rem", fontWeight: 800,
+  color: "var(--c-positive)", letterSpacing: "-0.02em",
+};
+
+const unitCardOverlay: React.CSSProperties = {
+  position: "absolute", left: 0, right: 0, bottom: 0, padding: "0.6rem",
+  display: "flex", flexDirection: "column", gap: "0.3rem",
+};
+const unitCardAddr: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.2rem", color: "rgba(255,255,255,0.7)" };
+const unitCardAddrText: React.CSSProperties = { fontSize: "0.6rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+
+const unitCardStatRow: React.CSSProperties = { display: "flex", gap: "0.3rem", flexWrap: "wrap" };
+const unitCardStatChip: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "0.18rem",
+  background: "rgba(255,255,255,0.12)", color: "#fff", fontSize: "0.56rem", fontWeight: 600,
+  padding: "0.16rem 0.38rem", borderRadius: 999, backdropFilter: "blur(4px)",
+};
+
+const unitCardValorM2Box: React.CSSProperties = {
+  display: "flex", flexDirection: "column", alignItems: "center", gap: "0.08rem",
+  alignSelf: "flex-start", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)",
+  borderRadius: 9, padding: "0.3rem 0.5rem", backdropFilter: "blur(6px)",
+  boxShadow: "0px 2px 2px rgba(0,0,0,0.25)", marginTop: "0.15rem",
+};
+const unitCardValorM2Value: React.CSSProperties = {
+  fontFamily: "var(--font-display)", fontSize: "0.72rem", fontWeight: 800, color: "#fff",
+  letterSpacing: "-0.02em", lineHeight: 1, textShadow: "0px 2px 2px rgba(0,0,0,0.25)",
+};
+const unitCardValorM2Label: React.CSSProperties = {
+  fontSize: "0.5rem", fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.06em",
+  textShadow: "0px 2px 2px rgba(0,0,0,0.25)",
+};
 
 const carouselNav: React.CSSProperties = { display: "flex", justifyContent: "flex-end", gap: "0.5rem", padding: "0 2.1rem", marginTop: "-0.75rem", marginBottom: "0.75rem" };
 const navBtn: React.CSSProperties = {
