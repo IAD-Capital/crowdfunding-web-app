@@ -74,21 +74,8 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
         @media (max-width: 760px) {
           .unit-grid {
             display: flex !important;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            scroll-padding-left: 1.5rem;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            gap: 1rem;
-            padding-bottom: 0.25rem;
-            margin: 0 -1.5rem;
-            padding-left: 1.5rem;
-            padding-right: 1.5rem;
-          }
-          .unit-grid::-webkit-scrollbar { display: none; }
-          .unit-card-item {
-            flex: 0 0 84%;
-            scroll-snap-align: start;
+            flex-direction: column;
+            gap: 1.25rem;
           }
         }
       `}</style>
@@ -116,7 +103,6 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
               <div key={u.id} className="unit-card-item">
                 <UnitCard
                   u={u}
-                  devName={developments.find((d) => d.id === u.development_id)?.name ?? ""}
                   devAddress={developments.find((d) => d.id === u.development_id)?.address ?? ""}
                   devSlug={developments.find((d) => d.id === u.development_id)?.slug ?? u.development_id}
                   devAmenities={developments.find((d) => d.id === u.development_id)?.amenities ?? []}
@@ -161,9 +147,9 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
 
 /* ─── Unit card ─────────────────────────────────── */
 function UnitCard({
-  u, devName, devAddress, devSlug, devAmenities, isInvestor, alreadyInvested, onInvest, lang, isAuthenticated, isFavorited,
+  u, devAddress, devSlug, devAmenities, isInvestor, alreadyInvested, onInvest, lang, isAuthenticated, isFavorited,
 }: {
-  u: Unit; devName: string; devAddress: string; devSlug: string | number; devAmenities: string[]; isInvestor: boolean;
+  u: Unit; devAddress: string; devSlug: string | number; devAmenities: string[]; isInvestor: boolean;
   alreadyInvested: boolean; onInvest: () => void; lang: string;
   isAuthenticated: boolean; isFavorited: boolean;
 }) {
@@ -189,7 +175,6 @@ function UnitCard({
           images={u.images}
           identifier={u.identifier}
           floorLabel={floorLabel}
-          devName={devName}
           devAddress={devAddress}
           totalM2={u.total_m2}
           rooms={u.rooms}
@@ -217,13 +202,12 @@ function UnitCard({
 
 /* ─── Unit cover slider ──────────────────────────── */
 function UnitCoverSlider({
-  images, identifier, floorLabel, devName, devAddress, totalM2, rooms, bedrooms, amenities, yieldInfo,
+  images, identifier, floorLabel, devAddress, totalM2, rooms, bedrooms, amenities, yieldInfo,
   unitId, isFavorited, isAuthenticated, lang, entryPrice, minInvest, canBuy, alreadyInvested, fmtUsd, onInvest,
 }: {
   images: string[] | undefined;
   identifier: string;
   floorLabel: string | null;
-  devName: string;
   devAddress: string;
   totalM2?: number | null;
   rooms?: number | null;
@@ -295,7 +279,7 @@ function UnitCoverSlider({
         <div style={unitOverlayAddr}>
           <MapPin size={12} />
           <span style={unitOverlayAddrText}>
-            {floorLabel ? `${floorLabel} · ` : ""}{devName} — {devAddress.toUpperCase()}
+            {floorLabel ? `${floorLabel} · ` : ""}{devAddress.toUpperCase()}
           </span>
         </div>
 
