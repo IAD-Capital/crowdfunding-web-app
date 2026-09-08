@@ -714,7 +714,7 @@ function FactCell({ icon, text }: { icon: React.ReactNode; text: string }) {
 
 const body: React.CSSProperties = { background: "#f9fafb", padding: "2rem 1.5rem 3rem" };
 const bodyInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: "2.5rem", alignItems: "start" };
-const leftCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "2rem" };
+const leftCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "2rem", minWidth: 0 };
 
 const imagesDisclaimerWrap: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "0.75rem 1.5rem 0" };
 const imagesDisclaimer: React.CSSProperties = { fontSize: "0.78rem", color: "#9ca3af", margin: 0, fontStyle: "italic" };
@@ -805,7 +805,7 @@ const coListNote: React.CSSProperties = { fontSize: "0.82rem", color: "#374151",
 const coPctBar: React.CSSProperties = { height: 6, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" };
 const coPctFill: React.CSSProperties = { height: "100%", background: "linear-gradient(90deg, #4ade80, #22c55e)", borderRadius: 999 };
 
-const sidebar: React.CSSProperties = { position: "sticky", top: 80, marginTop: "1.5rem" };
+const sidebar: React.CSSProperties = { position: "sticky", top: 80, marginTop: "1.5rem", minWidth: 0 };
 const sideCard: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" };
 const sidePriceLabel: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", margin: 0, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" };
 const sidePrice: React.CSSProperties = { fontSize: "2rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.04em" };
