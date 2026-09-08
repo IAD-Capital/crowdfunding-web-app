@@ -13,10 +13,12 @@ import OpenChatbotButton from "@/components/OpenChatbotButton";
 import TrackedLink from "@/components/TrackedLink";
 import ContactForm from "@/components/ContactForm";
 import Image from "next/image";
+import { unitPriceStageLabel } from "@/lib/unitPriceStages";
 import {
   Layers, Maximize, Home, Trees, BedDouble, Bed, Bath, Compass, ChevronRight, MapPin,
   Waves, Dumbbell, PartyPopper, ShieldCheck, Flame, SquareParking, WashingMachine,
   Laptop, Sparkles, Baby, Sun, Wifi, Utensils, ConciergeBell, CheckCircle2, Scale,
+  TrendingUp, TrendingDown, History,
 } from "lucide-react";
 
 const AMENITY_ICON_RULES: { keywords: string[]; icon: React.ReactNode }[] = [
@@ -154,6 +156,16 @@ export default async function PublicUnitPage({
           AND user_id != ${Number(session!.sub)}
       `
     : [{ count: 0, total_pct: 0 }];
+
+  // Price history — only shown when the admin has actually loaded entries for this unit
+  const priceHistory = await db<
+    { id: number; effective_date: string; stage: string; total_value_usd: number; value_per_m2_usd: number | null }[]
+  >`
+    SELECT id, effective_date, stage, total_value_usd, value_per_m2_usd
+    FROM unit_price_history
+    WHERE unit_id = ${unit.id}
+    ORDER BY effective_date ASC, id ASC
+  `;
 
   // Other units in the same development — same building, easy next step to invest
   const relatedUnits = await db`
@@ -310,6 +322,63 @@ export default async function PublicUnitPage({
               <div>
                 <h2 style={sectionTitle}>Descripción</h2>
                 <p style={descText}>{unit.description}</p>
+              </div>
+            )}
+
+            {/* Price history — filled in per unit from the admin, hidden until at least one entry exists */}
+            {priceHistory.length > 0 && (
+              <div>
+                <h2 style={sectionTitle}>
+                  <span style={legalTitleRow}>
+                    <History size={18} />
+                    Historial de precios
+                  </span>
+                </h2>
+                <div style={priceHistoryTableWrap}>
+                  <table style={priceHistoryTable}>
+                    <thead>
+                      <tr>
+                        <th style={priceHistoryTh}>Fecha</th>
+                        <th style={priceHistoryTh}>Estado</th>
+                        <th style={priceHistoryTh}>Valor total</th>
+                        <th style={priceHistoryTh}>Valor m²</th>
+                        <th style={priceHistoryTh}>Variación</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {priceHistory.map((entry, i) => {
+                        const prev = priceHistory[i - 1];
+                        const pct = prev
+                          ? ((Number(entry.total_value_usd) - Number(prev.total_value_usd)) / Number(prev.total_value_usd)) * 100
+                          : null;
+                        return (
+                          <tr key={entry.id} style={priceHistoryRow}>
+                            <td style={priceHistoryTd}>{fmtDate(new Date(entry.effective_date))}</td>
+                            <td style={priceHistoryTd}>
+                              <span style={priceHistoryStagePill}>{unitPriceStageLabel(entry.stage)}</span>
+                            </td>
+                            <td style={priceHistoryTd}>USD {Number(entry.total_value_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })}</td>
+                            <td style={priceHistoryTd}>
+                              {entry.value_per_m2_usd != null
+                                ? `USD ${Number(entry.value_per_m2_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })}`
+                                : "—"}
+                            </td>
+                            <td style={priceHistoryTd}>
+                              {pct == null ? (
+                                <span style={{ color: "#9ca3af" }}>—</span>
+                              ) : (
+                                <span style={{ ...priceHistoryPctPill, ...(pct >= 0 ? priceHistoryPctUp : priceHistoryPctDown) }}>
+                                  {pct >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                                  {pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -706,6 +775,17 @@ const mapLink: React.CSSProperties = { fontSize: "0.85rem", fontWeight: 700, col
 const legalTitleRow: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.5rem" };
 const legalBox: React.CSSProperties = { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, padding: "1.1rem 1.25rem" };
 const legalText: React.CSSProperties = { color: "#374151", lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" };
+
+/* Price history */
+const priceHistoryTableWrap: React.CSSProperties = { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, overflowX: "auto" };
+const priceHistoryTable: React.CSSProperties = { width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" };
+const priceHistoryTh: React.CSSProperties = { padding: "0.7rem 1rem", textAlign: "left", fontWeight: 600, fontSize: "0.75rem", color: "#6b7280", whiteSpace: "nowrap" };
+const priceHistoryRow: React.CSSProperties = { borderTop: "1px solid #e5e7eb" };
+const priceHistoryTd: React.CSSProperties = { padding: "0.7rem 1rem", color: "#111", whiteSpace: "nowrap" };
+const priceHistoryStagePill: React.CSSProperties = { display: "inline-block", padding: "0.15rem 0.55rem", borderRadius: 999, fontSize: "0.75rem", fontWeight: 700, background: "#eff3ff", color: "#1b4de0" };
+const priceHistoryPctPill: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.78rem", fontWeight: 700, padding: "0.1rem 0.5rem", borderRadius: 999 };
+const priceHistoryPctUp: React.CSSProperties = { background: "#dcfce7", color: "#166534" };
+const priceHistoryPctDown: React.CSSProperties = { background: "#fee2e2", color: "#991b1b" };
 
 /* Group / co-investors */
 const groupBanner: React.CSSProperties = {
