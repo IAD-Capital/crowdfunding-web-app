@@ -241,7 +241,9 @@ function UnitCoverSlider({
       {list.length > 0 ? (
         <Image src={list[index]} alt={identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 84vw, 300px" priority={priority} />
       ) : (
-        <div style={unitPlaceholder}><Building2 size={28} style={{ opacity: 0.2 }} /></div>
+        <div style={unitPlaceholder}>
+          <Image src="/iad-logo.svg" alt="" width={202} height={109} unoptimized style={logoPlaceholderImg} />
+        </div>
       )}
       <div style={unitGradient} />
 
@@ -395,6 +397,7 @@ const unitCover: React.CSSProperties = {
   boxShadow: "0 20px 40px -20px rgba(14,23,38,0.35)",
 };
 const unitPlaceholder: React.CSSProperties = { width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg,#e8eef7,#dfe7f2)" };
+const logoPlaceholderImg: React.CSSProperties = { width: 68, height: "auto", opacity: 0.28, filter: "grayscale(1)" };
 const unitGradient: React.CSSProperties = {
   position: "absolute", inset: 0,
   background: "linear-gradient(to top, rgba(9,13,23,0.92) 0%, rgba(9,13,23,0.55) 42%, rgba(9,13,23,0) 68%)",

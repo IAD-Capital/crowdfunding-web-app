@@ -153,7 +153,9 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
                   {u.images[0] ? (
                     <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} sizes="(max-width: 760px) 78vw, 340px" priority={idx < 2} />
                   ) : (
-                    <div style={imagePlaceholder} />
+                    <div style={imagePlaceholder}>
+                      <Image src="/iad-logo.svg" alt="" width={202} height={109} unoptimized style={logoPlaceholderImg} />
+                    </div>
                   )}
                   <div style={gradient} />
 
