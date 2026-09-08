@@ -334,50 +334,53 @@ export default async function PublicUnitPage({
                     Historial de precios
                   </span>
                 </h2>
-                <div style={priceHistoryTableWrap}>
-                  <table style={priceHistoryTable}>
-                    <thead>
-                      <tr>
-                        <th style={priceHistoryTh}>Fecha</th>
-                        <th style={priceHistoryTh}>Estado</th>
-                        <th style={priceHistoryTh}>Valor total</th>
-                        <th style={priceHistoryTh}>Valor m²</th>
-                        <th style={priceHistoryTh}>Variación</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {priceHistory.map((entry, i) => {
-                        const prev = priceHistory[i - 1];
-                        const pct = prev
-                          ? ((Number(entry.total_value_usd) - Number(prev.total_value_usd)) / Number(prev.total_value_usd)) * 100
-                          : null;
-                        return (
-                          <tr key={entry.id} style={priceHistoryRow}>
-                            <td style={priceHistoryTd}>{fmtDate(new Date(entry.effective_date))}</td>
-                            <td style={priceHistoryTd}>
+                <div style={priceHistoryList}>
+                  {priceHistory.map((entry, i) => {
+                    const prev = priceHistory[i - 1];
+                    const pct = prev
+                      ? ((Number(entry.total_value_usd) - Number(prev.total_value_usd)) / Number(prev.total_value_usd)) * 100
+                      : null;
+                    const isCurrent = i === priceHistory.length - 1;
+                    const dotColor = pct == null ? "#1b4de0" : pct >= 0 ? "#22c55e" : "#ef4444";
+                    return (
+                      <div key={entry.id} style={priceHistoryItem}>
+                        <div style={priceHistoryMarkerCol}>
+                          <div style={priceHistoryDot(dotColor)} />
+                          {!isCurrent && <div style={priceHistoryLine} />}
+                        </div>
+                        <div style={priceHistoryCard(isCurrent)}>
+                          <div style={priceHistoryCardTop}>
+                            <p style={priceHistoryDate}>{fmtDate(new Date(entry.effective_date))}</p>
+                            <div style={priceHistoryBadgeGroup}>
                               <span style={priceHistoryStagePill}>{unitPriceStageLabel(entry.stage)}</span>
-                            </td>
-                            <td style={priceHistoryTd}>USD {Number(entry.total_value_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })}</td>
-                            <td style={priceHistoryTd}>
-                              {entry.value_per_m2_usd != null
-                                ? `USD ${Number(entry.value_per_m2_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })}`
-                                : "—"}
-                            </td>
-                            <td style={priceHistoryTd}>
-                              {pct == null ? (
-                                <span style={{ color: "#9ca3af" }}>—</span>
-                              ) : (
-                                <span style={{ ...priceHistoryPctPill, ...(pct >= 0 ? priceHistoryPctUp : priceHistoryPctDown) }}>
-                                  {pct >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                                  {pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
+                              {isCurrent && (
+                                <span style={priceHistoryCurrentPill}>
+                                  <Sparkles size={11} />
+                                  Actual
                                 </span>
                               )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            </div>
+                          </div>
+                          <div style={priceHistoryValueRow}>
+                            <p style={priceHistoryValue}>
+                              USD {Number(entry.total_value_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })}
+                            </p>
+                            {pct != null && (
+                              <span style={{ ...priceHistoryPctPill, ...(pct >= 0 ? priceHistoryPctUp : priceHistoryPctDown) }}>
+                                {pct >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                                {pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
+                              </span>
+                            )}
+                          </div>
+                          {entry.value_per_m2_usd != null && (
+                            <p style={priceHistoryM2}>
+                              USD {Number(entry.value_per_m2_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })} /m²
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -776,13 +779,35 @@ const legalTitleRow: React.CSSProperties = { display: "inline-flex", alignItems:
 const legalBox: React.CSSProperties = { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, padding: "1.1rem 1.25rem" };
 const legalText: React.CSSProperties = { color: "#374151", lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" };
 
-/* Price history */
-const priceHistoryTableWrap: React.CSSProperties = { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, overflowX: "auto" };
-const priceHistoryTable: React.CSSProperties = { width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" };
-const priceHistoryTh: React.CSSProperties = { padding: "0.7rem 1rem", textAlign: "left", fontWeight: 600, fontSize: "0.75rem", color: "#6b7280", whiteSpace: "nowrap" };
-const priceHistoryRow: React.CSSProperties = { borderTop: "1px solid #e5e7eb" };
-const priceHistoryTd: React.CSSProperties = { padding: "0.7rem 1rem", color: "#111", whiteSpace: "nowrap" };
+/* Price history — vertical timeline of cards, no horizontal scroll at any width */
+const priceHistoryList: React.CSSProperties = { display: "flex", flexDirection: "column" };
+const priceHistoryItem: React.CSSProperties = { display: "flex", gap: "0.9rem", alignItems: "stretch" };
+const priceHistoryMarkerCol: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", width: 12, flexShrink: 0 };
+const priceHistoryDot = (color: string): React.CSSProperties => ({
+  width: 12, height: 12, borderRadius: 999, background: color, marginTop: "0.4rem", flexShrink: 0,
+  boxShadow: `0 0 0 4px ${color}22`,
+});
+const priceHistoryLine: React.CSSProperties = { width: 2, flex: 1, minHeight: 24, background: "#e5e7eb", marginTop: "0.25rem" };
+const priceHistoryCard = (highlight: boolean): React.CSSProperties => ({
+  flex: 1, minWidth: 0, marginBottom: "0.9rem",
+  background: highlight ? "rgba(27,77,224,0.05)" : "#fff",
+  border: `1px solid ${highlight ? "rgba(27,77,224,0.28)" : "#e5e7eb"}`,
+  borderRadius: 14, padding: "0.9rem 1.1rem",
+  boxShadow: highlight ? "0 4px 16px rgba(27,77,224,0.1)" : "0 1px 2px rgba(17,17,17,0.03)",
+  display: "flex", flexDirection: "column", gap: "0.45rem",
+});
+const priceHistoryCardTop: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", flexWrap: "wrap" };
+const priceHistoryDate: React.CSSProperties = { fontSize: "0.78rem", color: "#9ca3af", fontWeight: 600, margin: 0 };
+const priceHistoryBadgeGroup: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.4rem" };
 const priceHistoryStagePill: React.CSSProperties = { display: "inline-block", padding: "0.15rem 0.55rem", borderRadius: 999, fontSize: "0.75rem", fontWeight: 700, background: "#eff3ff", color: "#1b4de0" };
+const priceHistoryCurrentPill: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.68rem", fontWeight: 700,
+  color: "#fff", background: "linear-gradient(90deg, #1b4de0, #3b6bff)", borderRadius: 999,
+  padding: "0.2rem 0.55rem", textTransform: "uppercase", letterSpacing: "0.03em",
+};
+const priceHistoryValueRow: React.CSSProperties = { display: "flex", alignItems: "baseline", gap: "0.6rem", flexWrap: "wrap" };
+const priceHistoryValue: React.CSSProperties = { fontSize: "1.4rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.02em" };
+const priceHistoryM2: React.CSSProperties = { fontSize: "0.8rem", color: "#6b7280", margin: 0, fontWeight: 600 };
 const priceHistoryPctPill: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.78rem", fontWeight: 700, padding: "0.1rem 0.5rem", borderRadius: 999 };
 const priceHistoryPctUp: React.CSSProperties = { background: "#dcfce7", color: "#166534" };
 const priceHistoryPctDown: React.CSSProperties = { background: "#fee2e2", color: "#991b1b" };
