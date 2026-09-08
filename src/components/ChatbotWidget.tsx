@@ -233,12 +233,18 @@ export default function ChatbotWidget({ userEmail }: Props) {
         @media (max-width: 768px) {
           .chatbot-panel {
             position: fixed !important;
-            inset: 12px !important;
-            width: auto !important;
-            height: auto !important;
-            bottom: 12px !important;
+            top: auto !important;
+            left: 12px !important;
             right: 12px !important;
+            bottom: 12px !important;
+            width: auto !important;
+            height: min(70vh, 560px) !important;
+            max-height: calc(100vh - 24px) !important;
             border-radius: 16px !important;
+          }
+          .chatbot-panel textarea,
+          .chatbot-panel input {
+            font-size: 16px !important;
           }
         }
       `}</style>
