@@ -13,10 +13,12 @@ import OpenChatbotButton from "@/components/OpenChatbotButton";
 import TrackedLink from "@/components/TrackedLink";
 import ContactForm from "@/components/ContactForm";
 import Image from "next/image";
+import { unitPriceStageLabel } from "@/lib/unitPriceStages";
 import {
   Layers, Maximize, Home, Trees, BedDouble, Bed, Bath, Compass, ChevronRight, MapPin,
   Waves, Dumbbell, PartyPopper, ShieldCheck, Flame, SquareParking, WashingMachine,
   Laptop, Sparkles, Baby, Sun, Wifi, Utensils, ConciergeBell, CheckCircle2, Scale,
+  TrendingUp, TrendingDown, History,
 } from "lucide-react";
 
 const AMENITY_ICON_RULES: { keywords: string[]; icon: React.ReactNode }[] = [
@@ -154,6 +156,40 @@ export default async function PublicUnitPage({
           AND user_id != ${Number(session!.sub)}
       `
     : [{ count: 0, total_pct: 0 }];
+
+  // Price history — only shown when the admin has actually loaded entries for this unit
+  const priceHistory = await db<
+    { id: number; effective_date: string; stage: string; total_value_usd: number; value_per_m2_usd: number | null }[]
+  >`
+    SELECT id, effective_date, stage, total_value_usd, value_per_m2_usd
+    FROM unit_price_history
+    WHERE unit_id = ${unit.id}
+    ORDER BY effective_date ASC, id ASC
+  `;
+
+  // Today's price is always a valid data point — one loaded historic entry is enough to
+  // show a comparison, since "now" (current_price_usd, falling back to price_usd) closes the timeline.
+  const currentTotalValue = unit.current_price_usd != null
+    ? Number(unit.current_price_usd)
+    : unit.price_usd != null
+    ? Number(unit.price_usd)
+    : null;
+  const currentValuePerM2 = currentTotalValue != null && unit.total_m2 != null
+    ? currentTotalValue / Number(unit.total_m2)
+    : null;
+  const priceHistoryTimeline = [
+    ...priceHistory.map((e) => ({ ...e, isToday: false as const })),
+    ...(priceHistory.length > 0 && currentTotalValue != null
+      ? [{
+          id: -1,
+          effective_date: new Date().toISOString(),
+          stage: "",
+          total_value_usd: currentTotalValue,
+          value_per_m2_usd: currentValuePerM2,
+          isToday: true as const,
+        }]
+      : []),
+  ];
 
   // Other units in the same development — same building, easy next step to invest
   const relatedUnits = await db`
@@ -310,6 +346,67 @@ export default async function PublicUnitPage({
               <div>
                 <h2 style={sectionTitle}>Descripción</h2>
                 <p style={descText}>{unit.description}</p>
+              </div>
+            )}
+
+            {/* Price history — filled in per unit from the admin, hidden until at least one entry exists */}
+            {priceHistory.length > 0 && (
+              <div>
+                <h2 style={sectionTitle}>
+                  <span style={legalTitleRow}>
+                    <History size={18} />
+                    Historial de precios
+                  </span>
+                </h2>
+                <div style={priceHistoryList}>
+                  {priceHistoryTimeline.map((entry, i) => {
+                    const prev = priceHistoryTimeline[i - 1];
+                    const pct = prev
+                      ? ((Number(entry.total_value_usd) - Number(prev.total_value_usd)) / Number(prev.total_value_usd)) * 100
+                      : null;
+                    const isCurrent = entry.isToday;
+                    const isLast = i === priceHistoryTimeline.length - 1;
+                    const dotColor = pct == null ? "#1b4de0" : pct >= 0 ? "#22c55e" : "#ef4444";
+                    return (
+                      <div key={entry.id} style={priceHistoryItem}>
+                        <div style={priceHistoryMarkerCol}>
+                          <div style={priceHistoryDot(dotColor)} />
+                          {!isLast && <div style={priceHistoryLine} />}
+                        </div>
+                        <div style={priceHistoryCard(isCurrent)}>
+                          <div style={priceHistoryCardTop}>
+                            <p style={priceHistoryDate}>{isCurrent ? "Hoy" : fmtDate(new Date(entry.effective_date))}</p>
+                            <div style={priceHistoryBadgeGroup}>
+                              {entry.stage && <span style={priceHistoryStagePill}>{unitPriceStageLabel(entry.stage)}</span>}
+                              {isCurrent && (
+                                <span style={priceHistoryCurrentPill}>
+                                  <Sparkles size={11} />
+                                  Actual
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div style={priceHistoryValueRow}>
+                            <p style={priceHistoryValue}>
+                              USD {Number(entry.total_value_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })}
+                            </p>
+                            {pct != null && (
+                              <span style={{ ...priceHistoryPctPill, ...(pct >= 0 ? priceHistoryPctUp : priceHistoryPctDown) }}>
+                                {pct >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                                {pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
+                              </span>
+                            )}
+                          </div>
+                          {entry.value_per_m2_usd != null && (
+                            <p style={priceHistoryM2}>
+                              USD {Number(entry.value_per_m2_usd).toLocaleString("es-AR", { maximumFractionDigits: 0 })} /m²
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -645,7 +742,7 @@ function FactCell({ icon, text }: { icon: React.ReactNode; text: string }) {
 
 const body: React.CSSProperties = { background: "#f9fafb", padding: "2rem 1.5rem 3rem" };
 const bodyInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 380px", gap: "2.5rem", alignItems: "start" };
-const leftCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "2rem" };
+const leftCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "2rem", minWidth: 0 };
 
 const imagesDisclaimerWrap: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "0.75rem 1.5rem 0" };
 const imagesDisclaimer: React.CSSProperties = { fontSize: "0.78rem", color: "#9ca3af", margin: 0, fontStyle: "italic" };
@@ -707,6 +804,39 @@ const legalTitleRow: React.CSSProperties = { display: "inline-flex", alignItems:
 const legalBox: React.CSSProperties = { background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, padding: "1.1rem 1.25rem" };
 const legalText: React.CSSProperties = { color: "#374151", lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" };
 
+/* Price history — vertical timeline of cards, no horizontal scroll at any width */
+const priceHistoryList: React.CSSProperties = { display: "flex", flexDirection: "column" };
+const priceHistoryItem: React.CSSProperties = { display: "flex", gap: "0.9rem", alignItems: "stretch" };
+const priceHistoryMarkerCol: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", width: 12, flexShrink: 0 };
+const priceHistoryDot = (color: string): React.CSSProperties => ({
+  width: 12, height: 12, borderRadius: 999, background: color, marginTop: "0.4rem", flexShrink: 0,
+  boxShadow: `0 0 0 4px ${color}22`,
+});
+const priceHistoryLine: React.CSSProperties = { width: 2, flex: 1, minHeight: 24, background: "#e5e7eb", marginTop: "0.25rem" };
+const priceHistoryCard = (highlight: boolean): React.CSSProperties => ({
+  flex: 1, minWidth: 0, marginBottom: "0.9rem",
+  background: highlight ? "rgba(27,77,224,0.05)" : "#fff",
+  border: `1px solid ${highlight ? "rgba(27,77,224,0.28)" : "#e5e7eb"}`,
+  borderRadius: 14, padding: "0.9rem 1.1rem",
+  boxShadow: highlight ? "0 4px 16px rgba(27,77,224,0.1)" : "0 1px 2px rgba(17,17,17,0.03)",
+  display: "flex", flexDirection: "column", gap: "0.45rem",
+});
+const priceHistoryCardTop: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", flexWrap: "wrap" };
+const priceHistoryDate: React.CSSProperties = { fontSize: "0.78rem", color: "#9ca3af", fontWeight: 600, margin: 0 };
+const priceHistoryBadgeGroup: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.4rem" };
+const priceHistoryStagePill: React.CSSProperties = { display: "inline-block", padding: "0.15rem 0.55rem", borderRadius: 999, fontSize: "0.75rem", fontWeight: 700, background: "#eff3ff", color: "#1b4de0" };
+const priceHistoryCurrentPill: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.68rem", fontWeight: 700,
+  color: "#fff", background: "linear-gradient(90deg, #1b4de0, #3b6bff)", borderRadius: 999,
+  padding: "0.2rem 0.55rem", textTransform: "uppercase", letterSpacing: "0.03em",
+};
+const priceHistoryValueRow: React.CSSProperties = { display: "flex", alignItems: "baseline", gap: "0.6rem", flexWrap: "wrap" };
+const priceHistoryValue: React.CSSProperties = { fontSize: "1.4rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.02em" };
+const priceHistoryM2: React.CSSProperties = { fontSize: "0.8rem", color: "#6b7280", margin: 0, fontWeight: 600 };
+const priceHistoryPctPill: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.78rem", fontWeight: 700, padding: "0.1rem 0.5rem", borderRadius: 999 };
+const priceHistoryPctUp: React.CSSProperties = { background: "#dcfce7", color: "#166534" };
+const priceHistoryPctDown: React.CSSProperties = { background: "#fee2e2", color: "#991b1b" };
+
 /* Group / co-investors */
 const groupBanner: React.CSSProperties = {
   display: "flex", flexDirection: "column", gap: "0.2rem",
@@ -725,7 +855,7 @@ const coListNote: React.CSSProperties = { fontSize: "0.82rem", color: "#374151",
 const coPctBar: React.CSSProperties = { height: 6, background: "#f3f4f6", borderRadius: 999, overflow: "hidden" };
 const coPctFill: React.CSSProperties = { height: "100%", background: "linear-gradient(90deg, #4ade80, #22c55e)", borderRadius: 999 };
 
-const sidebar: React.CSSProperties = { position: "sticky", top: 80, marginTop: "1.5rem" };
+const sidebar: React.CSSProperties = { position: "sticky", top: 80, marginTop: "1.5rem", minWidth: 0 };
 const sideCard: React.CSSProperties = { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" };
 const sidePriceLabel: React.CSSProperties = { fontSize: "0.75rem", color: "#9ca3af", margin: 0, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" };
 const sidePrice: React.CSSProperties = { fontSize: "2rem", fontWeight: 900, color: "#111", margin: 0, letterSpacing: "-0.04em" };
