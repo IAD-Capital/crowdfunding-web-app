@@ -24,10 +24,10 @@ type UnitRow = Omit<Unit, "price_usd" | "current_price_usd" | "available_pct" | 
 };
 
 const TRUST_ITEMS = [
-  { Icon: FileCheck2, title: "Escrituración legal", desc: "Cada inversión se formaliza con respaldo notarial y documentación a tu nombre." },
-  { Icon: Eye, title: "Transparencia total", desc: "Conocé el detalle de cada proyecto, costos y proyecciones antes de invertir." },
-  { Icon: Activity, title: "Seguimiento en vivo", desc: "Mirá el avance de obra y el estado de tu cartera en tiempo real desde la app." },
-  { Icon: ShieldCheck, title: "Retiro con aprobación", desc: "Solicitá el retiro de tu inversión mediante un proceso claro y supervisado." },
+  { Icon: FileCheck2, title: "Respaldo legal", desc: "Cada inversión se formaliza con documentación y respaldo notarial, dejando registrada tu participación." },
+  { Icon: Eye, title: "Transparencia total", desc: "Conocé al grupo desarrollador. Estudiá el proyecto, sus costos, avances y proyecciones antes de tomar una decisión." },
+  { Icon: Activity, title: "Seguimiento en tiempo real", desc: "Seguí el avance de obra y la evolución de tus inversiones directamente de forma presencial o desde tu perfil." },
+  { Icon: ShieldCheck, title: "Salida simple y transparente", desc: "Solicitá la salida de tu inversión mediante un proceso claro, documentado y supervisado." },
 ];
 
 // Everything the DB-dependent sections need, fetched once per request and
@@ -224,8 +224,8 @@ export default function Home({ params }: { params: { lang: string } }) {
           <div style={howGrid} className="how-grid">
             {[
               { n: "01", title: "Elegí tu unidad", desc: "Explorá nuestro catálogo de departamentos disponibles para invertir." },
-              { n: "02", title: "Definí tu porcentaje", desc: "Invertí desde el 5% hasta el 100% del valor de la unidad funcional." },
-              { n: "03", title: "Formalizá tu inversión", desc: "Completá el proceso de manera segura y comenzá a generar rendimientos." },
+              { n: "02", title: "Definí tu porcentaje", desc: "Invertí desde el 5% hasta el 100% del valor de la propiedad." },
+              { n: "03", title: "Formalizá tu inversión", desc: "Completá el proceso de forma segura acordando previamente una reunión presencial." },
             ].map((s) => (
               <div key={s.n} style={howCard}>
                 <span style={howNum}>{s.n}</span>

@@ -167,12 +167,12 @@ export default function InvestmentSimulator({ units, lang }: Props) {
       <div style={inner} className="sim-inner">
         <div style={copy}>
           <span style={eyebrow}>Simulá tu inversión</span>
-          <h2 style={title}>Elegí una unidad y calculá tu entrada</h2>
-          <p style={subtitle}>Elegí una de nuestras unidades destacadas y mirá al instante cuánto representa cada opción de inversión.</p>
+          <h2 style={title}>Elegí qué porcentaje de la propiedad querés adquirir</h2>
+          <p style={subtitle}>Seleccioná una propiedad y calculá cuánto representa el porcentaje que querés comprar.</p>
           <ul style={perks}>
             <li style={perk}><span style={checkIcon}>✓</span>Sin mínimo de capital elevado</li>
             <li style={perk}><span style={checkIcon}>✓</span>Resultados claros antes de invertir</li>
-            <li style={perk}><span style={checkIcon}>✓</span>Seguimiento en tiempo real de tu cartera</li>
+            <li style={perk}><span style={checkIcon}>✓</span>Seguimiento en tiempo real del valor actual de tu inversión</li>
           </ul>
         </div>
 
