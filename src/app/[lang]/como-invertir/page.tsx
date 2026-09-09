@@ -5,8 +5,8 @@ import db from "@/lib/db";
 
 const STEPS = [
   { n: "01", title: "Elegí tu unidad", desc: "Explorá nuestro catálogo de departamentos disponibles para invertir." },
-  { n: "02", title: "Definí tu porcentaje", desc: "Invertí desde el 5% hasta el 100% del valor de la unidad funcional." },
-  { n: "03", title: "Formalizá tu inversión", desc: "Completá el proceso de manera segura y comenzá a generar rendimientos." },
+  { n: "02", title: "Definí tu porcentaje", desc: "Invertí desde el 5% hasta el 100% del valor de la propiedad." },
+  { n: "03", title: "Formalizá tu inversión", desc: "Completá el proceso de forma segura acordando previamente una reunión presencial." },
 ];
 
 export default async function ComoInvertirPage({ params }: { params: { lang: string } }) {

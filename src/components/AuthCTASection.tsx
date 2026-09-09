@@ -100,7 +100,7 @@ export default function AuthCTASection({ lang }: { lang: string }) {
           <h2 style={headline}>Invertí en bienes raíces desde cualquier monto</h2>
           <p style={sub}>
             Accedé a departamentos premium y comprá desde el <strong>5%</strong> de
-            una unidad funcional. Creá tu cuenta en minutos o ingresá con tu usuario.
+            una propiedad. Creá tu cuenta en minutos o ingresá con tu usuario.
           </p>
           <ul style={perks} className="auth-cta-perks">
             {[

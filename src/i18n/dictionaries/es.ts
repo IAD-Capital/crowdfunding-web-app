@@ -142,7 +142,7 @@ const es = {
         sold: "Vendida",
       },
       form: {
-        titleNew: "Nueva unidad funcional",
+        titleNew: "Nueva propiedad",
         titleEdit: "Editar unidad",
         identifier: "Identificador (ej: 2A, PH1)",
         floor: "Piso",
