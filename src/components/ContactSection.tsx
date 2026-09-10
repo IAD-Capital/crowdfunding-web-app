@@ -11,10 +11,24 @@ export default function ContactSection() {
   const [tab, setTab] = useState<Tab>("users");
 
   return (
-    <section id="contacto" style={section}>
+    <section id="contacto" style={section} className="contact-section">
       <style>{`
         @media (max-width: 760px) {
-          .contact-cta-inner { grid-template-columns: 1fr !important; padding: 1.5rem !important; gap: 1.75rem !important; }
+          .contact-section {
+            position: sticky;
+            top: 14px;
+            z-index: 2;
+            padding: 0 0 2rem !important;
+          }
+          .contact-cta-inner {
+            grid-template-columns: 1fr !important;
+            padding: 1.5rem !important;
+            gap: 1.75rem !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            border-radius: 22px 22px 0 0 !important;
+            box-shadow: 0 -18px 40px rgba(0,0,0,0.35) !important;
+          }
           .contact-cta-form-card { padding: 1.5rem !important; }
         }
       `}</style>
@@ -69,7 +83,7 @@ export default function ContactSection() {
 
 const section: React.CSSProperties = {
   background: "var(--c-bg)",
-  padding: "4rem 1.5rem 5rem",
+  padding: "1.5rem 1.5rem 4rem",
 };
 const inner: React.CSSProperties = {
   maxWidth: 1100,

@@ -58,10 +58,23 @@ export default function AuthCTASection({ lang }: { lang: string }) {
   }
 
   return (
-    <section style={section} id="invertir">
+    <section style={section} id="invertir" className="auth-cta-section">
       <style>{`
         @media (max-width: 760px) {
-          .auth-cta-inner { grid-template-columns: 1fr !important; padding: 1.5rem !important; gap: 1.75rem !important; }
+          .auth-cta-section {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            padding: 2rem 0 0 !important;
+          }
+          .auth-cta-inner {
+            grid-template-columns: 1fr !important;
+            padding: 1.5rem !important;
+            gap: 1.75rem !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            border-radius: 22px 22px 0 0 !important;
+          }
           .auth-cta-form-card { padding: 1.5rem !important; }
         }
       `}</style>
@@ -187,7 +200,7 @@ export default function AuthCTASection({ lang }: { lang: string }) {
 /* Styles */
 const section: React.CSSProperties = {
   background: "var(--c-bg)",
-  padding: "4rem 1.5rem 5rem",
+  padding: "4rem 1.5rem 2.5rem",
   color: "#fff",
 };
 const inner: React.CSSProperties = {
