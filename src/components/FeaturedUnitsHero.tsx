@@ -100,7 +100,7 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
 
           <h2 style={title}>
             {minInvestUsd != null ? (
-              <>Invrtí en propiedades desde <span style={titleHighlight}>{fmtUsd(minInvestUsd)}</span></>
+              <>Invertí en propiedades desde <span style={titleHighlight}>{fmtUsd(minInvestUsd)}</span></>
             ) : (
               "Unidades destacadas"
             )}
