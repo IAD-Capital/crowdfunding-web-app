@@ -205,7 +205,7 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
 
               <div className={s.mobileMenuSection}>
                 <a
-                  href="https://www.instagram.com/iad.capital"
+                  href="https://www.instagram.com/iadcapital"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={s.userMenuItem}
