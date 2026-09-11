@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
-export type PublicFaq = { id: number; question: string; answer: string };
+export type PublicFaq = {
+  id: number;
+  question: string;
+  answer: string;
+  section_id: number | null;
+  section_name: string | null;
+};
 
 type Props = { faqs: PublicFaq[] };
 
@@ -12,26 +18,35 @@ export default function FaqAccordionSection({ faqs }: Props) {
 
   if (faqs.length === 0) return null;
 
+  let lastSectionId: number | null = null;
+
   return (
     <div style={list}>
-      {faqs.map((f) => {
+      {faqs.map((f, i) => {
         const isOpen = openId === f.id;
+        const showHeading = !!f.section_name && f.section_id !== lastSectionId;
+        lastSectionId = f.section_id;
         return (
-          <div key={f.id} style={item}>
-            <button
-              type="button"
-              style={question}
-              onClick={() => setOpenId(isOpen ? null : f.id)}
-              aria-expanded={isOpen}
-            >
-              <span>{f.question}</span>
-              <ChevronDown
-                size={18}
-                style={{ ...chevron, transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
-              />
-            </button>
-            {isOpen && <p style={answer}>{f.answer}</p>}
-          </div>
+          <Fragment key={f.id}>
+            {showHeading && (
+              <h3 style={{ ...sectionHeading, marginTop: i === 0 ? 0 : "0.75rem" }}>{f.section_name}</h3>
+            )}
+            <div style={item}>
+              <button
+                type="button"
+                style={question}
+                onClick={() => setOpenId(isOpen ? null : f.id)}
+                aria-expanded={isOpen}
+              >
+                <span>{f.question}</span>
+                <ChevronDown
+                  size={18}
+                  style={{ ...chevron, transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                />
+              </button>
+              {isOpen && <p style={answer}>{f.answer}</p>}
+            </div>
+          </Fragment>
         );
       })}
     </div>
@@ -39,6 +54,9 @@ export default function FaqAccordionSection({ faqs }: Props) {
 }
 
 const list: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.75rem" };
+const sectionHeading: React.CSSProperties = {
+  fontSize: "1.05rem", fontWeight: 800, color: "var(--c-ink)", margin: 0, letterSpacing: "-0.01em",
+};
 const item: React.CSSProperties = {
   background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 14, overflow: "hidden",
 };
