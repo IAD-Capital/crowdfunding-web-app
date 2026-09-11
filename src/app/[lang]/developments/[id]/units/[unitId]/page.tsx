@@ -10,7 +10,6 @@ import UnitHeroGallery from "@/components/UnitHeroGallery";
 import RelatedUnits from "@/components/RelatedUnits";
 import ImageGallery from "@/components/admin/ImageGallery";
 import BuyPanel from "@/components/BuyPanel";
-import OpenChatbotButton from "@/components/OpenChatbotButton";
 import TrackedLink from "@/components/TrackedLink";
 import ContactForm from "@/components/ContactForm";
 import Image from "next/image";
@@ -137,10 +136,11 @@ export default async function PublicUnitPage({
       `
     : [null];
 
-  const [phoneRow] = canInvest
+  const [phoneRow] = isAuthenticated
     ? await db<{ phone: string | null }[]>`SELECT phone FROM users WHERE id = ${Number(session!.sub)}`
     : [null];
   const hasPhone = !!phoneRow?.phone?.trim();
+  const userPhone = phoneRow?.phone?.trim() || "";
 
   const [favoriteRow] = isAuthenticated
     ? await db`SELECT id FROM favorites WHERE user_id = ${Number(session!.sub)} AND unit_id = ${unit.id}`
@@ -303,7 +303,7 @@ export default async function PublicUnitPage({
             {/* Top info block */}
             <div style={topInfoBlock}>
               <div style={priceCol}>
-                {unit.status !== "partial" && (
+                {unit.status === "sold" && (
                   <span style={{ ...statusPillInline, background: sc.bg, color: sc.fg }}>{sc.label}</span>
                 )}
                 {showInvestHeadline ? (
@@ -562,9 +562,12 @@ export default async function PublicUnitPage({
               <div style={legalBox}>
                 <ContactForm
                   unitContext={{
-                    label: `Unidad ${unit.identifier} — ${dev.address}`,
+                    label: `${dev.address} (Unidad ${unit.identifier})`,
                     url: `${getAppUrl()}${unitPath}`,
                   }}
+                  initialFullName={session?.fullName ?? ""}
+                  initialEmail={session?.email ?? ""}
+                  initialPhone={userPhone}
                 />
               </div>
             </div>
@@ -680,13 +683,15 @@ export default async function PublicUnitPage({
                   >
                     Invertir en esta unidad
                   </TrackedLink>
-                  <OpenChatbotButton
-                    label="¿Cómo funciona?"
+                  <TrackedLink
+                    href={`/${lang}/como-invertir`}
                     style={sideBtnSecondary}
                     ctaId="unit_page_how_it_works"
                     ctaLabel={unit.identifier}
                     ctaLocation="unit_page_sidebar"
-                  />
+                  >
+                    ¿Cómo funciona?
+                  </TrackedLink>
                   <p style={loginHint}>
                     ¿Ya tenés cuenta?{" "}
                     <TrackedLink
