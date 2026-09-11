@@ -44,7 +44,6 @@ export default function RelatedUnits({ units, lang }: Props) {
       `}</style>
       <div style={inner}>
         <div style={header}>
-          <h2 style={title}>Propiedades relacionadas</h2>
           <p style={subtitle}>Seguí explorando otras oportunidades de inversión.</p>
         </div>
 
@@ -141,15 +140,14 @@ const section: React.CSSProperties = { background: "var(--c-bg)", padding: "3rem
 const inner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto" };
 
 const header: React.CSSProperties = { textAlign: "center", marginBottom: "1.75rem" };
-const title: React.CSSProperties = { fontSize: "1.9rem", fontWeight: 800, color: "var(--c-ink)", margin: "0 0 0.5rem", letterSpacing: "-0.02em" };
-const subtitle: React.CSSProperties = { fontSize: "1rem", color: "var(--c-text-secondary)", margin: 0 };
+const subtitle: React.CSSProperties = { fontSize: "1.125rem", color: "var(--c-text-secondary)", margin: 0 };
 
 const grid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem" };
 
 const track: React.CSSProperties = {
   display: "flex", gap: "1.25rem", overflowX: "auto",
   scrollSnapType: "x mandatory", scrollbarWidth: "none",
-  margin: "0 -1.5rem", padding: "0 1.5rem 0.25rem",
+  paddingBottom: "0.25rem",
 };
 const trackItem: React.CSSProperties = { flex: "0 0 auto", width: "78vw", maxWidth: 340, scrollSnapAlign: "start" };
 

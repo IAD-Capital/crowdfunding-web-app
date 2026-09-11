@@ -13,9 +13,11 @@ export default async function ComoInvertirPage({ params }: { params: { lang: str
   const lang: Locale = isValidLocale(params.lang) ? params.lang : DEFAULT_LOCALE;
 
   const faqs = await db<PublicFaq[]>`
-    SELECT id, question, answer FROM faqs
-    WHERE is_active = true
-    ORDER BY sort_order, id
+    SELECT f.id, f.question, f.answer, f.section_id, s.name AS section_name
+    FROM faqs f
+    LEFT JOIN faq_sections s ON s.id = f.section_id
+    WHERE f.is_active = true
+    ORDER BY COALESCE(s.sort_order, 999999), COALESCE(f.section_id, 999999), f.sort_order, f.id
   `;
 
   return (
