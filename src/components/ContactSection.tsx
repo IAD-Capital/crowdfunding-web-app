@@ -16,9 +16,10 @@ export default function ContactSection() {
         @media (max-width: 760px) {
           .contact-section {
             position: sticky;
-            top: 14px;
+            top: 16px;
             z-index: 2;
-            padding: 0 0 2rem !important;
+            padding: 0 !important;
+            background: transparent !important;
           }
           .contact-cta-inner {
             grid-template-columns: 1fr !important;
@@ -27,7 +28,8 @@ export default function ContactSection() {
             max-width: 100% !important;
             margin: 0 !important;
             border-radius: 22px 22px 0 0 !important;
-            box-shadow: 0 -18px 40px rgba(0,0,0,0.35) !important;
+            /* Same box-shadow as the coming-soon countdown box (ComingSoonCountdown.tsx). */
+            box-shadow: 0px 2px 2px rgba(0,0,0,0.25) !important;
           }
           .contact-cta-form-card { padding: 1.5rem !important; }
         }

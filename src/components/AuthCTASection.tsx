@@ -65,29 +65,44 @@ export default function AuthCTASection({ lang }: { lang: string }) {
             position: sticky;
             top: 0;
             z-index: 1;
-            padding: 2rem 0 0 !important;
+            /* Bottom gap: since the card is pinned at top:0, the scroll
+               distance before the contact card starts covering it equals
+               (this section's total height − viewport height). Now that the
+               copy block is hidden, the card alone is shorter than most
+               viewports, so this needs to be large or the total height would
+               be smaller than the viewport and contact would cover the card
+               immediately, with no dwell time at all. */
+            padding: 2rem 0 34rem !important;
+            background: transparent !important;
           }
           .auth-cta-inner {
             grid-template-columns: 1fr !important;
-            padding: 1.5rem !important;
-            gap: 1.75rem !important;
+            padding: 1.25rem !important;
+            gap: 0 !important;
             max-width: 100% !important;
             margin: 0 !important;
             border-radius: 22px 22px 0 0 !important;
           }
+          /* The marketing copy (headline, perks) repeats messaging already
+             shown in the hero and trust band higher up the page. Dropped
+             here so only the compact, functional form gets pinned — with
+             the full pitch text included, the card is nearly as tall as the
+             viewport itself, leaving the Google button / switch-hint link
+             with no breathing room above the screen edge. */
+          .auth-cta-copy { display: none !important; }
           .auth-cta-form-card { padding: 1.5rem !important; }
         }
       `}</style>
       <div style={inner} className="auth-cta-inner">
         {/* Left — copy */}
-        <div style={copy}>
+        <div style={copy} className="auth-cta-copy">
           <span style={eyebrow}>Empezá hoy</span>
           <h2 style={headline}>Invertí en bienes raíces desde cualquier monto</h2>
           <p style={sub}>
             Accedé a departamentos premium y comprá desde el <strong>5%</strong> de
             una unidad funcional. Creá tu cuenta en minutos o ingresá con tu usuario.
           </p>
-          <ul style={perks}>
+          <ul style={perks} className="auth-cta-perks">
             {[
               "Sin mínimo de capital elevado",
               "Transparencia total en cada inversión",
