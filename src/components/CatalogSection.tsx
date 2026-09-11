@@ -64,8 +64,10 @@ type Props = {
 export default function CatalogSection({ developments, units, isInvestor, hasPhone = true, myInvestedUnitIds = [], isAuthenticated = false, myFavoriteUnitIds = [], lang, limit, seeAllHref }: Props) {
   const [drawerUnit, setDrawerUnit] = useState<Unit | null>(null);
 
+  const mobileLimit = 4;
   const visibleUnits = limit != null ? units.slice(0, limit) : units;
-  const hasMore = limit != null && units.length > limit;
+  const hasMoreDesktop = limit != null && units.length > limit;
+  const hasMoreMobile = units.length > mobileLimit;
   const drawerDev = drawerUnit ? developments.find((d) => d.id === drawerUnit.development_id) : null;
 
   return (
@@ -76,6 +78,17 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
             display: flex !important;
             flex-direction: column;
             gap: 1.25rem;
+          }
+          .unit-grid > .unit-card-item:nth-child(n+${mobileLimit + 1}) {
+            display: none;
+          }
+          .see-all-desktop {
+            display: none !important;
+          }
+        }
+        @media (min-width: 761px) {
+          .see-all-mobile {
+            display: none !important;
           }
         }
       `}</style>
@@ -119,8 +132,16 @@ export default function CatalogSection({ developments, units, isInvestor, hasPho
           </div>
         )}
 
-        {hasMore && seeAllHref && (
-          <div style={seeAllRow}>
+        {hasMoreDesktop && seeAllHref && (
+          <div style={seeAllRow} className="see-all-desktop">
+            <Link href={seeAllHref} style={seeAllBtn}>
+              Ver más propiedades →
+            </Link>
+          </div>
+        )}
+
+        {hasMoreMobile && seeAllHref && (
+          <div style={seeAllRow} className="see-all-mobile">
             <Link href={seeAllHref} style={seeAllBtn}>
               Ver más propiedades →
             </Link>

@@ -7,6 +7,7 @@ import db from "@/lib/db";
 import { getAppUrl } from "@/lib/mail";
 import PublicShell from "@/components/PublicShell";
 import UnitHeroGallery from "@/components/UnitHeroGallery";
+import RelatedUnits from "@/components/RelatedUnits";
 import ImageGallery from "@/components/admin/ImageGallery";
 import BuyPanel from "@/components/BuyPanel";
 import OpenChatbotButton from "@/components/OpenChatbotButton";
@@ -191,14 +192,43 @@ export default async function PublicUnitPage({
       : []),
   ];
 
-  // Other units in the same development — same building, easy next step to invest
-  const relatedUnits = await db`
+  // Related properties — same development first, then other available units, so there's always a full row/carousel to keep browsing
+  const sameDevRelated = await db<{
+    id: number; identifier: string; price_usd: number | null;
+    total_m2: number | null; rooms: number | null; images: string[]; status: string;
+  }[]>`
     SELECT id, identifier, price_usd, total_m2, rooms, images, status
     FROM units
-    WHERE development_id = ${dev.id} AND id != ${unit.id}
-    ORDER BY (status = 'available') DESC, id ASC
-    LIMIT 6
+    WHERE development_id = ${dev.id} AND id != ${unit.id} AND status != 'sold'
+    ORDER BY id ASC
+    LIMIT 8
   `;
+  const otherDevRelated = await db<{
+    id: number; identifier: string; price_usd: number | null;
+    total_m2: number | null; rooms: number | null; images: string[]; status: string;
+    dev_address: string; dev_slug: string | null; dev_id: number; dev_amenities: string[];
+  }[]>`
+    SELECT u.id, u.identifier, u.price_usd, u.total_m2, u.rooms, u.images, u.status,
+           d.address AS dev_address, d.slug AS dev_slug, d.id AS dev_id, d.amenities AS dev_amenities
+    FROM units u
+    JOIN developments d ON d.id = u.development_id
+    WHERE u.development_id != ${dev.id} AND u.status != 'sold' AND d.visible = true
+    ORDER BY u.id DESC
+    LIMIT ${Math.max(0, 8 - sameDevRelated.length)}
+  `;
+  const relatedUnits = [
+    ...sameDevRelated.map((u) => ({
+      ...u,
+      dev_address: dev.address as string,
+      dev_slug: (dev.slug ?? dev.id) as string | number,
+      dev_amenities: (dev.amenities ?? []) as string[],
+    })),
+    ...otherDevRelated.map((u) => ({
+      ...u,
+      dev_slug: (u.dev_slug ?? u.dev_id) as string | number,
+      dev_amenities: (u.dev_amenities ?? []) as string[],
+    })),
+  ];
 
   const groupExpires = unit.group_expires_at ? new Date(unit.group_expires_at as string) : null;
   const groupExpired = groupExpires ? groupExpires < new Date() : false;
@@ -493,53 +523,6 @@ export default async function PublicUnitPage({
               </div>
             )}
 
-            {/* Related units — same building, easy next step */}
-            {relatedUnits.length > 0 && (
-              <div>
-                <h2 style={sectionTitle}>Otras unidades disponibles</h2>
-                <div style={relatedTrack}>
-                  {relatedUnits.map((u) => {
-                    const rsc = STATUS_UNIT[u.status] ?? { bg: "#f3f4f6", fg: "#374151", label: u.status };
-                    return (
-                      <TrackedLink
-                        key={u.id}
-                        href={`/${lang}/developments/${dev.slug ?? dev.id}/units/${u.id}`}
-                        style={relatedCard}
-                        ctaId="unit_page_related_unit"
-                        ctaLabel={u.identifier}
-                        ctaLocation="unit_page_related_units"
-                      >
-                        <div style={relatedImageWrap}>
-                          {u.images?.[0] ? (
-                            <Image src={u.images[0]} alt={u.identifier} fill style={{ objectFit: "cover" }} sizes="220px" />
-                          ) : (
-                            <div style={relatedImagePlaceholder} />
-                          )}
-                          {u.status !== "partial" && (
-                            <span style={{ ...relatedStatusPill, background: rsc.bg, color: rsc.fg }}>{rsc.label}</span>
-                          )}
-                        </div>
-                        <div style={relatedInfo}>
-                          <p style={relatedIdentifier}>Unidad {u.identifier}</p>
-                          <p style={relatedPrice}>
-                            {u.price_usd != null ? `USD ${Number(u.price_usd).toLocaleString("es-AR")}` : "Consultar"}
-                          </p>
-                          <div style={relatedStats}>
-                            {u.total_m2 != null && (
-                              <span style={relatedStat}><Maximize size={12} /> {Number(u.total_m2)} m²</span>
-                            )}
-                            {u.rooms != null && (
-                              <span style={relatedStat}><BedDouble size={12} /> {u.rooms} amb.</span>
-                            )}
-                          </div>
-                        </div>
-                      </TrackedLink>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             {/* Location — built from the development's address, no lat/lng stored so this uses Google's query-based embed */}
             {dev.address && (
               <div>
@@ -727,6 +710,8 @@ export default async function PublicUnitPage({
           </aside>
         </div>
       </div>
+
+      <RelatedUnits units={relatedUnits} lang={lang} />
     </PublicShell>
   );
 }
@@ -767,18 +752,6 @@ const infoGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "r
 const factCell: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.65rem", background: "#f3f4f6", borderRadius: 10, padding: "0.85rem 1rem" };
 const factIcon: React.CSSProperties = { color: "#4b5563", flexShrink: 0, display: "flex" };
 const factText: React.CSSProperties = { fontSize: "0.88rem", color: "#111", fontWeight: 600 };
-
-/* Related units */
-const relatedTrack: React.CSSProperties = { display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "0.25rem" };
-const relatedCard: React.CSSProperties = { flex: "0 0 200px", textDecoration: "none", display: "flex", flexDirection: "column", gap: "0.5rem" };
-const relatedImageWrap: React.CSSProperties = { position: "relative", width: "100%", aspectRatio: "4 / 3", borderRadius: 12, overflow: "hidden", background: "#e5e7eb" };
-const relatedImagePlaceholder: React.CSSProperties = { width: "100%", height: "100%", background: "#e5e7eb" };
-const relatedStatusPill: React.CSSProperties = { position: "absolute", top: 10, left: 10, borderRadius: 999, padding: "0.15rem 0.6rem", fontSize: "0.68rem", fontWeight: 700 };
-const relatedInfo: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.15rem" };
-const relatedIdentifier: React.CSSProperties = { fontSize: "0.78rem", color: "#6b7280", margin: 0, fontWeight: 600 };
-const relatedPrice: React.CSSProperties = { fontSize: "1rem", color: "#111", margin: 0, fontWeight: 800 };
-const relatedStats: React.CSSProperties = { display: "flex", gap: "0.6rem", marginTop: "0.1rem" };
-const relatedStat: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: "0.25rem", fontSize: "0.75rem", color: "#6b7280", fontWeight: 600 };
 
 /* Compact development pointer */
 const devMiniCard: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.85rem", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 12, padding: "0.85rem 1rem", flexWrap: "wrap" };

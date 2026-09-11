@@ -304,7 +304,7 @@ async function HomeSimulatorCatalogAndCTA({ lang }: { lang: Locale }) {
           isAuthenticated={!!session}
           myFavoriteUnitIds={myFavoriteUnitIds}
           lang={lang}
-          limit={6}
+          limit={8}
           seeAllHref={`/${lang}/propiedades`}
         />
       </div>
