@@ -21,6 +21,10 @@
   .banner {
     bottom: 6rem;
   }
+
+  .banner.noChatbotGap {
+    bottom: 1rem;
+  }
 }
 
 @keyframes slide-up {

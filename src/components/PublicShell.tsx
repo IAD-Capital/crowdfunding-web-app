@@ -47,7 +47,7 @@ export default async function PublicShell({
         <main style={{ flex: 1 }}>{children}</main>
         <Footer lang={lang} />
         {(settings?.chatbot_enabled ?? true) && <ChatbotWidget userEmail={session?.email ?? null} />}
-        <InstallAppPrompt />
+        <InstallAppPrompt chatbotEnabled={settings?.chatbot_enabled ?? true} />
       </div>
     </InstallPromptProvider>
   );

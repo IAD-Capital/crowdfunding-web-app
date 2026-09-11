@@ -8,6 +8,7 @@ import { subscribeToPush } from "@/lib/pushSubscription";
 import s from "./InstallAppPrompt.module.scss";
 
 const INSTALL_DISMISS_KEY = "pwa-install-dismissed-at";
+const INSTALL_SESSION_DISMISS_KEY = "pwa-install-dismissed-session";
 const NOTIF_DISMISS_KEY = "push-opt-in-dismissed-at";
 const DISMISS_DAYS = 14;
 const INSTALL_PROMPT_TIMEOUT_MS = 3000;
@@ -48,19 +49,24 @@ function canOfferNotifications(): boolean {
   );
 }
 
-export default function InstallAppPrompt() {
+export default function InstallAppPrompt({ chatbotEnabled = true }: { chatbotEnabled?: boolean }) {
   const [deferredEvent, setDeferredEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [stage, setStage] = useState<Stage>(null);
   const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
+    // Once the user closes the install banner, don't bring it back for the
+    // rest of this browser session/tab — even on iOS, where it would
+    // otherwise reappear on every navigation (see comment below).
+    const dismissedThisSession = sessionStorage.getItem(INSTALL_SESSION_DISMISS_KEY) === "1";
+
     // iOS has no native install prompt — "add to home screen" is the only
     // way to unlock notifications there, so it can't be subject to the same
     // 14-day dismiss suppression as the Android/desktop install banner below
     // (otherwise closing it once means neither it nor the notifications
     // opt-in can appear again for 2 weeks).
     if (isIos()) {
-      if (isStandalone()) {
+      if (isStandalone() || dismissedThisSession) {
         if (canOfferNotifications()) setStage("notifications");
       } else {
         setStage("install-ios");
@@ -68,7 +74,7 @@ export default function InstallAppPrompt() {
       return;
     }
 
-    if (isStandalone() || isDismissedRecently(INSTALL_DISMISS_KEY)) {
+    if (isStandalone() || isDismissedRecently(INSTALL_DISMISS_KEY) || dismissedThisSession) {
       if (canOfferNotifications()) setStage("notifications");
       return;
     }
@@ -106,6 +112,7 @@ export default function InstallAppPrompt() {
 
   function dismissInstall() {
     localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));
+    sessionStorage.setItem(INSTALL_SESSION_DISMISS_KEY, "1");
     setDeferredEvent(null);
     setStage(canOfferNotifications() ? "notifications" : null);
   }
@@ -137,9 +144,11 @@ export default function InstallAppPrompt() {
 
   if (stage === null) return null;
 
+  const bannerClassName = chatbotEnabled ? s.banner : `${s.banner} ${s.noChatbotGap}`;
+
   if (stage === "notifications") {
     return (
-      <div className={s.banner} role="dialog" aria-label="Activar notificaciones">
+      <div className={bannerClassName} role="dialog" aria-label="Activar notificaciones">
         <div className={s.iconCircle}>
           <Bell size={20} />
         </div>
@@ -158,7 +167,7 @@ export default function InstallAppPrompt() {
   }
 
   return (
-    <div className={s.banner} role="dialog" aria-label="Instalar aplicación">
+    <div className={bannerClassName} role="dialog" aria-label="Instalar aplicación">
       <Image src="/icons/icon-192.png" alt="" width={40} height={40} className={s.icon} />
       <div className={s.text}>
         <p className={s.title}>Instalá la app de IAD Capital</p>
