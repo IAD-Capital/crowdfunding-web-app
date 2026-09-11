@@ -10,12 +10,18 @@ type Props = {
   unitContext?: UnitContext;
   title?: string;
   description?: string;
+  initialFullName?: string;
+  initialEmail?: string;
+  initialPhone?: string;
 };
 
-export default function ContactForm({ unitContext, title, description }: Props) {
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+export default function ContactForm({
+  unitContext, title, description,
+  initialFullName = "", initialEmail = "", initialPhone = "",
+}: Props) {
+  const [fullName, setFullName] = useState(initialFullName);
+  const [email, setEmail] = useState(initialEmail);
+  const [phone, setPhone] = useState(initialPhone);
   const [message, setMessage] = useState(unitContext ? `Quisiera recibir más información sobre ${unitContext.label}.` : "");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
@@ -45,9 +51,9 @@ export default function ContactForm({ unitContext, title, description }: Props) 
       return;
     }
     setResult({ ok: true, message: "¡Gracias! Recibimos tu mensaje y te vamos a contactar a la brevedad." });
-    setFullName("");
-    setEmail("");
-    setPhone("");
+    setFullName(initialFullName);
+    setEmail(initialEmail);
+    setPhone(initialPhone);
     setMessage(unitContext ? `Quisiera recibir más información sobre ${unitContext.label}.` : "");
   }
 

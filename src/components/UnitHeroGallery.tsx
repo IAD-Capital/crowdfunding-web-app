@@ -95,6 +95,7 @@ export default function UnitHeroGallery({
 
   const gridExtras = images.slice(1, 5);
   const hiddenCount = images.length - 5;
+  const hasGrid = gridExtras.length > 0;
 
   return (
     <div style={wrap} className="unit-hero-wrap">
@@ -103,22 +104,20 @@ export default function UnitHeroGallery({
           .unit-hero-wrap { padding-left: 0 !important; padding-right: 0 !important; }
         }
       `}</style>
-      {count > 1 && (
-        <style>{`
-          .unit-hero-collage { display: none; }
-          @media (min-width: 768px) {
-            .unit-hero-carousel { display: none !important; }
-            .unit-hero-collage { display: grid !important; }
-          }
-        `}</style>
-      )}
+      <style>{`
+        .unit-hero-collage { display: none; }
+        @media (min-width: 768px) {
+          .unit-hero-carousel { display: none !important; }
+          .unit-hero-collage { display: grid !important; }
+        }
+      `}</style>
 
-      {/* Desktop / tablet — collage: one large image plus up to four smaller ones */}
-      {count > 1 && (
-        <div style={collageWrap} className="unit-hero-collage">
-          <button type="button" style={collageMain} onClick={() => openAt(0)} aria-label="Ver foto 1">
-            <Image src={images[0]} alt={alt} fill style={{ objectFit: "cover" }} priority sizes="50vw" />
-          </button>
+      {/* Desktop / tablet — collage: one large image plus up to four smaller ones (or just the single photo) */}
+      <div style={{ ...collageWrap, gridTemplateColumns: hasGrid ? "1fr 1fr" : "1fr" }} className="unit-hero-collage">
+        <button type="button" style={collageMain} onClick={() => openAt(0)} aria-label="Ver foto 1">
+          <Image src={images[0]} alt={alt} fill style={{ objectFit: "cover" }} priority sizes={hasGrid ? "50vw" : "100vw"} />
+        </button>
+        {hasGrid && (
           <div style={collageGrid}>
             {gridExtras.map((src, i) => {
               const realIndex = i + 1;
@@ -142,29 +141,29 @@ export default function UnitHeroGallery({
               );
             })}
           </div>
+        )}
 
-          <button type="button" onClick={handleBack} style={backBtn} aria-label="Volver">
-            <ArrowLeft size={18} />
-          </button>
-          <div style={heroActionsWrap}>
-            <FavoriteButton
-              unitId={unitId}
-              initialFavorited={initialFavorited}
-              isAuthenticated={isAuthenticated}
-              lang={lang}
-              label={alt}
-              location="unit_page_hero"
-              variant="hero"
-            />
-            <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
-          </div>
-          {hiddenCount <= 0 && (
-            <button type="button" style={expandBtn} onClick={() => setLightbox(true)} aria-label="Ver todas las fotos">
-              <Expand size={16} /> Ver fotos
-            </button>
-          )}
+        <button type="button" onClick={handleBack} style={backBtn} aria-label="Volver">
+          <ArrowLeft size={18} />
+        </button>
+        <div style={heroActionsWrap}>
+          <FavoriteButton
+            unitId={unitId}
+            initialFavorited={initialFavorited}
+            isAuthenticated={isAuthenticated}
+            lang={lang}
+            label={alt}
+            location="unit_page_hero"
+            variant="hero"
+          />
+          <ShareButton url={shareUrl} title={shareTitle} variant="hero" />
         </div>
-      )}
+        {hiddenCount <= 0 && (
+          <button type="button" style={expandBtn} onClick={() => setLightbox(true)} aria-label="Ver todas las fotos">
+            <Expand size={16} /> Ver fotos
+          </button>
+        )}
+      </div>
 
       {/* Mobile — swipeable single-image carousel (and the fallback for a single photo) */}
       <div className="unit-hero-carousel">
