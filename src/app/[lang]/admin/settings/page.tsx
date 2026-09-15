@@ -2,15 +2,22 @@ import db from "@/lib/db";
 import InvestmentTiersForm from "@/components/admin/InvestmentTiersForm";
 import ComingSoonSettingsForm from "@/components/admin/ComingSoonSettingsForm";
 import ChatbotSettingsForm from "@/components/admin/ChatbotSettingsForm";
+import InstallAppSettingsForm from "@/components/admin/InstallAppSettingsForm";
 import EmailTestForm, { type EmailTestUser } from "@/components/admin/EmailTestForm";
 import type { TierThresholds } from "@/lib/investmentTiers";
 
 export default async function AdminSettingsPage() {
-  // SELECT * so this page keeps working even before migration 008 has added
-  // chatbot_enabled — the toggle just defaults to enabled in that case.
+  // SELECT * so this page keeps working even before migrations 008/017 have
+  // added chatbot_enabled/install_app_enabled — the toggles just default to
+  // enabled in that case.
   const [[row], users] = await Promise.all([
     db<
-      (TierThresholds & { coming_soon_enabled: boolean; coming_soon_expires_at: string | null; chatbot_enabled?: boolean })[]
+      (TierThresholds & {
+        coming_soon_enabled: boolean;
+        coming_soon_expires_at: string | null;
+        chatbot_enabled?: boolean;
+        install_app_enabled?: boolean;
+      })[]
     >`SELECT * FROM app_settings WHERE id = 1`,
     db<EmailTestUser[]>`SELECT id, full_name, email FROM users ORDER BY full_name`,
   ]);
@@ -32,6 +39,7 @@ export default async function AdminSettingsPage() {
         initialExpiresAt={row?.coming_soon_expires_at ?? null}
       />
       <ChatbotSettingsForm initialEnabled={row?.chatbot_enabled ?? true} />
+      <InstallAppSettingsForm initialEnabled={row?.install_app_enabled ?? true} />
       <EmailTestForm users={users} senderEmail={process.env.MAIL_USER ?? "iadcapital.app@gmail.com"} />
       <InvestmentTiersForm initial={thresholds} />
     </div>

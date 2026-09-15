@@ -5,6 +5,7 @@ import { getSession } from "@/lib/session";
 import { getDictionary, type Locale } from "@/i18n";
 import UserMenu from "./UserMenu";
 import NotificationBell, { type Notification } from "./NotificationBell";
+import HeaderNotifyButton from "./HeaderNotifyButton";
 import ScrollHeader from "./ScrollHeader";
 import DevelopmentsMenu from "./DevelopmentsMenu";
 import MobileMenu from "./MobileMenu";
@@ -84,9 +85,21 @@ export default async function Header({ lang }: Props) {
 
         <nav className={s.centerNav}>
           <DevelopmentsMenu properties={featuredProperties} lang={lang} />
+          <div className={s.navItem}>
+            <TrackedLink
+              href={`/${lang}#how-it-works`}
+              className={`${s.navLink} ${s.navTrigger}`}
+              ctaId="header_como_funciona"
+              ctaLabel="Cómo funciona"
+              ctaLocation="header"
+            >
+              Cómo funciona
+            </TrackedLink>
+          </div>
         </nav>
 
         <div className={s.right}>
+          <HeaderNotifyButton />
           <TrackedLink
             href={`/${lang}/como-invertir`}
             className={s.btnCta}
