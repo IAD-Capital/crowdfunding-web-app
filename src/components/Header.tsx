@@ -96,19 +96,21 @@ export default async function Header({ lang }: Props) {
               Cómo funciona
             </TrackedLink>
           </div>
+          <div className={s.navItem}>
+            <TrackedLink
+              href={`/${lang}/como-invertir`}
+              className={`${s.navLink} ${s.navTrigger}`}
+              ctaId="header_como_invertir"
+              ctaLabel="Quiero invertir"
+              ctaLocation="header"
+            >
+              Quiero invertir
+            </TrackedLink>
+          </div>
         </nav>
 
         <div className={s.right}>
           <HeaderNotifyButton />
-          <TrackedLink
-            href={`/${lang}/como-invertir`}
-            className={s.btnCta}
-            ctaId="header_como_invertir"
-            ctaLabel="Quiero invertir"
-            ctaLocation="header"
-          >
-            Quiero invertir
-          </TrackedLink>
           {session ? (
             <>
               {session.role === "investor" && (
@@ -117,10 +119,10 @@ export default async function Header({ lang }: Props) {
               <UserMenu lang={lang} session={session} adminLabel={t.header.admin} logoutLabel={t.auth.logout} />
             </>
           ) : (
-            <>
+            <div className={s.authGroup}>
               <TrackedLink
                 href={`/${lang}/login`}
-                className={s.navLink}
+                className={s.btnLoginPill}
                 ctaId="header_login"
                 ctaLabel={t.header.signIn}
                 ctaLocation="header"
@@ -129,14 +131,14 @@ export default async function Header({ lang }: Props) {
               </TrackedLink>
               <TrackedLink
                 href={`/${lang}/signup`}
-                className={s.btnOutline}
+                className={s.btnSignupPill}
                 ctaId="header_signup"
                 ctaLabel={t.header.signUp}
                 ctaLocation="header"
               >
                 {t.header.signUp}
               </TrackedLink>
-            </>
+            </div>
           )}
         </div>
 

@@ -62,7 +62,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  color: #374151;
+  color: #111;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
@@ -99,11 +99,14 @@
   display: flex;
   align-items: center;
   align-self: stretch;
+  gap: 0.5rem;
 }
 
 .navTrigger {
-  padding: 0.5rem 0.9rem;
+  padding: 0.5rem 1.1rem;
+  border: 1.5px solid #111;
   border-radius: 999px;
+  color: #111;
   font-weight: 600;
   transition: background 0.2s ease, color 0.2s ease;
 
@@ -332,6 +335,51 @@
 
   &:hover {
     background: #1539a8;
+  }
+}
+
+/* Auth pill pair (Iniciar sesión / Registrarse) */
+.authGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btnLoginPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #111;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #e9ebef;
+  }
+}
+
+.btnSignupPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #000;
   }
 }
 
