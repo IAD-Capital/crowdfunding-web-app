@@ -33,7 +33,13 @@ type InstallPromptContextValue = {
 
 const InstallPromptContext = createContext<InstallPromptContextValue | null>(null);
 
-export function InstallPromptProvider({ children }: { children: ReactNode }) {
+export function InstallPromptProvider({
+  children,
+  installEnabled = true,
+}: {
+  children: ReactNode;
+  installEnabled?: boolean;
+}) {
   const [ready, setReady] = useState(false);
   const [deferredEvent, setDeferredEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [standalone, setStandalone] = useState(false);
@@ -82,8 +88,8 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
 
   const value: InstallPromptContextValue = {
     ready,
-    canInstall: ready && !standalone && !!deferredEvent,
-    isIosInstallable: ready && !standalone && isIos(),
+    canInstall: ready && installEnabled && !standalone && !!deferredEvent,
+    isIosInstallable: ready && installEnabled && !standalone && isIos(),
     notificationsAvailable: ready && notifPermission === "default" && (!isIos() || standalone),
     subscribing,
     requestInstall,

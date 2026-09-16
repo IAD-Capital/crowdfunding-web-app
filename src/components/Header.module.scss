@@ -68,10 +68,38 @@
   font-weight: 500;
 }
 
+.notifyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: #f3f4f6;
+    border-color: #b0b5bd;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+}
+
 .centerNav {
   display: flex;
   align-items: center;
   align-self: stretch;
+  gap: 0.5rem;
 }
 
 .navTrigger {
@@ -83,6 +111,28 @@
   &:hover,
   &:focus-visible {
     background: rgba(17, 17, 17, 0.06);
+  }
+}
+
+.navCta {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1.3rem;
+  border: none;
+  border-radius: 999px;
+  background: #1b4de0;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(27, 77, 224, 0.35);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    background: #1539a8;
+    box-shadow: 0 6px 18px rgba(27, 77, 224, 0.42);
+    transform: translateY(-1px);
   }
 }
 
@@ -305,6 +355,51 @@
 
   &:hover {
     background: #1539a8;
+  }
+}
+
+/* Auth pill pair (Iniciar sesión / Registrarse) */
+.authGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btnLoginPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #111;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #e9ebef;
+  }
+}
+
+.btnSignupPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #000;
   }
 }
 

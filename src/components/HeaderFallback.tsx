@@ -19,22 +19,31 @@ export default function HeaderFallback({ lang }: { lang: Locale }) {
 
         <nav className={s.centerNav}>
           <div className={s.navItem}>
-            <Link href={`/${lang}#catalog`} className={s.navLink}>
+            <Link href={`/${lang}#catalog`} className={`${s.navLink} ${s.navTrigger}`}>
               Propiedades
+            </Link>
+          </div>
+          <div className={s.navItem}>
+            <Link href={`/${lang}#how-it-works`} className={`${s.navLink} ${s.navTrigger}`}>
+              Cómo funciona
+            </Link>
+          </div>
+          <div className={s.navItem}>
+            <Link href={`/${lang}/como-invertir`} className={s.navCta}>
+              Quiero invertir
             </Link>
           </div>
         </nav>
 
         <div className={s.right}>
-          <Link href={`/${lang}/como-invertir`} className={s.btnCta}>
-            Quiero invertir
-          </Link>
-          <Link href={`/${lang}/login`} className={s.navLink}>
-            Iniciar sesión
-          </Link>
-          <Link href={`/${lang}/signup`} className={s.btnOutline}>
-            Registrarse
-          </Link>
+          <div className={s.authGroup}>
+            <Link href={`/${lang}/login`} className={s.btnLoginPill}>
+              Iniciar sesión
+            </Link>
+            <Link href={`/${lang}/signup`} className={s.btnSignupPill}>
+              Registrarse
+            </Link>
+          </div>
         </div>
 
         <button className={s.hamburgerBtn} aria-hidden tabIndex={-1}>

@@ -49,12 +49,25 @@ function canOfferNotifications(): boolean {
   );
 }
 
-export default function InstallAppPrompt({ chatbotEnabled = true }: { chatbotEnabled?: boolean }) {
+export default function InstallAppPrompt({
+  chatbotEnabled = true,
+  installEnabled = true,
+}: {
+  chatbotEnabled?: boolean;
+  installEnabled?: boolean;
+}) {
   const [deferredEvent, setDeferredEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [stage, setStage] = useState<Stage>(null);
   const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
+    // Admin has turned off the install promotion site-wide — skip straight
+    // to (optionally) offering the notifications opt-in, which is unrelated.
+    if (!installEnabled) {
+      if (canOfferNotifications()) setStage("notifications");
+      return;
+    }
+
     // Once the user closes the install banner, don't bring it back for the
     // rest of this browser session/tab — even on iOS, where it would
     // otherwise reappear on every navigation (see comment below).
@@ -108,7 +121,7 @@ export default function InstallAppPrompt({ chatbotEnabled = true }: { chatbotEna
       window.removeEventListener("appinstalled", onAppInstalled);
       clearTimeout(timer);
     };
-  }, []);
+  }, [installEnabled]);
 
   function dismissInstall() {
     localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import {
-  Menu, X, Wallet, Heart, UserRound, Settings, LogOut, LogIn, UserPlus, Download, Bell, Share, SquarePlus,
+  Menu, X, Wallet, Heart, UserRound, Settings, LogOut, LogIn, UserPlus, Download, Bell, Share, SquarePlus, Info,
 } from "lucide-react";
 import Link from "next/link";
 import NotificationBell, { type Notification } from "./NotificationBell";
@@ -135,8 +135,16 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
 
               <div className={s.mobileMenuSection}>
                 <Link
+                  href={`/${lang}#how-it-works`}
+                  className={s.userMenuItem}
+                  onClick={() => { trackCtaClick("mobile_menu_como_funciona", { location: "mobile_menu" }); close(); }}
+                >
+                  <Info size={16} /> Cómo funciona
+                </Link>
+                <Link
                   href={`/${lang}/como-invertir`}
                   className={`${s.btnCta} ${s.blockBtn}`}
+                  style={{ marginTop: "0.4rem" }}
                   onClick={() => { trackCtaClick("mobile_menu_como_invertir", { location: "mobile_menu" }); close(); }}
                 >
                   Quiero invertir
@@ -197,7 +205,7 @@ export default function MobileMenu({ lang, session, notifications, featuredPrope
                       onClick={() => requestNotifications()}
                       disabled={subscribing}
                     >
-                      <Bell size={16} /> {subscribing ? "Activando…" : "Activar notificaciones"}
+                      <Bell size={16} /> {subscribing ? "Activando…" : "Recibir novedades"}
                     </button>
                   )}
                 </div>

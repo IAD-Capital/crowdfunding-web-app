@@ -101,7 +101,7 @@ export default function UserMenu({ lang, session, adminLabel, logoutLabel }: Pro
         )}
         {ready && notificationsAvailable && (
           <button type="button" className={s.userMenuItem} onClick={requestNotifications} disabled={subscribing}>
-            <Bell size={16} /> {subscribing ? "Activando…" : "Activar notificaciones"}
+            <Bell size={16} /> {subscribing ? "Activando…" : "Recibir novedades"}
           </button>
         )}
         <button

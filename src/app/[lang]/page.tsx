@@ -8,12 +8,43 @@ import AuthCTASection from "@/components/AuthCTASection";
 import FeaturedUnitsHero, { type FeaturedUnit } from "@/components/FeaturedUnitsHero";
 import ContactSection from "@/components/ContactSection";
 import ScrollReveal from "@/components/ScrollReveal";
+import StoryImage from "@/components/StoryImage";
 import CountUpNumber from "@/components/CountUpNumber";
 import Skeleton from "@/components/Skeleton";
-import { FileCheck2, Eye, Activity, ShieldCheck } from "lucide-react";
 import db from "@/lib/db";
 import type { Development, Unit } from "@/components/CatalogSection";
 import { MIN_ENTRY_PCT } from "@/lib/investmentTiers";
+
+const STORY_STEPS = [
+  {
+    img: "/images/story/fideicomiso.svg",
+    title: "Se constituye un fideicomiso",
+    desc: "Una fiduciaria de confianza arma el fideicomiso donde queda registrado cada socio inversor, con su porcentaje y condiciones.",
+  },
+  {
+    img: "/images/story/persona-juridica.svg",
+    title: "Una única persona jurídica invierte por vos",
+    desc: "El fideicomiso pasa a ser la persona jurídica que compra y participa en la inversión, respaldando legalmente a todos los socios.",
+  },
+  {
+    img: "/images/story/unidad-asignada.svg",
+    title: "Se asigna una unidad específica",
+    desc: "A ese fideicomiso se le asigna una unidad puntual del desarrollo —por ejemplo, la 1A del proyecto Carranza— donde queda reflejada tu inversión.",
+  },
+  {
+    img: "/images/story/venta-participacion.svg",
+    title: "Vendé tu participación cuando quieras",
+    desc: "Cada inversor puede vender su porcentaje en cualquier momento, con un proceso simple, documentado y transparente.",
+  },
+];
+
+const EXIT_TIMELINE = [
+  { when: "Octubre 2026", label: "Invertís el 20% de una unidad en construcción", amount: "USD 20.000", note: "sobre un valor total de USD 100.000" },
+  { when: "Octubre 2029", label: "Se entrega la obra y sube el valor estimado", amount: "USD 140.000", note: "valor proyectado de la unidad terminada" },
+  { when: "Agosto – Noviembre 2029", label: "1er plazo de venta (4 meses)", amount: "USD 145.000", note: "precio de salida objetivo" },
+  { when: "Diciembre 2029 – Enero 2030", label: "2do plazo de venta (2 meses)", amount: "USD 130.000", note: "si no se concretó la venta anterior" },
+  { when: "Desde febrero 2030", label: "Nuevos plazos, precio decreciente", amount: "USD 125.000 en adelante", note: "hasta un valor mínimo preestablecido, o se alquila la unidad" },
+];
 
 type DevRow = Omit<Development, "unit_count"> & { unit_count: number; completion_date: Date | string | null };
 type UnitRow = Omit<Unit, "price_usd" | "current_price_usd" | "available_pct" | "group_expires_at"> & {
@@ -22,13 +53,6 @@ type UnitRow = Omit<Unit, "price_usd" | "current_price_usd" | "available_pct" | 
   available_pct: number | string;
   group_expires_at: Date | string | null;
 };
-
-const TRUST_ITEMS = [
-  { Icon: FileCheck2, title: "Respaldo legal", desc: "Cada inversión se formaliza con documentación y respaldo notarial, dejando registrada tu participación." },
-  { Icon: Eye, title: "Transparencia total", desc: "Conocé al grupo desarrollador. Estudiá el proyecto, sus costos, avances y proyecciones antes de tomar una decisión." },
-  { Icon: Activity, title: "Seguimiento en tiempo real", desc: "Seguí el avance de obra y la evolución de tus inversiones directamente de forma presencial o desde tu perfil." },
-  { Icon: ShieldCheck, title: "Salida simple y transparente", desc: "Solicitá la salida de tu inversión mediante un proceso claro, documentado y supervisado." },
-];
 
 // Everything the DB-dependent sections need, fetched once per request and
 // shared (via React's cache()) between the two independent Suspense
@@ -158,9 +182,9 @@ export default function Home({ params }: { params: { lang: string } }) {
         @media (max-width: 760px) {
           .stats-strip { grid-template-columns: 1fr 1fr !important; }
           .stats-strip > div:nth-child(2) { border-right: none !important; }
-          .trust-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
-          .trust-card { padding: 2rem 1.6rem !important; }
           .how-grid { grid-template-columns: 1fr !important; }
+          .story-row { grid-template-columns: 1fr !important; gap: 1.25rem !important; }
+          .story-row > div { order: initial !important; }
         }
         @media (max-width: 480px) {
           .stats-strip { grid-template-columns: 1fr !important; }
@@ -178,29 +202,6 @@ export default function Home({ params }: { params: { lang: string } }) {
       <Suspense fallback={<HeroStatsSkeleton />}>
         <HomeHeroAndStats lang={lang} />
       </Suspense>
-
-      {/* ─── Trust band — static, no data dependency, renders immediately ── */}
-      <section style={trustSection}>
-        <ScrollReveal>
-          <div style={trustHeader}>
-            <div style={eyebrow}>Por qué IAD Capital</div>
-            <h2 style={trustTitle}>Tu inversión, protegida en cada paso</h2>
-          </div>
-        </ScrollReveal>
-        <div style={trustGrid} className="trust-grid">
-          {TRUST_ITEMS.map(({ Icon, title, desc }, i) => (
-            <ScrollReveal key={title} delay={i * 140}>
-              <div style={trustCard} className="trust-card">
-                <div style={trustIconWrap}>
-                  <Icon size={20} color="var(--c-accent)" strokeWidth={2} />
-                </div>
-                <h3 style={trustCardTitle}>{title}</h3>
-                <p style={trustCardDesc}>{desc}</p>
-              </div>
-            </ScrollReveal>
-          ))}
-        </div>
-      </section>
 
       {/* ─── How it works — static, renders immediately ─────────────────── */}
       <section id="how-it-works" style={howSection}>
@@ -222,6 +223,64 @@ export default function Home({ params }: { params: { lang: string } }) {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ─── Qué pasa después de formalizar la inversión — light band ───── */}
+      <section style={storySection}>
+        <div style={storySectionInner}>
+          <div style={storyIntro}>
+            <h3 style={storyIntroTitle}>¿Qué pasa una vez que formalizás tu inversión?</h3>
+          </div>
+
+          <div style={storyList}>
+            {STORY_STEPS.map((step, i) => (
+              <ScrollReveal key={step.title} direction={i % 2 === 0 ? "left" : "right"}>
+                <div style={storyRow} className="story-row">
+                  <div style={{ order: i % 2 === 0 ? 1 : 2 }}>
+                    <StoryImage src={step.img} alt={step.title} />
+                  </div>
+                  <div style={{ ...storyTextWrap, order: i % 2 === 0 ? 2 : 1 }}>
+                    <h4 style={storyStepTitle}>{step.title}</h4>
+                    <p style={storyStepDesc}>{step.desc}</p>
+                  </div>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+
+          {/* ─── Ejemplo de venta y salida ─────────────────────────────── */}
+          <ScrollReveal>
+            <div style={exampleCard}>
+              <div style={eyebrow}>Ejemplo</div>
+              <h4 style={exampleTitle}>Así se define la salida de una inversión</h4>
+              <p style={exampleIntro}>
+                Como en toda inversión, se espera que el valor de la unidad aumente a medida que avanza la obra.
+                Por eso, desde el inicio se fijan los plazos y precios de salida —así todos los socios saben qué esperar.
+              </p>
+              <div style={timelineWrap}>
+                {EXIT_TIMELINE.map((e, i) => (
+                  <div key={e.when} style={timelineItem}>
+                    <div style={timelineDotCol}>
+                      <span style={timelineDot} />
+                      {i < EXIT_TIMELINE.length - 1 && <span style={timelineLine} />}
+                    </div>
+                    <div style={timelineContent}>
+                      <span style={timelineWhen}>{e.when}</span>
+                      <span style={timelineLabel}>{e.label}</span>
+                      <span style={timelineAmount}>
+                        {e.amount} <span style={timelineNote}>{e.note}</span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p style={exampleClosing}>
+                Cuando la venta se concreta —en cualquiera de esas etapas, o incluso alquilando la unidad mientras tanto—
+                lo recaudado se reparte entre los inversores en partes proporcionales a su participación.
+              </p>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -397,19 +456,7 @@ const statCell: React.CSSProperties = { padding: "1.4rem 1.6rem", borderRight: "
 const statNum: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "2.1rem", fontWeight: 800, color: "var(--c-ink)", letterSpacing: "-0.03em" };
 const statLabel: React.CSSProperties = { fontSize: "0.85rem", color: "var(--c-text-secondary)", fontWeight: 500, marginTop: "0.1rem" };
 
-/* Trust band */
-const trustSection: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "0.5rem 1.5rem 4rem" };
 const eyebrow: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em", color: "var(--c-accent)", textTransform: "uppercase", marginBottom: "0.7rem" };
-const trustHeader: React.CSSProperties = { textAlign: "center", maxWidth: 620, margin: "0 auto 2.75rem" };
-const trustTitle: React.CSSProperties = { fontSize: "2.1rem", fontWeight: 800, letterSpacing: "-0.025em", margin: 0, color: "var(--c-ink)" };
-const trustGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem" };
-const trustCard: React.CSSProperties = { background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 16, padding: "1.6rem" };
-const trustIconWrap: React.CSSProperties = {
-  width: 42, height: 42, borderRadius: 11, background: "var(--c-accent-light)",
-  display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.1rem",
-};
-const trustCardTitle: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, margin: "0 0 0.5rem", color: "var(--c-ink)" };
-const trustCardDesc: React.CSSProperties = { fontSize: "0.9rem", lineHeight: 1.5, color: "var(--c-text-secondary)", margin: 0 };
 
 /* How it works */
 const howSection: React.CSSProperties = { background: "var(--c-ink)", marginTop: "1.5rem" };
@@ -425,3 +472,30 @@ const howCard: React.CSSProperties = {
 const howNum: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "0.95rem", fontWeight: 800, color: "#7fa0ff", marginBottom: "2.5rem" };
 const howCardTitle: React.CSSProperties = { fontSize: "1.3rem", fontWeight: 700, margin: 0, color: "#fff" };
 const howCardDesc: React.CSSProperties = { color: "var(--c-text-on-dark)", fontSize: "0.95rem", lineHeight: 1.55, margin: 0 };
+
+/* Storytelling: qué pasa después de invertir — light band */
+const storySection: React.CSSProperties = { background: "var(--c-border-soft)" };
+const storySectionInner: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "5rem 1.5rem" };
+const storyIntro: React.CSSProperties = { width: "100%", textAlign: "center", marginBottom: "3rem" };
+const storyIntroTitle: React.CSSProperties = { fontSize: "1.9rem", fontWeight: 800, letterSpacing: "-0.02em", margin: 0, color: "var(--c-ink)", lineHeight: 1.2 };
+const storyList: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "3.5rem", marginBottom: "4rem" };
+const storyRow: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5rem", alignItems: "center" };
+const storyTextWrap: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.6rem" };
+const storyStepTitle: React.CSSProperties = { fontSize: "1.4rem", fontWeight: 700, margin: 0, color: "var(--c-ink)" };
+const storyStepDesc: React.CSSProperties = { color: "var(--c-text-secondary)", fontSize: "1rem", lineHeight: 1.6, margin: 0 };
+
+/* Storytelling: ejemplo de venta y salida */
+const exampleCard: React.CSSProperties = { background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 20, padding: "2.5rem" };
+const exampleTitle: React.CSSProperties = { fontSize: "1.5rem", fontWeight: 800, margin: "0.5rem 0 0.75rem", color: "var(--c-ink)" };
+const exampleIntro: React.CSSProperties = { color: "var(--c-text-secondary)", fontSize: "1rem", lineHeight: 1.6, margin: "0 0 2rem", maxWidth: 720 };
+const timelineWrap: React.CSSProperties = { display: "flex", flexDirection: "column" };
+const timelineItem: React.CSSProperties = { display: "grid", gridTemplateColumns: "24px 1fr", gap: "1.25rem" };
+const timelineDotCol: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center" };
+const timelineDot: React.CSSProperties = { width: 12, height: 12, borderRadius: "50%", background: "var(--c-accent)", flexShrink: 0, marginTop: 4 };
+const timelineLine: React.CSSProperties = { flex: 1, width: 2, background: "var(--c-border)", margin: "4px 0" };
+const timelineContent: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.15rem", paddingBottom: "1.75rem" };
+const timelineWhen: React.CSSProperties = { fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--c-accent)" };
+const timelineLabel: React.CSSProperties = { fontSize: "1rem", fontWeight: 600, color: "var(--c-ink)" };
+const timelineAmount: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 800, color: "var(--c-ink)" };
+const timelineNote: React.CSSProperties = { fontSize: "0.85rem", fontWeight: 500, color: "var(--c-text-secondary)" };
+const exampleClosing: React.CSSProperties = { color: "var(--c-text-secondary)", fontSize: "0.95rem", lineHeight: 1.6, margin: "1rem 0 0", paddingTop: "1.5rem", borderTop: "1px solid var(--c-border)" };
