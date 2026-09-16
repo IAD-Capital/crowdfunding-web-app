@@ -94,10 +94,6 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
               {totalUnitsCount} departamento{totalUnitsCount !== 1 ? "s" : ""} activo{totalUnitsCount !== 1 ? "s" : ""} · invertí desde el 5%
             </span>
           )}
-
-
-
-
           <h2 style={title}>
             {minInvestUsd != null ? (
               <>Invertí en propiedades desde <span style={titleHighlight}>{fmtUsd(minInvestUsd)}</span></>
