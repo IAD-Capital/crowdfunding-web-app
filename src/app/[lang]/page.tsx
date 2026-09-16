@@ -7,10 +7,8 @@ import InvestmentSimulator from "@/components/InvestmentSimulator";
 import AuthCTASection from "@/components/AuthCTASection";
 import FeaturedUnitsHero, { type FeaturedUnit } from "@/components/FeaturedUnitsHero";
 import ContactSection from "@/components/ContactSection";
-import ScrollReveal from "@/components/ScrollReveal";
 import CountUpNumber from "@/components/CountUpNumber";
 import Skeleton from "@/components/Skeleton";
-import { FileCheck2, Eye, Activity, ShieldCheck } from "lucide-react";
 import db from "@/lib/db";
 import type { Development, Unit } from "@/components/CatalogSection";
 import { MIN_ENTRY_PCT } from "@/lib/investmentTiers";
@@ -22,13 +20,6 @@ type UnitRow = Omit<Unit, "price_usd" | "current_price_usd" | "available_pct" | 
   available_pct: number | string;
   group_expires_at: Date | string | null;
 };
-
-const TRUST_ITEMS = [
-  { Icon: FileCheck2, title: "Respaldo legal", desc: "Cada inversión se formaliza con documentación y respaldo notarial, dejando registrada tu participación." },
-  { Icon: Eye, title: "Transparencia total", desc: "Conocé al grupo desarrollador. Estudiá el proyecto, sus costos, avances y proyecciones antes de tomar una decisión." },
-  { Icon: Activity, title: "Seguimiento en tiempo real", desc: "Seguí el avance de obra y la evolución de tus inversiones directamente de forma presencial o desde tu perfil." },
-  { Icon: ShieldCheck, title: "Salida simple y transparente", desc: "Solicitá la salida de tu inversión mediante un proceso claro, documentado y supervisado." },
-];
 
 // Everything the DB-dependent sections need, fetched once per request and
 // shared (via React's cache()) between the two independent Suspense
@@ -158,8 +149,6 @@ export default function Home({ params }: { params: { lang: string } }) {
         @media (max-width: 760px) {
           .stats-strip { grid-template-columns: 1fr 1fr !important; }
           .stats-strip > div:nth-child(2) { border-right: none !important; }
-          .trust-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
-          .trust-card { padding: 2rem 1.6rem !important; }
           .how-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 480px) {
@@ -178,29 +167,6 @@ export default function Home({ params }: { params: { lang: string } }) {
       <Suspense fallback={<HeroStatsSkeleton />}>
         <HomeHeroAndStats lang={lang} />
       </Suspense>
-
-      {/* ─── Trust band — static, no data dependency, renders immediately ── */}
-      <section style={trustSection}>
-        <ScrollReveal>
-          <div style={trustHeader}>
-            <div style={eyebrow}>Por qué IAD Capital</div>
-            <h2 style={trustTitle}>Tu inversión, protegida en cada paso</h2>
-          </div>
-        </ScrollReveal>
-        <div style={trustGrid} className="trust-grid">
-          {TRUST_ITEMS.map(({ Icon, title, desc }, i) => (
-            <ScrollReveal key={title} delay={i * 140}>
-              <div style={trustCard} className="trust-card">
-                <div style={trustIconWrap}>
-                  <Icon size={20} color="var(--c-accent)" strokeWidth={2} />
-                </div>
-                <h3 style={trustCardTitle}>{title}</h3>
-                <p style={trustCardDesc}>{desc}</p>
-              </div>
-            </ScrollReveal>
-          ))}
-        </div>
-      </section>
 
       {/* ─── How it works — static, renders immediately ─────────────────── */}
       <section id="how-it-works" style={howSection}>
@@ -397,19 +363,7 @@ const statCell: React.CSSProperties = { padding: "1.4rem 1.6rem", borderRight: "
 const statNum: React.CSSProperties = { fontFamily: "var(--font-display)", fontSize: "2.1rem", fontWeight: 800, color: "var(--c-ink)", letterSpacing: "-0.03em" };
 const statLabel: React.CSSProperties = { fontSize: "0.85rem", color: "var(--c-text-secondary)", fontWeight: 500, marginTop: "0.1rem" };
 
-/* Trust band */
-const trustSection: React.CSSProperties = { maxWidth: 1200, margin: "0 auto", padding: "0.5rem 1.5rem 4rem" };
 const eyebrow: React.CSSProperties = { fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em", color: "var(--c-accent)", textTransform: "uppercase", marginBottom: "0.7rem" };
-const trustHeader: React.CSSProperties = { textAlign: "center", maxWidth: 620, margin: "0 auto 2.75rem" };
-const trustTitle: React.CSSProperties = { fontSize: "2.1rem", fontWeight: 800, letterSpacing: "-0.025em", margin: 0, color: "var(--c-ink)" };
-const trustGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem" };
-const trustCard: React.CSSProperties = { background: "var(--c-surface)", border: "1px solid var(--c-border)", borderRadius: 16, padding: "1.6rem" };
-const trustIconWrap: React.CSSProperties = {
-  width: 42, height: 42, borderRadius: 11, background: "var(--c-accent-light)",
-  display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.1rem",
-};
-const trustCardTitle: React.CSSProperties = { fontSize: "1.05rem", fontWeight: 700, margin: "0 0 0.5rem", color: "var(--c-ink)" };
-const trustCardDesc: React.CSSProperties = { fontSize: "0.9rem", lineHeight: 1.5, color: "var(--c-text-secondary)", margin: 0 };
 
 /* How it works */
 const howSection: React.CSSProperties = { background: "var(--c-ink)", marginTop: "1.5rem" };
