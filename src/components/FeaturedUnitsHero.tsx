@@ -106,7 +106,7 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
             )}
           </h2>
           <p style={sub}>
-            Accedé proyectos inmobiliarios seleccionados comprando desde el <strong style={{ color: "var(--c-ink)" }}>5%</strong> de una unidad. Invertí simple, seguro y con la mejor rentabilidad.
+            Accedé a proyectos inmobiliarios seleccionados comprando desde el <strong style={{ color: "var(--c-ink)" }}>5%</strong> de una unidad. Invertí simple, seguro y con la mejor rentabilidad.
           </p>
           <div style={cta}>
             {!hasSession ? (
