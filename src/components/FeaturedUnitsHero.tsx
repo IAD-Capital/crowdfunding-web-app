@@ -94,10 +94,6 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
               {totalUnitsCount} departamento{totalUnitsCount !== 1 ? "s" : ""} activo{totalUnitsCount !== 1 ? "s" : ""} · invertí desde el 5%
             </span>
           )}
-
-
-
-
           <h2 style={title}>
             {minInvestUsd != null ? (
               <>Invertí en propiedades desde <span style={titleHighlight}>{fmtUsd(minInvestUsd)}</span></>
@@ -106,7 +102,7 @@ export default function FeaturedUnitsHero({ units, lang, minInvestUsd, totalUnit
             )}
           </h2>
           <p style={sub}>
-            Accedé proyectos inmobiliarios seleccionados comprando desde el <strong style={{ color: "var(--c-ink)" }}>5%</strong> de una unidad. Invertí simple, seguro y con la mejor rentabilidad.
+            Accedé a proyectos inmobiliarios seleccionados comprando desde el <strong style={{ color: "var(--c-ink)" }}>5%</strong> de una unidad. Invertí simple, seguro y con la mejor rentabilidad.
           </p>
           <div style={cta}>
             {!hasSession ? (

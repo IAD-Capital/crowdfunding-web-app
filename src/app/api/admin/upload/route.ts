@@ -1,21 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import sharp from "sharp";
 import { requireAdmin } from "@/lib/requireAdmin";
 
 export const dynamic = "force-dynamic";
 
 const BUCKET = process.env.SUPABASE_STORAGE_BUCKET ?? "uploads";
+const MAX_DIMENSION = 1920;
+const WEBP_QUALITY = 75;
 
-async function uploadToSupabase(file: File, filename: string, supabaseUrl: string, serviceRoleKey: string) {
+async function processImage(file: File) {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const output = await sharp(buffer)
+    .rotate()
+    .resize({ width: MAX_DIMENSION, height: MAX_DIMENSION, fit: "inside", withoutEnlargement: true })
+    .webp({ quality: WEBP_QUALITY })
+    .toBuffer();
+  return { buffer: output, contentType: "image/webp", ext: "webp" };
+}
+
+async function uploadToSupabase(buffer: Buffer, contentType: string, filename: string, supabaseUrl: string, serviceRoleKey: string) {
   const res = await fetch(`${supabaseUrl}/storage/v1/object/${BUCKET}/${filename}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${serviceRoleKey}`,
       apikey: serviceRoleKey,
-      "Content-Type": file.type,
+      "Content-Type": contentType,
     },
-    body: Buffer.from(await file.arrayBuffer()),
+    body: new Uint8Array(buffer),
   });
 
   if (!res.ok) {
@@ -26,10 +39,10 @@ async function uploadToSupabase(file: File, filename: string, supabaseUrl: strin
   return `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${filename}`;
 }
 
-async function uploadToLocalDisk(file: File, filename: string) {
+async function uploadToLocalDisk(buffer: Buffer, filename: string) {
   const uploadDir = join(process.cwd(), "public", "uploads");
   await mkdir(uploadDir, { recursive: true });
-  await writeFile(join(uploadDir, filename), Buffer.from(await file.arrayBuffer()));
+  await writeFile(join(uploadDir, filename), buffer);
   return `/uploads/${filename}`;
 }
 
@@ -50,16 +63,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "El archivo excede el máximo de 5 MB." }, { status: 400 });
   }
 
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   try {
+    const { buffer, contentType, ext } = await processImage(file);
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
     const path = supabaseUrl && serviceRoleKey
-      ? await uploadToSupabase(file, filename, supabaseUrl, serviceRoleKey)
-      : await uploadToLocalDisk(file, filename);
+      ? await uploadToSupabase(buffer, contentType, filename, supabaseUrl, serviceRoleKey)
+      : await uploadToLocalDisk(buffer, filename);
 
     return NextResponse.json({ path });
   } catch (e) {
