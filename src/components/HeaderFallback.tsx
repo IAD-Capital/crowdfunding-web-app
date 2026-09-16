@@ -29,7 +29,7 @@ export default function HeaderFallback({ lang }: { lang: Locale }) {
             </Link>
           </div>
           <div className={s.navItem}>
-            <Link href={`/${lang}/como-invertir`} className={`${s.navLink} ${s.navTrigger}`}>
+            <Link href={`/${lang}/como-invertir`} className={s.navCta}>
               Quiero invertir
             </Link>
           </div>

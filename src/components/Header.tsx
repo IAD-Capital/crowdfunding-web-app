@@ -99,7 +99,7 @@ export default async function Header({ lang }: Props) {
           <div className={s.navItem}>
             <TrackedLink
               href={`/${lang}/como-invertir`}
-              className={`${s.navLink} ${s.navTrigger}`}
+              className={s.navCta}
               ctaId="header_como_invertir"
               ctaLabel="Quiero invertir"
               ctaLocation="header"

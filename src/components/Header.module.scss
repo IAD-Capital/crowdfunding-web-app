@@ -62,7 +62,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  color: #111;
+  color: #374151;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
@@ -103,16 +103,36 @@
 }
 
 .navTrigger {
-  padding: 0.5rem 1.1rem;
-  border: 1.5px solid #111;
+  padding: 0.5rem 0.9rem;
   border-radius: 999px;
-  color: #111;
   font-weight: 600;
   transition: background 0.2s ease, color 0.2s ease;
 
   &:hover,
   &:focus-visible {
     background: rgba(17, 17, 17, 0.06);
+  }
+}
+
+.navCta {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1.3rem;
+  border: none;
+  border-radius: 999px;
+  background: #1b4de0;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(27, 77, 224, 0.35);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    background: #1539a8;
+    box-shadow: 0 6px 18px rgba(27, 77, 224, 0.42);
+    transform: translateY(-1px);
   }
 }
 
